@@ -12,7 +12,7 @@
 3.  The configuration is a five node system.  Four peers and one member services node.    
 
 ## The folder structure for the branch
-1.  Each branch will also have a README that breaks down all the tests have run successfully, failed, or are incomplete.
+1.  Each branch will also have a README that breaks down all the tests have run successfully, failed, or are incomplete. 
 2.  Each branch will have the commit level run for that release.
 3.  The folder structure is designed to separate each area of verifiction and percolate the results back the the branch's README.md.
 4.  The focused areas for verification are:  performance, system verification testing, functional verification testing, and automated behave runs.
