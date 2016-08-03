@@ -1,0 +1,123 @@
+
+=========== GROUP START TIME Sat Jul 30 00:58:59 UTC 2016
+
+BEGIN  CAT_01_S1_IQDQIQ.go (Enforce Q=true CH=true, MustMatch Q=true CH=false AllRunningNodes=true) [STARTED: 2016-07-30 00:59:01.068508849 +0000 UTC]
+PASSED CAT_01_S1_IQDQIQ.go (Q_Pass=true CH_Pass=true, Enforce Q=true CH=true, MustMatch Q=true CH=true AllVP=true) [5m1.115923359s]  
+
+BEGIN  CAT_02_S0_IQDQIQ.go (Enforce Q=true CH=true, MustMatch Q=true CH=false AllRunningNodes=true) [STARTED: 2016-07-30 01:04:03.523510219 +0000 UTC]
+PASSED CAT_02_S0_IQDQIQ.go (Q_Pass=true CH_Pass=true, Enforce Q=true CH=true, MustMatch Q=true CH=false AllVP=true) [5m42.289038651s]  
+
+BEGIN  CAT_03_SnIQRnIQ_CycleAndRepeat.go (Enforce Q=true CH=true, MustMatch Q=true CH=false AllRunningNodes=true) [STARTED: 2016-07-30 01:09:47.130067996 +0000 UTC]
+PASSED CAT_03_SnIQRnIQ_CycleAndRepeat.go (Q_Pass=true CH_Pass=true, Enforce Q=true CH=true, MustMatch Q=true CH=false AllVP=false) [33m34.545277452s]  
+
+BEGIN  CAT_04_SnIQRnIQDQIQ_CycleAndRepeat.go (Enforce Q=true CH=true, MustMatch Q=true CH=false AllRunningNodes=true) [STARTED: 2016-07-30 01:43:23.025261708 +0000 UTC]
+PASSED CAT_04_SnIQRnIQDQIQ_CycleAndRepeat.go (Q_Pass=true CH_Pass=true, Enforce Q=true CH=true, MustMatch Q=true CH=false AllVP=false) [55m31.423687546s]  
+
+BEGIN  CAT_05_S1_IQDQIQ_R1_IQIQ_repeats.go (Enforce Q=true CH=true, MustMatch Q=true CH=false AllRunningNodes=true) [STARTED: 2016-07-30 02:38:55.773535759 +0000 UTC]
+PASSED CAT_05_S1_IQDQIQ_R1_IQIQ_repeats.go (Q_Pass=true CH_Pass=true, Enforce Q=true CH=true, MustMatch Q=true CH=true AllVP=false) [18m5.622451612s]  
+
+BEGIN  CAT_06_S1_IQDQIQ_R1_IQ_S2_IQ.go (Enforce Q=true CH=true, MustMatch Q=true CH=false AllRunningNodes=true) [STARTED: 2016-07-30 02:57:02.699367269 +0000 UTC]
+PASSED CAT_06_S1_IQDQIQ_R1_IQ_S2_IQ.go (Q_Pass=true CH_Pass=true, Enforce Q=true CH=true, MustMatch Q=true CH=true AllVP=false) [7m20.605963836s]  
+
+BEGIN  CAT_07_S1_IQDQIQ_R1_IQ_S0_IQ.go (Enforce Q=true CH=true, MustMatch Q=true CH=false AllRunningNodes=true) [STARTED: 2016-07-30 03:04:24.663018465 +0000 UTC]
+PASSED CAT_07_S1_IQDQIQ_R1_IQ_S0_IQ.go (Q_Pass=true CH_Pass=true, Enforce Q=true CH=true, MustMatch Q=true CH=false AllVP=false) [8m19.577430315s]  
+
+BEGIN  CAT_08_S0_IQDQIQ_R0_IQIQ_repeats.go (Enforce Q=true CH=true, MustMatch Q=true CH=false AllRunningNodes=true) [STARTED: 2016-07-30 03:12:45.654684388 +0000 UTC]
+PASSED CAT_08_S0_IQDQIQ_R0_IQIQ_repeats.go (Q_Pass=true CH_Pass=true, Enforce Q=true CH=true, MustMatch Q=true CH=false AllVP=false) [20m4.213831508s]  
+
+BEGIN  CAT_09_S0_IQDQIQ_R0_IQ_S2_IQ.go (Enforce Q=true CH=true, MustMatch Q=true CH=false AllRunningNodes=true) [STARTED: 2016-07-30 03:32:51.199154287 +0000 UTC]
+PASSED CAT_09_S0_IQDQIQ_R0_IQ_S2_IQ.go (Q_Pass=true CH_Pass=true, Enforce Q=true CH=true, MustMatch Q=true CH=false AllVP=false) [9m29.715333588s]  
+
+BEGIN  CAT_10_S0_IQDQIQ_R0_IQ_S1_IQ.go (Enforce Q=true CH=true, MustMatch Q=true CH=false AllRunningNodes=true) [STARTED: 2016-07-30 03:42:22.191356862 +0000 UTC]
+PASSED CAT_10_S0_IQDQIQ_R0_IQ_S1_IQ.go (Q_Pass=true CH_Pass=true, Enforce Q=true CH=true, MustMatch Q=true CH=false AllVP=false) [8m56.692208586s]  
+
+BEGIN  CAT_11_S2S1_IQDI.go (Enforce Q=true CH=true, MustMatch Q=true CH=false AllRunningNodes=true) [STARTED: 2016-07-30 03:51:20.234798914 +0000 UTC]
+PASSED CAT_11_S2S1_IQDI.go (Q_Pass=true CH_Pass=true, Enforce Q=true CH=true, MustMatch Q=true CH=true AllVP=true) [4m51.936694714s]  
+
+BEGIN  CAT_12_S0S1_IQDI.go (Enforce Q=true CH=true, MustMatch Q=true CH=false AllRunningNodes=true) [STARTED: 2016-07-30 03:56:13.490885339 +0000 UTC]
+PASSED CAT_12_S0S1_IQDI.go (Q_Pass=true CH_Pass=true, Enforce Q=true CH=true, MustMatch Q=true CH=true AllVP=true) [5m11.790806617s]  
+
+BEGIN  CAT_13_S2_IQDQIQ_S1_IQDD.go (Enforce Q=true CH=true, MustMatch Q=true CH=false AllRunningNodes=true) [STARTED: 2016-07-30 04:01:26.614936823 +0000 UTC]
+PASSED CAT_13_S2_IQDQIQ_S1_IQDD.go (Q_Pass=true CH_Pass=true, Enforce Q=true CH=true, MustMatch Q=true CH=true AllVP=true) [9m52.291371579s]  
+
+BEGIN  CAT_14_S0_IQDQIQ_S1_IQDD.go (Enforce Q=true CH=true, MustMatch Q=true CH=false AllRunningNodes=true) [STARTED: 2016-07-30 04:11:20.211570406 +0000 UTC]
+PASSED CAT_14_S0_IQDQIQ_S1_IQDD.go (Q_Pass=true CH_Pass=true, Enforce Q=true CH=true, MustMatch Q=true CH=true AllVP=true) [10m33.187663701s]  
+
+BEGIN  CAT_15_S1_IQ_S2_R1_IQ.go (Enforce Q=true CH=true, MustMatch Q=true CH=false AllRunningNodes=true) [STARTED: 2016-07-30 04:21:54.654055621 +0000 UTC]
+PASSED CAT_15_S1_IQ_S2_R1_IQ.go (Q_Pass=true CH_Pass=true, Enforce Q=true CH=true, MustMatch Q=true CH=false AllVP=true) [4m30.450408052s]  
+
+BEGIN  CAT_16_S2_IQ_S1_IQ_R1_IQ.go (Enforce Q=true CH=true, MustMatch Q=true CH=false AllRunningNodes=true) [STARTED: 2016-07-30 04:26:26.392032065 +0000 UTC]
+PASSED CAT_16_S2_IQ_S1_IQ_R1_IQ.go (Q_Pass=true CH_Pass=true, Enforce Q=true CH=true, MustMatch Q=true CH=true AllVP=true) [4m42.949170323s]  
+
+BEGIN  CAT_17_S1_IQ_S0_R0_IQ.go (Enforce Q=true CH=true, MustMatch Q=true CH=false AllRunningNodes=true) [STARTED: 2016-07-30 04:31:10.627649129 +0000 UTC]
+PASSED CAT_17_S1_IQ_S0_R0_IQ.go (Q_Pass=true CH_Pass=true, Enforce Q=true CH=true, MustMatch Q=true CH=true AllVP=true) [5m20.070041826s]  
+
+BEGIN  CAT_18_S0_IQ_S1_IQ_R0_IQ.go (Enforce Q=true CH=true, MustMatch Q=true CH=false AllRunningNodes=true) [STARTED: 2016-07-30 04:36:32.032600559 +0000 UTC]
+PASSED CAT_18_S0_IQ_S1_IQ_R0_IQ.go (Q_Pass=true CH_Pass=true, Enforce Q=true CH=true, MustMatch Q=true CH=false AllVP=true) [6m24.920754131s]  
+
+BEGIN  CAT_19_S2S1_IQ_R1_IQ.go (Enforce Q=true CH=true, MustMatch Q=true CH=false AllRunningNodes=true) [STARTED: 2016-07-30 04:42:58.314644462 +0000 UTC]
+PASSED CAT_19_S2S1_IQ_R1_IQ.go (Q_Pass=true CH_Pass=true, Enforce Q=true CH=true, MustMatch Q=true CH=true AllVP=true) [3m45.309565576s]  
+
+BEGIN  CAT_20_S2S1_IQ_R1R2_IQ.go (Enforce Q=true CH=true, MustMatch Q=true CH=false AllRunningNodes=true) [STARTED: 2016-07-30 04:46:44.949144072 +0000 UTC]
+PASSED CAT_20_S2S1_IQ_R1R2_IQ.go (Q_Pass=true CH_Pass=true, Enforce Q=true CH=true, MustMatch Q=true CH=false AllVP=false) [6m54.130652592s]  
+
+BEGIN  CAT_21_S0S1_IQ_R0_IQ.go (Enforce Q=true CH=true, MustMatch Q=true CH=false AllRunningNodes=true) [STARTED: 2016-07-30 04:53:40.447677498 +0000 UTC]
+PASSED CAT_21_S0S1_IQ_R0_IQ.go (Q_Pass=true CH_Pass=true, Enforce Q=true CH=true, MustMatch Q=true CH=false AllVP=true) [4m36.912444706s]  
+
+BEGIN  CAT_22_S0S1_IQ_R0R1_IQ.go (Enforce Q=true CH=true, MustMatch Q=true CH=false AllRunningNodes=true) [STARTED: 2016-07-30 04:58:18.643351497 +0000 UTC]
+PASSED CAT_22_S0S1_IQ_R0R1_IQ.go (Q_Pass=true CH_Pass=true, Enforce Q=true CH=true, MustMatch Q=true CH=false AllVP=false) [7m40.896824265s]  
+
+BEGIN  CAT_23_S0S1S2_IQ_R0_IQ_R1_IQ.go (Enforce Q=true CH=true, MustMatch Q=true CH=false AllRunningNodes=true) [STARTED: 2016-07-30 05:06:00.820281753 +0000 UTC]
+PASSED CAT_23_S0S1S2_IQ_R0_IQ_R1_IQ.go (Q_Pass=true CH_Pass=true, Enforce Q=true CH=true, MustMatch Q=true CH=false AllVP=true) [9m34.792533063s]  
+
+BEGIN  CAT_24_S0S1S2_IQ_R0R1_IQIQ.go (Enforce Q=true CH=true, MustMatch Q=true CH=false AllRunningNodes=true) [STARTED: 2016-07-30 05:15:36.913696632 +0000 UTC]
+PASSED CAT_24_S0S1S2_IQ_R0R1_IQIQ.go (Q_Pass=true CH_Pass=true, Enforce Q=true CH=true, MustMatch Q=true CH=false AllVP=true) [10m6.679676538s]  
+
+BEGIN  CAT_25_S0S1S2_IQ_R0R1R2_IQ.go (Enforce Q=true CH=true, MustMatch Q=true CH=false AllRunningNodes=true) [STARTED: 2016-07-30 05:25:44.949760643 +0000 UTC]
+FAILED CAT_25_S0S1S2_IQ_R0R1R2_IQ.go (Q_Pass=false CH_Pass=true, Enforce Q=true CH=true, MustMatch Q=true CH=false AllVP=false) [17m33.516649622s]  !!!!!!!!!!!!!!!!!!!!
+
+BEGIN  CAT_26_S1S2S3_IQ_R1R2_IQ.go (Enforce Q=true CH=true, MustMatch Q=true CH=false AllRunningNodes=true) [STARTED: 2016-07-30 05:43:19.717407528 +0000 UTC]
+PASSED CAT_26_S1S2S3_IQ_R1R2_IQ.go (Q_Pass=true CH_Pass=true, Enforce Q=true CH=true, MustMatch Q=true CH=false AllVP=true) [9m3.596664598s]  
+
+BEGIN  CAT_27_S1S2S3_IQ_R1R2R3_IQ.go (Enforce Q=true CH=true, MustMatch Q=true CH=false AllRunningNodes=true) [STARTED: 2016-07-30 05:52:24.656889718 +0000 UTC]
+FAILED CAT_27_S1S2S3_IQ_R1R2R3_IQ.go (Q_Pass=false CH_Pass=true, Enforce Q=true CH=true, MustMatch Q=true CH=false AllVP=false) [16m53.046759738s]  !!!!!!!!!!!!!!!!!!!!
+
+BEGIN  CAT_28_S0S1S2S3_R0R1R2_IQ_R3_IQ.go (Enforce Q=true CH=true, MustMatch Q=true CH=false AllRunningNodes=true) [STARTED: 2016-07-30 06:09:19.043965055 +0000 UTC]
+PASSED CAT_28_S0S1S2S3_R0R1R2_IQ_R3_IQ.go (Q_Pass=true CH_Pass=true, Enforce Q=true CH=true, MustMatch Q=true CH=false AllVP=false) [11m59.601529162s]  
+
+BEGIN  CAT_29_S0S1S2S3_R0R1R2R3_IQ.go (Enforce Q=true CH=true, MustMatch Q=true CH=false AllRunningNodes=true) [STARTED: 2016-07-30 06:21:19.966614918 +0000 UTC]
+PASSED CAT_29_S0S1S2S3_R0R1R2R3_IQ.go (Q_Pass=true CH_Pass=true, Enforce Q=true CH=true, MustMatch Q=true CH=false AllVP=false) [11m24.498454055s]  
+
+BEGIN  CAT_30_DQIQDQIQ.go (Enforce Q=true CH=true, MustMatch Q=true CH=false AllRunningNodes=true) [STARTED: 2016-07-30 06:32:45.83399994 +0000 UTC]
+PASSED CAT_30_DQIQDQIQ.go (Q_Pass=true CH_Pass=true, Enforce Q=true CH=true, MustMatch Q=true CH=true AllVP=true) [7m33.111159328s]  
+
+BEGIN  CAT_31_S1_DQIQDQIQ.go (Enforce Q=true CH=true, MustMatch Q=true CH=false AllRunningNodes=true) [STARTED: 2016-07-30 06:40:20.266792324 +0000 UTC]
+PASSED CAT_31_S1_DQIQDQIQ.go (Q_Pass=true CH_Pass=true, Enforce Q=true CH=true, MustMatch Q=true CH=true AllVP=true) [7m43.700126639s]  
+
+BEGIN  CAT_32_S0_IQ_DQIQDQIQ.go (Enforce Q=true CH=true, MustMatch Q=true CH=false AllRunningNodes=true) [STARTED: 2016-07-30 06:48:05.297657646 +0000 UTC]
+PASSED CAT_32_S0_IQ_DQIQDQIQ.go (Q_Pass=true CH_Pass=true, Enforce Q=true CH=true, MustMatch Q=true CH=false AllVP=true) [8m15.050855569s]  
+
+BEGIN  CAT_33_S1S2_D_I_R1_IQ.go (Enforce Q=true CH=true, MustMatch Q=true CH=false AllRunningNodes=true) [STARTED: 2016-07-30 06:56:21.640204757 +0000 UTC]
+PASSED CAT_33_S1S2_D_I_R1_IQ.go (Q_Pass=true CH_Pass=true, Enforce Q=true CH=true, MustMatch Q=true CH=true AllVP=true) [6m17.683323396s]  
+
+BEGIN  CAT_34_S0S1_D_I_R0_IQ.go (Enforce Q=true CH=true, MustMatch Q=true CH=false AllRunningNodes=true) [STARTED: 2016-07-30 07:02:40.659006824 +0000 UTC]
+PASSED CAT_34_S0S1_D_I_R0_IQ.go (Q_Pass=true CH_Pass=true, Enforce Q=true CH=true, MustMatch Q=true CH=false AllVP=true) [7m4.691040852s]  
+
+BEGIN  CAT_35_S0S1_D_I_R0R1_IQ.go (Enforce Q=true CH=true, MustMatch Q=true CH=false AllRunningNodes=true) [STARTED: 2016-07-30 07:09:46.628166264 +0000 UTC]
+PASSED CAT_35_S0S1_D_I_R0R1_IQ.go (Q_Pass=true CH_Pass=true, Enforce Q=true CH=true, MustMatch Q=true CH=false AllVP=false) [7m14.692698603s]  
+
+BEGIN  CAT_36_S0S1S2_D_I_R0R1_IQ.go (Enforce Q=true CH=true, MustMatch Q=true CH=false AllRunningNodes=true) [STARTED: 2016-07-30 07:17:02.645615917 +0000 UTC]
+FAILED CAT_36_S0S1S2_D_I_R0R1_IQ.go (Q_Pass=false CH_Pass=true, Enforce Q=true CH=true, MustMatch Q=true CH=false AllVP=true) [11m25.067834242s]  !!!!!!!!!!!!!!!!!!!!
+
+BEGIN  CAT_37_S0S1S2_D_I_R0R1R2_IQ.go (Enforce Q=true CH=true, MustMatch Q=true CH=false AllRunningNodes=true) [STARTED: 2016-07-30 07:28:29.031943431 +0000 UTC]
+FAILED CAT_37_S0S1S2_D_I_R0R1R2_IQ.go (Q_Pass=false CH_Pass=true, Enforce Q=true CH=true, MustMatch Q=true CH=false AllVP=false) [15m17.643256789s]  !!!!!!!!!!!!!!!!!!!!
+
+BEGIN  CAT_38_S1S2S3_D_I_R1R2_IQ.go (Enforce Q=true CH=true, MustMatch Q=true CH=false AllRunningNodes=true) [STARTED: 2016-07-30 07:43:48.010005342 +0000 UTC]
+FAILED CAT_38_S1S2S3_D_I_R1R2_IQ.go (Q_Pass=false CH_Pass=true, Enforce Q=true CH=true, MustMatch Q=true CH=false AllVP=true) [11m32.461056284s]  !!!!!!!!!!!!!!!!!!!!
+
+BEGIN  CAT_39_S1S2S3_D_I_R1R2R3_IQ.go (Enforce Q=true CH=true, MustMatch Q=true CH=false AllRunningNodes=true) [STARTED: 2016-07-30 07:55:21.804486964 +0000 UTC]
+FAILED CAT_39_S1S2S3_D_I_R1R2R3_IQ.go (Q_Pass=false CH_Pass=true, Enforce Q=true CH=true, MustMatch Q=true CH=false AllVP=false) [14m24.998660625s]  !!!!!!!!!!!!!!!!!!!!
+
+=========== GROUP END
+=========== Sat Jul 30 00:58:59 UTC 2016, BEFORE RUN GROUP: BEGIN= , PASSED= , FAILED=
+=========== Sat Jul 30 08:09:46 UTC 2016, AFTER RUN GROUP : BEGIN=39 , PASSED=33 , FAILED=6
