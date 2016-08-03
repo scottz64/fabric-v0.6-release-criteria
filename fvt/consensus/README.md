@@ -1,7 +1,7 @@
 
 # Release Criteria for Functional Area: Consensus
 
-## Testing was done to ensure the stability and resiliency of the PBFT Batch design when Byzantine faults occur. Test objectives:
+Testing is done to ensure the stability and resiliency of the PBFT Batch design when Byzantine faults occur. Test objectives:
 
 A.  	Stop 1 peer: the network continues to process deploys, invokes, and query transactions. Perform this operation on each peer in the fabric.
 	Restarting the peer should cause it to join in the network operations. Note: although F (the minimum number required for consensus) peers
@@ -14,35 +14,22 @@ B. 	Stop 2 peers: the network should halt due to a lack of consensus. Restarting
 C.	Stop 3 peers: the network should halt due to a lack of consensus. Restarting just one of the peers should not resume consensus.
 	Restarting 2 or 3 peers should cause the network to resume consensus.
 
-D.  	Deploys should be processed, or queued if necessary, with any number of running peers.
+D.  	Deploys should be processed, or queued if appropriate, with any number of running peers.
 
 
-## Consensus Acceptance Tests
+## Consensus Acceptance Testcases
 
-The following GO SDK testnames were executed on local fabric in vagrant environment with docker containers.
-Additional details (the date the tests were run, commit image, test config parameters, the test steps, output summary and details, etc.)
-are available in the GO_TEST files in this folder.
-Results are indicated first - either PASS or the test_escape #issue created on https://github.com/hyperledger/fabric/issues
+The following GO SDK testnames were executed on local fabric in vagrant environment with docker containers. Additional details (the date the tests were run, commit image, test config parameters, the test steps, output summary and details, etc.) are available in the GO_TEST files in this folder. The testnames themselves indicate the steps performed. For example:
+	CAT_34_S0S1_D_I_R0_IQ.go
+	CAT_34_				Consensus Acceptance Test number 34
+	       S0S1			Stop Validating PEERs VP0 and VP1 at virtually the same time
+	            D			Deploy request sent to a running peer
+	              I			Query requests sent to all running peers and validate results
+	                R0		Restart VP0
+	                   I		Invoke requests sent to all running peers
+	                    Q		Query requests sent to all running peers and validate results
 
-### The testnames themselves indicate the steps performed. For example, CAT_01_S1_IQDQIQ.go may be interpreted as:
-
-	CAT_01_	Consensus Acceptance Test, number 01
-	S1	Stop Validating PEER 1
-	I	Invokes sent to all running peers
-	Q	Query sent to all running peers and validate results
-	D	Deploy sent to a running peer
-	Q	Query sent to all running peers and validate results
-	I	Invokes sent to all running peers
-	Q	Query sent to all running peers and validate results
-
-
-### RESULTS SUMMARY:
-
-	Date       Testcases   Pass/Fail   Release   Commit    Time    Notable Parameters (non-default)
-	20160727   CAT 01-39    33 /  6    v0.5      3e0e80a   7h10m   batchsize=2, nullrequest=1s
-	20160731   CAT 01-39    33 /  6    v0.5      3e0e80a   7h14m   batchsize=500
-
-### TESTCASES:
+Results are indicated first - either PASS, or the test_escape #issue created on https://github.com/hyperledger/fabric/issues
 
 A.  	Stop 1 peer: the network continues to process deploys, invokes, and query transactions. Perform this operation on each peer in the fabric.
 	Restarting the peer should cause it to join in the network operations. Note: although F (the minimum number required for consensus) peers
@@ -114,4 +101,9 @@ D.  	Deploys should be processed, or queued if necessary, with any number of run
 	+ Run with different batch size, timer values, larger F and number of nodes N (not CAT), etc.
 	+ DUPLICATE all tests using PAUSE instead of STOP by setting chco2.go constant pauseInsteadOfStop to true.
 
+## RESULTS SUMMARY:
+
+	Date       Testcases   Pass/Fail   Release   Commit    Time    Notable Parameters (non-default)
+	20160727   CAT 01-39    33 /  6    v0.5      3e0e80a   7h10m   batchsize=2, nullrequest=1s
+	20160731   CAT 01-39    33 /  6    v0.5      3e0e80a   7h14m   batchsize=500
 
