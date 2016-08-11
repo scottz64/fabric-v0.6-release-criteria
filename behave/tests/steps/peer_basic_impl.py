@@ -272,6 +272,11 @@ def step_impl(context, expectedValue):
         print("New height:", str(int(prevHeight)+1))
         expected = int(prevHeight) + int(expectedValue)
         assert (str(foundValue) in (prevHeight, str(expected))), "For attribute height, expected (%s), instead found (%s)" % (expected, foundValue)
+    elif expectedValue == 'store':
+        context.height = context.response.json()["height"]
+        print("Stored height:", context.height)
+    elif expectedValue == 'previous':
+        assert (foundValue == context.height), "For attribute height, expected (%s), instead found (%s)" % (context.height, foundValue)
     else:
         assert (str(foundValue) == expectedValue), "For attribute height, expected (%s), instead found (%s)" % (expectedValue, foundValue)
 
@@ -950,6 +955,7 @@ def step_impl(context, userName, secret):
 def step_impl(context):
     assert 'compose_containers' in context, "compose_containers not found in context"
     assert 'table' in context, "table (of peers, username, secret) not found in context"
+    time.sleep(5)
 
     peerToSecretMessage = {}
 
@@ -978,20 +984,29 @@ def step_impl(context):
         context.response = resp
         print("message = {0}".format(resp.json()))
         peerToSecretMessage[peer] = secretMsg
-        request_url = buildUrl(context, base_url, "/registrar/{0}/tcert".format(username))
+        request_url = buildUrl(context, base_url, "/registrar/{0}/tcert".format(userName))
+        resp = requests.get(request_url, headers={'Content-type': 'application/json'}, verify=False)
+        print("TCERT??? {0}".format(resp))
     context.peerToSecretMessage = peerToSecretMessage
 
 
-@given(u'I mount transaction database')
+@given(u'I mount peer data')
 def step_impl(context):
-    compose_output, compose_error, compose_returncode = \
-         bdd_test_util.cli_call(context,
-                                ["docker", "create", "-v", "/var/hyperledger/test/behave/db", "--name", "dbstore", "hyperledger/fabric-membersrvc", "/bin/true"],
-                                expect_success=True)
-    assert compose_returncode == 0, "docker create failed to create a volume for the behave transaction database"
+    for container in context.compose_containers:
+        if container.containerName.startswith("vp"):
+            compose_output, compose_error, compose_returncode = \
+                 bdd_test_util.cli_call(context,
+                                        ["docker", "create", "-v", "/var/hyperledger/test/behave/db", "--name", "{0}_dbstore".format(container.containerName), "hyperledger/fabric-peer", "/bin/true"],
+                                        expect_success=True)
+        else:
+            compose_output, compose_error, compose_returncode = \
+                 bdd_test_util.cli_call(context,
+                                        ["docker", "create", "-v", "/var/hyperledger/test/behave/db", "--name", "{0}_dbstore".format(container.containerName), "hyperledger/fabric-membersrvc", "/bin/true"],
+                                        expect_success=True)
+        assert compose_returncode == 0, "docker create failed to create a volume for the behave transaction database"
 
 
-@given(u'I upgrade peers')
+@given(u'I upgrade')
 def step_impl(context):
     assert 'table' in context, "table (of peers) not found in context"
     fileArgsToDockerCompose = getDockerComposeFileArgsFromYamlFile(context.compose_yaml)
@@ -1001,19 +1016,28 @@ def step_impl(context):
     commit = prev_log.split()[0]
     print("current commit: {0}".format(commit))
 
-    # Build a new caserver and peer image from the previous commit
-    res = subprocess.check_output(['git', 'checkout', "%s~1" % commit])
-    print("Git results: {0}".format(res))
-
     try:
+        # Build a new caserver and peer image from the previous commit
+        res = subprocess.check_output(['git', 'checkout', "%s~1" % commit])
+        print("Git results: {0}".format(res))
+
+        # Kill chaincode containers
+#    compose_output, compose_error, compose_returncode = \
+#            bdd_test_util.cli_call(context,
+#                                   ["docker", "rm" "-f", "$(docker ps -n=4 -q)"],
+#                                   expect_success=True)
+        res = subprocess.check_output(["docker", "ps", "-n=4", "-q"])
+        print("chaincode containers {0}".format(res))
+        result = subprocess.check_output(["docker", "rm", "-f"] + res.split('\n'))
+        print("chaincode containers {0}".format(result))
+
+        # Kill chaincode images
+        res = subprocess.check_output(["docker", "images", "|", "awk", "'$1 ~ /dev-vp/ { print $3}'"])
+        print("chaincode images {0}".format(res))
+        result = subprocess.check_output(["docker", "rmi", "-f"] + res.split('\n'))
+        print("chaincode images {0}".format(result))
+
         # Build peer_beta
-        #cur_peer_id = subprocess.check_output(["docker", "images", "-q", "hyperledger/fabric-peer:latest"])
-        #compose_output, compose_error, compose_returncode = \
-        #    bdd_test_util.cli_call(context,
-        #                           ["docker", "tag", cur_peer_id, "hyperledger/fabric-peer:current"],
-        #                           expect_success=True)
-        #assert compose_returncode == 0, "docker peer image not tagged correctly"
-        #print("Current peer image tagged")
         compose_output, compose_error, compose_returncode = \
             bdd_test_util.cli_call(context,
                                    ["docker", "build", "-t", "hyperledger/fabric-peer:previous", "../build/image/peer"],
@@ -1057,22 +1081,24 @@ def step_impl(context):
     # Start membersrvc
     compose_output, compose_error, compose_returncode = \
         bdd_test_util.cli_call(context,
-                               ["docker", "run", "-d", "--volumes-from", "dbstore", "--name=caserver_1", "-p", "50051:50051", "-p", "50052:30303", "-it", "hyperledger/fabric-membersrvc:previous", "membersrvc"],
+                               ["docker", "run", "-d", "--volumes-from", "bddtests_dbstore_membersrvc0_1", "--name=caserver_1", "-p", "50051:50051", "-p", "50052:30303", "-it", "hyperledger/fabric-membersrvc:previous", "membersrvc"],
                                expect_success=True)
     assert compose_returncode == 0, "docker failed to start membersrvc"
 
     # stop and start specified peers
-    for peer in context.table.headings:
-        for container in context.compose_containers:
-            if peer in container.containerName:
-                print("Container Info: {0}, {1}, {2}".format(container.containerName, container.url, container.ipAddress))
-                break
+    for container in context.compose_containers:
+        name_pieces = container.containerName.split('_')
+        if len(name_pieces) > 3 or 'dbstore' in name_pieces or 'membersrvc0' in name_pieces:
+            continue
+
+        peer = name_pieces[1]
+        print("Container Info: {0}, {1}, {2}".format(container.containerName, container.url, container.ipAddress))
 
         if not context.byon:
             # Stop the specified peers
             compose_output, compose_error, compose_returncode = \
                 bdd_test_util.cli_call(context,
-                                       ["docker-compose"] + fileArgsToDockerCompose + ["stop", peer],
+                                       ["docker-compose"] + fileArgsToDockerCompose + ["stop", "membersrvc0"],
                                        expect_success=True)
             assert compose_returncode == 0, "docker failed to stop peer {0}".format(peer)
             print("Stopped {0}".format(peer))
@@ -1084,8 +1110,8 @@ def step_impl(context):
             compose_output, compose_error, compose_returncode = \
                 bdd_test_util.cli_call(context,
                                        ["docker", "run", "-d", "--name=betapeer_%s" % peer,
-                                        "-it", "-v", "/var/hyperledger/test/behave/%s:/var/hyperledger/production" % peer,
-                                        #"-e", "CORE_VM_ENDPOINT='%s'" % container.url,
+                                        #"-it", "-v", "/var/hyperledger/test/behave/%s:/var/hyperledger/production" % peer,
+                                        "--volumes-from", "bddtests_dbstore_%s_1" % peer,
                                         "-e", "CORE_VM_ENDPOINT=http://172.17.0.1:2375",
                                         "-e", "CORE_PEER_ID=%s" % peer,
                                         "-e", "CORE_SECURITY_ENABLED=true",
@@ -1108,18 +1134,6 @@ def step_impl(context):
                                         "hyperledger/fabric-peer:previous", "peer", "node", "start"],
                                        expect_success=True)
         assert compose_returncode == 0, "docker run failed to bring up beta image for {0}".format(peer)
-        base_url = bdd_test_util.ipFromContainerNamePart(peer, context.compose_containers, context.byon)
-        print("Base url! {0}".format(base_url))
-        ip_info = bdd_test_util.cli_call(context,
-                                    ["docker", "inspect", "--format", "{{.NetworkSettings.IPAddress}}", "betapeer_%s" % peer],
-                                    expect_success=True)
-        ip = ip_info[0].strip()
-        print("IP address??? {0}".format(ip))
-
-        time.sleep(60)
-        context = login(context, "{0}:5000".format(ip), "test_%s" % peer, network_creds['test_'+peer])
-        print("Logged in??? {0}".format(base_url))
-
 
 
 @given(u'I stop peers')
