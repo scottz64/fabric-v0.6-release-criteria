@@ -20,13 +20,14 @@ D.  	Deploys should be processed, or queued if appropriate, with any number of r
 ## Consensus Acceptance Testcases
 
 The following GO SDK testnames were executed on local fabric in vagrant environment with docker containers. Additional details (the date the tests were run, commit image, test config parameters, the test steps, output summary and details, etc.) are available in the GO_TEST files in this folder. The testnames themselves indicate the steps performed. For example:
+
 	CAT_34_S0S1_D_I_R0_IQ.go
-	CAT_34_				Consensus Acceptance Test number 34
-	       S0S1			Stop Validating PEERs VP0 and VP1 at virtually the same time
-	            D			Deploy request sent to a running peer
-	              I			Query requests sent to all running peers and validate results
-	                R0		Restart VP0
-	                   I		Invoke requests sent to all running peers
+	CAT_34				Consensus Acceptance Test number 34
+	      _S0S1			Stop Validating PEERs VP0 and VP1 at virtually the same time
+	           _D			Deploy request sent to a running peer
+	             _I			Query requests sent to all running peers and validate results
+	               _R0		Restart VP0
+	                  _I		Invoke requests sent to all running peers
 	                    Q		Query requests sent to all running peers and validate results
 
 Results are indicated first - either PASS, or the test_escape #issue created on https://github.com/hyperledger/fabric/issues
@@ -89,19 +90,20 @@ D.  	Deploys should be processed, or queued if necessary, with any number of run
 	#2309	CAT_38_S1S2S3_D_I_R1R2_IQ.go	Stop VP 1,2,3. New Deploy, and Invokes (queued). Restart VP 1,2. Verify new deployment, matching CH/A/B.
 	#2313	CAT_39_S1S2S3_D_I_R1R2R3_IQ.go  	Stop VP 1,2,3. New Deploy, and Invokes (queued). Restart all 3 peers. Verify new deployment, consensus.
 
-## OTHER:
+## OTHER
 
-### Long Runs (these should be moved to the SVT folder, not here in FVT):
+### Long Runs
 
+	(These should be moved to the SVT folder, not here in FVT):
 	PASS	40.  CRT_40_StopAndRestartRandom_12Hrs.go	Stop/restart random peer, never losing consensus. Run for 12 hours.
 	#2148	41.  CRT_41_StopAndRestart1or2_12Hrs.go		Cycle through stopping/restarting one, or sometimes two, peers at a time. Run for 12 hours.
 
-### FUTURE TEST IDEAS:
+### FUTURE TEST IDEAS
 
 	+ Run with different batch size, timer values, larger F and number of nodes N (not CAT), etc.
 	+ DUPLICATE all tests using PAUSE instead of STOP by setting chco2.go constant pauseInsteadOfStop to true.
 
-## RESULTS SUMMARY:
+## RESULTS SUMMARY
 
 	Date       Testcases   Pass/Fail   Release   Commit    Time    Notable Parameters (non-default)
 	20160727   CAT 01-39    33 /  6    v0.5      3e0e80a   7h10m   batchsize=2, nullrequest=1s
