@@ -645,7 +645,6 @@ Feature: Network of Peers
 
 #   @doNotDecompose
 #    @wip
-@scat
 	Scenario: basic startup of 3 validating peers
 	    Given we compose "docker-compose-3.yml"
 	    When requesting "/chain" from "vp0"

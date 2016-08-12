@@ -1022,10 +1022,6 @@ def step_impl(context):
         print("Git results: {0}".format(res))
 
         # Kill chaincode containers
-#    compose_output, compose_error, compose_returncode = \
-#            bdd_test_util.cli_call(context,
-#                                   ["docker", "rm" "-f", "$(docker ps -n=4 -q)"],
-#                                   expect_success=True)
         res = subprocess.check_output(["docker", "ps", "-n=4", "-q"])
         print("chaincode containers {0}".format(res))
         result = subprocess.check_output(["docker", "rm", "-f"] + res.split('\n'))
