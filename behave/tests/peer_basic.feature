@@ -315,7 +315,7 @@ Feature: Network of Peers
 
 @doNotDecompose
 #    @wip
-@scat
+#@scat
 	Scenario: chaincode example 01 single peer erroneous TX
 	    Given we compose "docker-compose-1.yml"
 	    When requesting "/chain" from "vp0"
@@ -394,7 +394,7 @@ Feature: Network of Peers
 
 #    @doNotDecompose
 #    @wip
-@scat
+#@scat
 	Scenario: chaincode example 02 single peer
 	    Given we compose "docker-compose-1.yml"
 	    When requesting "/chain" from "vp0"
@@ -596,7 +596,7 @@ Feature: Network of Peers
 
 #    @doNotDecompose
     @issue_724
-@scat
+#@scat
 	Scenario Outline: chaincode example02 with 4 peers and 1 membersrvc, issue #724
 
 	    Given we compose "<ComposeFile>"
@@ -723,7 +723,7 @@ Feature: Network of Peers
 #@doNotDecompose
 #@wip
 #@skip
-@scat
+#@scat
  Scenario Outline: 4 peers and 1 membersrvc, consensus fails if 2 backup replicas fail
 
     Given we compose "<ComposeFile>"
@@ -783,7 +783,7 @@ Feature: Network of Peers
      #@doNotDecompose
      #@wip
      #@skip
-@scat
+#@scat
       Scenario Outline: 4 peers and 1 membersrvc, consensus still works if 1 peer (vp3) is byzantine
 
          Given we compose "<ComposeFile>"
@@ -1116,7 +1116,7 @@ Feature: Network of Peers
 
 @issue_1942
 #@doNotDecompose
-@scat
+#@scat
 Scenario: chaincode example02 with 4 peers, stop and start alternates, primary
     Given we compose "docker-compose-4-consensus-batch.yml"
     And I register with CA supplying username "binhn" and secret "7avZQLwcUe9q" on peers:
@@ -1180,7 +1180,7 @@ Scenario: chaincode example02 with 4 peers, stop and start alternates, primary
 
 @issue_1874a
 #@doNotDecompose
-@scat
+#@scat
 Scenario: chaincode example02 with 4 peers, two stopped
     Given we compose "docker-compose-4-consensus-batch.yml"
     And I register with CA supplying username "binhn" and secret "7avZQLwcUe9q" on peers:
@@ -1233,7 +1233,7 @@ Scenario: chaincode example02 with 4 peers, two stopped
 
 @issue_1874b
 #@doNotDecompose
-@scat
+#@scat
 Scenario: chaincode example02 with 4 peers, two stopped, bring back vp0
     Given we compose "docker-compose-4-consensus-batch.yml"
     And I register with CA supplying username "binhn" and secret "7avZQLwcUe9q" on peers:
@@ -1297,7 +1297,7 @@ Scenario: chaincode example02 with 4 peers, two stopped, bring back vp0
 
 @issue_1874c
 #@doNotDecompose
-@scat
+#@scat
     Scenario: chaincode example02 with 4 peers, two stopped, bring back both
     Given we compose "docker-compose-4-consensus-batch.yml"
     And I register with CA supplying username "binhn" and secret "7avZQLwcUe9q" on peers:
@@ -1352,7 +1352,7 @@ Scenario: chaincode example02 with 4 peers, two stopped, bring back vp0
             | vp0  | vp1 | vp2 | vp3 |
 
 @issue_1942
-@scat
+#@scat
 Scenario: chaincode example02 with 4 peers, stop and start vp0
   Given we compose "docker-compose-4-consensus-batch.yml"
   And I register with CA supplying username "binhn" and secret "7avZQLwcUe9q" on peers:
@@ -1556,7 +1556,7 @@ Scenario: chaincode example02 with 4 peers, stop and start vp0
 
     @issue_2116
     #@doNotDecompose
-@scat
+#@scat
     Scenario Outline: chaincode authorizable_counter with 4 peers, two stopped, bring back both
         Given we compose "<ComposeFile>"
         And I register with CA supplying username "diego" and secret "DRJ23pEQl16a" on peers:
@@ -1626,7 +1626,7 @@ Scenario: chaincode example02 with 4 peers, stop and start vp0
 
 #    noop
 #    @doNotDecompose
-@scat
+#@scat
   Scenario: noop chaincode test
     Given we compose "docker-compose-1.yml"
       When I invoke master chaincode "noop" function name "execute" on "vp0"
@@ -1675,7 +1675,7 @@ Scenario: chaincode example02 with 4 peers, stop and start vp0
     When requesting "/chain" from "vp0"
     Then I should get a JSON response with "height" = "store"
 
-    Given I upgrade
+    Given I fallback
     And I wait "60" seconds
 
     When I query chaincode "example2" function name "query" with value "a" on peers:
@@ -1696,6 +1696,32 @@ Scenario: chaincode example02 with 4 peers, stop and start vp0
     When I query chaincode "example2" function name "query" with value "a" on peers:
                                     | vp0  | vp1 | vp2 | vp3 |
     Then I should get a JSON response from peers with "result.message" = "260"
+    And I wait "5" seconds
+
+    When requesting "/chain" from "vp0"
+    Then I should get a JSON response with "height" = "store"
+
+    Given I upgrade
+    And I wait "60" seconds
+
+    When I query chaincode "example2" function name "query" with value "a" on peers:
+                                    | vp0  | vp1 | vp2 |
+    Then I should get a JSON response from peers with "result.message" = "260"
+                                    | vp0  | vp1 | vp2 |
+
+    When requesting "/chain" from "vp0"
+    Then I should get a JSON response with "height" = "previous"
+
+    When I invoke chaincode "example2" function name "invoke" on "vp0" "30" times
+                                            |arg1|arg2|arg3|
+                                            | b  | a  | 1  |
+    Then I should have received a transactionID
+    Then I wait up to "120" seconds for transaction to be committed to peers:
+                                            | vp0  | vp1 | vp2 | vp3 |
+
+    When I query chaincode "example2" function name "query" with value "a" on peers:
+                                    | vp0  | vp1 | vp2 | vp3 |
+    Then I should get a JSON response from peers with "result.message" = "290"
 
 
 Scenario: chaincode example02 with 4 peers and 1 membersrvc, many invokes

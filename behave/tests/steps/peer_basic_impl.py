@@ -92,6 +92,9 @@ def getContainerServiceLabels(context, containerName):
     """ Get the Labels to access the com.docker.compose.service value"""
     output, error, returncode = \
         bdd_test_util.cli_call(context, ["docker", "inspect", "--format",  "{{ .Config.Labels }}", containerName], expect_success=True)
+    if len(output) <= 6:
+        result = containerName.split("_")
+        return [result[-1]]
     labels = output.splitlines()[0][4:-1].split()
     return [composeService[27:] for composeService in labels if composeService.startswith("com.docker.compose.service:")][0]
 
@@ -849,6 +852,8 @@ def query_common(context, chaincodeName, functionName, value, failOnError):
 
     aliases =  context.table.headings
     containerDataList = bdd_test_util.getContainerDataValuesFromContext(context, aliases, lambda containerData: containerData)
+#    container_names = [container.containerName for container in containerDataList]
+#    print("ContainerList: {0}".format(container_names))
 
     # Update the chaincodeSpec ctorMsg for invoke
     context.chaincodeSpec['ctorMsg']['function'] = functionName
@@ -1006,13 +1011,14 @@ def step_impl(context):
         assert compose_returncode == 0, "docker create failed to create a volume for the behave transaction database"
 
 
-@given(u'I upgrade')
+@given(u'I fallback')
 def step_impl(context):
-    assert 'table' in context, "table (of peers) not found in context"
     fileArgsToDockerCompose = getDockerComposeFileArgsFromYamlFile(context.compose_yaml)
 
     # Grab the last 2 commit SHAs
-    prev_log = subprocess.check_output(["/usr/bin/git", "log", "-n", "2", "--oneline", "--no-abbrev-commit"])
+    prev_log = subprocess.check_output(["/usr/bin/git", "log", "-n", "2",
+                                        "--oneline",
+                                        "--no-abbrev-commit"])
     commit = prev_log.split()[0]
     print("current commit: {0}".format(commit))
 
@@ -1023,34 +1029,34 @@ def step_impl(context):
 
         # Kill chaincode containers
         res = subprocess.check_output(["docker", "ps", "-n=4", "-q"])
-        print("chaincode containers {0}".format(res))
         result = subprocess.check_output(["docker", "rm", "-f"] + res.split('\n'))
-        print("chaincode containers {0}".format(result))
 
         # Kill chaincode images
-        res = subprocess.check_output(["docker", "images", "|", "awk", "'$1 ~ /dev-vp/ { print $3}'"])
-        print("chaincode images {0}".format(res))
+        res = subprocess.check_output(["docker", "images", "|",
+                                       "awk", "'$1 ~ /dev-vp/ { print $3}'"])
         result = subprocess.check_output(["docker", "rmi", "-f"] + res.split('\n'))
-        print("chaincode images {0}".format(result))
 
         # Build peer_beta
         compose_output, compose_error, compose_returncode = \
             bdd_test_util.cli_call(context,
-                                   ["docker", "build", "-t", "hyperledger/fabric-peer:previous", "../build/image/peer"],
+                                   ["docker", "build",
+                                    "-t", "hyperledger/fabric-peer:previous",
+                                    "../build/image/peer"],
                                    expect_success=True)
         assert compose_returncode == 0, "docker peer image not built correctly for previous commit"
 
         # Build membersrvc_beta
         compose_output, compose_error, compose_returncode = \
             bdd_test_util.cli_call(context,
-                                   ["docker", "build", "-t", "hyperledger/fabric-membersrvc:previous", "../build/image/membersrvc"],
+                                   ["docker", "build",
+                                    "-t", "hyperledger/fabric-membersrvc:previous",
+                                    "../build/image/membersrvc"],
                                    expect_success=True)
         assert compose_returncode == 0, "docker membersrvc image not built correctly for previous commit"
     except:
         pass
     finally:
         res = subprocess.check_output(['git', 'checkout', commit])
-        print("Git results: {0}".format(res))
 
     # Grab the username and secrets from membersrvc.yaml file
     network_creds = {}
@@ -1072,57 +1078,57 @@ def step_impl(context):
                                ["docker-compose"] + fileArgsToDockerCompose + ["stop", "membersrvc0"],
                                expect_success=True)
     assert compose_returncode == 0, "docker failed to stop membersrvc"
-    print("Stopped caserver")
+    print("Stopped membersrvc0")
+
+    context.compose_containers = [containerData for containerData in context.compose_containers if containerData.composeService != "membersrvc0"]
 
     # Start membersrvc
     compose_output, compose_error, compose_returncode = \
         bdd_test_util.cli_call(context,
-                               ["docker", "run", "-d", "--volumes-from", "bddtests_dbstore_membersrvc0_1", "--name=caserver_1", "-p", "50051:50051", "-p", "50052:30303", "-it", "hyperledger/fabric-membersrvc:previous", "membersrvc"],
+                               ["docker", "run", "-d",
+                                "--volumes-from", "bddtests_dbstore_membersrvc0_1",
+                                "--name=beta_membersrvc0",
+                                "-p", "50051:50051",
+                                "-p", "50052:30303",
+                                "-it", "hyperledger/fabric-membersrvc:previous",
+                                "membersrvc"],
                                expect_success=True)
     assert compose_returncode == 0, "docker failed to start membersrvc"
 
+    new_container_names = []
     # stop and start specified peers
     for container in context.compose_containers:
         name_pieces = container.containerName.split('_')
         if len(name_pieces) > 3 or 'dbstore' in name_pieces or 'membersrvc0' in name_pieces:
             continue
-
         peer = name_pieces[1]
-        print("Container Info: {0}, {1}, {2}".format(container.containerName, container.url, container.ipAddress))
 
         if not context.byon:
             # Stop the specified peers
             compose_output, compose_error, compose_returncode = \
                 bdd_test_util.cli_call(context,
-                                       ["docker-compose"] + fileArgsToDockerCompose + ["stop", "membersrvc0"],
+                                       ["docker-compose"] + fileArgsToDockerCompose + ["stop", peer],
                                        expect_success=True)
             assert compose_returncode == 0, "docker failed to stop peer {0}".format(peer)
-            print("Stopped {0}".format(peer))
 
-            # Start the peer with a new build
-            bdd_test_util.cli_call(context,
-                                   ["mkdir", "-p", "/var/hyperledger/test/behave/%s" % peer],
-                                   expect_success=True)
+            # Remove container from context list
+            context.compose_containers = [containerData for containerData in context.compose_containers if containerData.composeService != peer]
+
+            # Add the new container to the context list
             compose_output, compose_error, compose_returncode = \
                 bdd_test_util.cli_call(context,
                                        ["docker", "run", "-d", "--name=betapeer_%s" % peer,
-                                        #"-it", "-v", "/var/hyperledger/test/behave/%s:/var/hyperledger/production" % peer,
                                         "--volumes-from", "bddtests_dbstore_%s_1" % peer,
                                         "-e", "CORE_VM_ENDPOINT=http://172.17.0.1:2375",
                                         "-e", "CORE_PEER_ID=%s" % peer,
                                         "-e", "CORE_SECURITY_ENABLED=true",
                                         "-e", "CORE_SECURITY_PRIVACY=true",
-                                        #"-e", "CORE_PEER_ADDRESSAUTODETECT=false -p $REST_PORT:5000 -p `expr $USE_PORT + 1`:30303",
                                         "-e", "CORE_PEER_ADDRESSAUTODETECT=true",
                                         "-e", "CORE_PEER_ADDRESS=172.17.0.1:5001",
                                         "-e", "CORE_PEER_PKI_ECA_PADDR=172.17.0.1:50051",
                                         "-e", "CORE_PEER_PKI_TCA_PADDR=172.17.0.1:50051",
                                         "-e", "CORE_PEER_PKI_TLSCA_PADDR=172.17.0.1:50051",
                                         "-e", "CORE_PEER_LISTENADDRESS=0.0.0.0:30303",
-                                        #"-e", "CORE_PEER_VALIDATOR_CONSENSUS_PLUGIN=$CONSENSUS",
-                                        #"-e", "CORE_PBFT_GENERAL_MODE=$PBFT_MODE",
-                                        #"-e", "CORE_PBFT_GENERAL_N=4",
-                                        #"-e", "CORE_PBFT_GENERAL_TIMEOUT_REQUEST=10s",
                                         "-e", "CORE_PEER_LOGGING_LEVEL=debug",
                                         "-e", "CORE_VM_DOCKER_TLS_ENABLED=false",
                                         "-e", "CORE_SECURITY_ENROLLID=test_%s" % peer,
@@ -1130,6 +1136,105 @@ def step_impl(context):
                                         "hyperledger/fabric-peer:previous", "peer", "node", "start"],
                                        expect_success=True)
         assert compose_returncode == 0, "docker run failed to bring up beta image for {0}".format(peer)
+        new_container_names.append("betapeer_%s" % peer)
+
+    # Save the new containers to the context
+    new_containers = saveContainerDataToContext(new_container_names, context)
+    context.compose_containers = context.compose_containers + new_containers 
+
+
+@given(u'I upgrade')
+def step_impl(context):
+    assert 'table' in context, "table (of peers) not found in context"
+    fileArgsToDockerCompose = getDockerComposeFileArgsFromYamlFile(context.compose_yaml)
+
+    # Verify that a latest build is present from the fallback scenario
+    output, error, returncode = bdd_test_util.cli_call(context,
+                                   ["docker", "images", "-q", "hyperledger/fabric-peer:latest"],
+                                   expect_success=True)
+    assert output != ""
+    assert returncode == 0, "docker peer image not built correctly for latest commit"
+    output, error, returncode = bdd_test_util.cli_call(context,
+                                   ["docker", "images", "-q", "hyperledger/fabric-membersrvc:latest"],
+                                   expect_success=True)
+    assert output != ""
+    assert returncode == 0, "docker membersrvc image not built correctly for latest commit"
+
+    # Grab the username and secrets from membersrvc.yaml file
+    network_creds = {}
+    with open("membersrvc.yaml", "r") as fd:
+        contents = fd.read()
+        search_val = contents.find("users:")
+        cred_val = contents[search_val:].find("test_vp")
+        cred_info = contents[search_val + cred_val: search_val + cred_val + 200].split('\n')
+    for cred in cred_info:
+        if cred.strip() != '':
+            values = cred.strip().split(":")
+            pswd = values[1].split()
+            network_creds[values[0]] = pswd[-1]
+    print("network creds:{0}".format(network_creds))
+
+    # Stop membersrvc
+    output, error, returncode = bdd_test_util.cli_call(context,
+                               ["docker", "stop", "beta_membersrvc0"],
+                               expect_success=False)
+    assert returncode == 0, "docker failed to stop beta_membersrvc0"
+    print("Stopped beta_membersrvc0")
+
+    # Start membersrvc
+    output, error, returncode = bdd_test_util.cli_call(context,
+                               ["docker", "run", "-d",
+                                "--volumes-from", "bddtests_dbstore_membersrvc0_1",
+                                "--name=caserver_2",
+                                "-p", "50051:50051",
+                                "-p", "50052:30303",
+                                "-it", "hyperledger/fabric-membersrvc:latest",
+                                "membersrvc"],
+                               expect_success=True)
+    assert returncode == 0, "docker failed to start caserver_2"
+
+    new_container_names = []
+    # stop and start specified peers
+    for container in context.compose_containers:
+        name_pieces = container.containerName.split('_')
+        if len(name_pieces) > 3 or 'dbstore' in name_pieces or 'membersrvc0' in name_pieces:
+            continue
+        peer = name_pieces[1]
+
+        if not context.byon:
+            # Stop the specified peers
+            res = subprocess.check_output(["docker", "stop", "betapeer_%s" % peer])
+            print("Stopped betapeer_{0}".format(peer))
+
+            # Remove container from context list
+            context.compose_containers = [containerData for containerData in context.compose_containers if containerData.composeService != peer]
+
+            # Start the peer with a new build
+            output, error, returncode = bdd_test_util.cli_call(context,
+                                       ["docker", "run", "-d", "--name=new_peer_%s" % peer,
+                                        "--volumes-from", "bddtests_dbstore_%s_1" % peer,
+                                        "-e", "CORE_VM_ENDPOINT=http://172.17.0.1:2375",
+                                        "-e", "CORE_PEER_ID=%s" % peer,
+                                        "-e", "CORE_SECURITY_ENABLED=true",
+                                        "-e", "CORE_SECURITY_PRIVACY=true",
+                                        "-e", "CORE_PEER_ADDRESSAUTODETECT=true",
+                                        "-e", "CORE_PEER_ADDRESS=172.17.0.1:5001",
+                                        "-e", "CORE_PEER_PKI_ECA_PADDR=172.17.0.1:50051",
+                                        "-e", "CORE_PEER_PKI_TCA_PADDR=172.17.0.1:50051",
+                                        "-e", "CORE_PEER_PKI_TLSCA_PADDR=172.17.0.1:50051",
+                                        "-e", "CORE_PEER_LISTENADDRESS=0.0.0.0:30303",
+                                        "-e", "CORE_PEER_LOGGING_LEVEL=debug",
+                                        "-e", "CORE_VM_DOCKER_TLS_ENABLED=false",
+                                        "-e", "CORE_SECURITY_ENROLLID=test_%s" % peer,
+                                        "-e", "CORE_SECURITY_ENROLLSECRET=%s" % network_creds['test_'+peer],
+                                        "hyperledger/fabric-peer:latest", "peer", "node", "start"],
+                                       expect_success=True)
+        assert returncode == 0, "docker run failed to bring up beta image for {0}".format(peer)
+        new_container_names.append("new_peer_%s" % peer)
+
+    # Save the new containers to the context
+    new_containers = saveContainerDataToContext(new_container_names, context)
+    context.compose_containers = context.compose_containers + new_containers 
 
 
 @given(u'I stop peers')
