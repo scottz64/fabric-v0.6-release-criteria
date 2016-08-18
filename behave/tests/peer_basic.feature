@@ -1675,7 +1675,8 @@ Scenario: chaincode example02 with 4 peers, stop and start vp0
     When requesting "/chain" from "vp0"
     Then I should get a JSON response with "height" = "store"
 
-    Given I fallback
+    Given I build new images
+    And I fallback
     And I wait "60" seconds
 
     When I query chaincode "example2" function name "query" with value "a" on peers:
