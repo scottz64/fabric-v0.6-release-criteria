@@ -117,7 +117,7 @@ def get_ssh_info(context, peer):
         request_url = "https://{0}/api/com.ibm.zBlockchain/peers/{1}/status".format(context.remote_ip, peer['name'])
         print("GETing path = {0}".format(request_url))
         resp = requests.get(request_url, headers={'Content-type': 'application/json', 'zACI-API': 'com.ibm.zaci.system/1.0'}, verify=False)
-        env_result = resp['result']['message']
+        env_result = resp.text
     elif context.remote_ip is not None:
         env_result = subprocess.check_output('ssh -p %s %s@%s "env"' % (peer['port'], context.remote_user, context.remote_ip),
                                              shell=True)

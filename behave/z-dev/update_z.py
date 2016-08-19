@@ -1,9 +1,12 @@
 #!/usr/bin/python
 import json
+import getpass
 
 
-z_network_file = "sample.txt"
-ip_address = "9.2.98.200"
+z_network_file = raw_input("Please enter the name of the z-network file: ")
+ip_address = raw_input("Please enter the 9.x IP address of the z-network to test: ")
+username = raw_input("Please enter the username for the 9.x system [default=root]: ")
+secret = getpass.getpass("Please enter the password: ")
 
 with open(z_network_file, "r") as fd:
     network_info = json.loads(fd.read())
@@ -37,6 +40,8 @@ for peerInfo in peerList:
     data['PeerData'].append(peerData)
     data['UserData'].append(userData)
 
+data['CA_username'] = username or "root"
+data['CA_secret'] = secret
 
 with open("z_networkcredentials", "w") as fd:
    fd.write(json.dumps(data, indent=3))
