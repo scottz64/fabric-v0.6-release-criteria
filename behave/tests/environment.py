@@ -110,16 +110,29 @@ def decompose_remote(context, scenario):
         ssh_call(context, command)
 
 def get_logs_from_network(context, file_suffix):
-    # SCP from the network
-    print("SCP from nodes in the network...")
-    info = dict(user=context.remote_user, ip=context.remote_ip)
-    for peer in context.remote_servers:
-        info['port'] = peer['port']
-        if info['port'] == '5000':
-            info['port'] = 22
-            info['ip'] = peer['ip']
-        command = "scp -P %(port)s %(user)s@%(ip)s:/srv/data/hyperledger/hyperledger.log REMOTE_PEER_%(ip)s_%(port)s.log" % info
-        subprocess.call(command, shell=True)
+    if context.tls and context.remote_ip:
+        for target in ["vp0", "vp1", "vp2", "vp3"]:
+            request_url = "https://{0}/api/com.ibm.zBlockchain/peers/{1}/logs".format(context.remote_ip, target)
+            #"https://{0}/api/com.ibm.zBlockchain/networks/:network_id/peers/{1}/logs"
+            print("GETing path = {0}".format(request_url))
+            resp = requests.get(request_url, headers={'Content-type': 'application/json', 'zACI-API': 'com.ibm.zaci.system/1.0'}, verify=False)
+            try:
+                with open("REMOTE_PEER_{0}_{1}.log".format(context.remote_ip, target), "w") as fd:
+                    fd.write(resp.text)
+            except:
+                print("response = {0}".format(resp.status_code))
+                print("Unable to pull log through zACI API: {0}".format(resp.status_code))
+    else:
+        # SCP from the network
+        print("SCP from nodes in the network...")
+        info = dict(user=context.remote_user, ip=context.remote_ip)
+        for peer in context.remote_servers:
+            info['port'] = peer['port']
+            if info['port'] == '5000':
+                info['port'] = 22
+                info['ip'] = peer['ip']
+            command = "scp -P %(port)s %(user)s@%(ip)s:/srv/data/hyperledger/hyperledger.log REMOTE_PEER_%(ip)s_%(port)s.log" % info
+            subprocess.call(command, shell=True)
 ##########################################
 
 def after_scenario(context, scenario):
@@ -147,7 +160,7 @@ def before_all(context):
     if context.byon:
         context = get_remote_servers(context)
         if context.tls and context.remote_ip:
-            print("unpause!!!")
+            print("Already restarted during 'pause'!!!")
         else:
             command = "export SUDO_ASKPASS=~/.remote_pass.sh;sudo iptables -D INPUT 1"
             ssh_call(context, command)
