@@ -1,5 +1,5 @@
 import subprocess
-import os
+import os, sys
 import glob
 import json
 import requests
@@ -118,8 +118,9 @@ def get_logs_from_network(context, file_suffix):
             resp = requests.get(request_url, headers={'Content-type': 'application/json', 'zACI-API': 'com.ibm.zaci.system/1.0'}, verify=False)
             try:
                 with open("REMOTE_PEER_{0}_{1}.log".format(context.remote_ip, target), "w") as fd:
-                    fd.write(resp.text)
+                    fd.write(resp.text.encode('utf-8').strip())
             except:
+                print("response = {0}".format(resp.reason))
                 print("response = {0}".format(resp.status_code))
                 print("Unable to pull log through zACI API: {0}".format(resp.status_code))
     else:

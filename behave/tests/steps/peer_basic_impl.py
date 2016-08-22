@@ -279,7 +279,8 @@ def step_impl(context, expectedValue):
         print("Previous height:", prevHeight)
         print("New height:", str(int(prevHeight)+1))
         expected = int(prevHeight) + int(expectedValue)
-        assert (str(foundValue) in (prevHeight, str(expected))), "For attribute height, expected (%s), instead found (%s)" % (expected, foundValue)
+        #assert (str(foundValue) in (prevHeight, str(expected))), "For attribute height, expected (%s), instead found (%s)" % (expected, foundValue)
+        assert (foundValue > int(prevHeight)), "For attribute height, expected (%s), instead found (%s)" % (expected, foundValue)
     elif expectedValue == 'store':
         context.height = context.response.json()["height"]
         print("Stored height:", context.height)
@@ -380,7 +381,7 @@ def step_impl(context, chaincodePath, chainLang, ctor, containerName):
         },
     }
     if context.byon:
-        chaincodeSpec["secureContext"] = context.user_creds[0]['username']
+        chaincodeSpec["secureContext"] = get_primary_user(context)[0]
     elif 'userName' in context:
         chaincodeSpec["secureContext"] = context.userName
 
@@ -394,6 +395,12 @@ def step_impl(context, chaincodePath, chainLang, ctor, containerName):
     context.chaincodeSpec = chaincodeSpec
     print(json.dumps(chaincodeSpec, indent=4))
     print("")
+
+def get_primary_user(context):
+    for user in context.user_creds:
+        if user['peer'] == 'vp0':
+            return (user['username'], user['secret'])
+    return (context.user_creds[0]['username'], context.user_creds[0]['secret'])
 
 @when(u'I deploy chaincode "{chaincodePath}" with ctor "{ctor}" to "{containerName}"')
 def step_impl(context, chaincodePath, ctor, containerName):
@@ -423,7 +430,7 @@ def step_impl(context, chaincodePath, ctor, containerName):
 #        "secureContext" : "binhn"
     }
     if context.byon:
-        chaincodeSpec["secureContext"] = context.user_creds[0]['username']
+        chaincodeSpec["secureContext"] = get_primary_user(context)[0]
     elif 'userName' in context:
         chaincodeSpec["secureContext"] = context.userName
 
@@ -544,7 +551,7 @@ def invokeChaincode(context, devopsFunc, functionName, containerName, idGenAlg=N
                     if containerData.containerName == containerName:
                         composeService = containerData.composeService
                 bdd_test_util.registerUser(context, secretMsg, composeService)
-        context.chaincodeSpec["secureContext"] = username or context.user_creds[0]['username']
+        context.chaincodeSpec["secureContext"] = username or get_primary_user(context)[0]
     elif 'userName' in context:
         context.chaincodeSpec["secureContext"] = context.userName
 
@@ -609,7 +616,7 @@ def invokeMasterChaincode(context, devopsFunc, chaincodeName, functionName, cont
         }
     }
     if context.byon:
-        chaincodeSpec["secureContext"] = context.user_creds[0]['username']
+        chaincodeSpec["secureContext"] = get_primary_user(context)[0]
     elif 'userName' in context:
         chaincodeSpec["secureContext"] = context.userName
 
@@ -912,8 +919,9 @@ def login(context, base_url, userName=None, secret=None):
         enrollSecret = context.remote_secret
 
     if context.remote_ip:
-        userName = context.user_creds[0]['username']
-        secret = context.user_creds[0]['secret']
+        user_creds = get_primary_user(context)
+        userName = user_creds[0]
+        secret = user_creds[1]
 
     secretMsg = {
         "enrollId": userName or enrollId,
@@ -942,8 +950,9 @@ def step_impl(context, userName, secret):
     containerDataList = bdd_test_util.getContainerDataValuesFromContext(context, aliases, lambda containerData: containerData)
 
     if context.byon:
-        userName = context.user_creds[0]['username']
-        secret = context.user_creds[0]['username']
+        user_creds = get_primary_user(context)
+        userName = user_creds[0]
+        secret = user_creds[1]
 
     secretMsg = {
         "enrollId": userName,
