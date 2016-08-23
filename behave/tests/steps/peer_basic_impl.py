@@ -51,7 +51,9 @@ class ContainerData:
         print("Requesting path = {0}".format(request_url))
         resp = requests.get(request_url, headers=headers, verify=False)
         print("Resulting chain height {0}".format(resp.json()['height']))
-        return resp.json()['height']
+        height = resp.json()['height']
+        resp.connection.close()
+        return height
 
     def getEnv(self, key):
         envValue = None
@@ -118,6 +120,7 @@ def get_ssh_info(context, peer):
         print("GETing path = {0}".format(request_url))
         resp = requests.get(request_url, headers={'Content-type': 'application/json', 'zACI-API': 'com.ibm.zaci.system/1.0'}, verify=False)
         env_result = resp.text
+        resp.connection.close()
     elif context.remote_ip is not None:
         env_result = subprocess.check_output('ssh -p %s %s@%s "env"' % (peer['port'], context.remote_user, context.remote_ip),
                                              shell=True)
@@ -244,63 +247,6 @@ def getDockerComposeFileArgsFromYamlFile(compose_yaml):
         args = args + ["-f"] + [part]
     return args
 
-@given(u'we compose "{composeYamlFile}"')
-def step_impl(context, composeYamlFile):
-    print("BYON?????", str(context.byon))
-    context.compose_yaml = composeYamlFile
-    if not context.byon:
-        fileArgsToDockerCompose = getDockerComposeFileArgsFromYamlFile(context.compose_yaml)
-        context.compose_output, context.compose_error, context.compose_returncode = \
-            bdd_test_util.cli_call(context, ["docker-compose"] + fileArgsToDockerCompose + ["up","--force-recreate", "-d"], expect_success=True)
-        assert context.compose_returncode == 0, "docker-compose failed to bring up {0}".format(composeYamlFile)
-    parseComposeOutput(context)
-    time.sleep(10)       # Should be replaced with a definitive interlock guaranteeing that all peers/membersrvc are ready
-
-@when(u'requesting "{path}" from "{containerName}"')
-def step_impl(context, path, containerName):
-    headers = {'Accept': 'application/json'}
-    if context.byon and context.tls:
-        headers = {'Accept': 'application/json', 'zACI-API': 'com.ibm.zaci.system/1.0'}
-    base_url = bdd_test_util.ipFromContainerNamePart(containerName, context.compose_containers, context.byon)
-    request_url = buildUrl(context, base_url, path)
-    print("Requesting path = {0}".format(request_url))
-    resp = requests.get(request_url, headers=headers, verify=False)
-    assert resp.status_code == 200, "Failed to GET url %s:  %s" % (request_url,resp.text)
-    context.response = resp
-    print("")
-
-@then(u'I should get a JSON response with "height" = "{expectedValue}"')
-def step_impl(context, expectedValue):
-    assert "height" in context.response.json(), "Attribute not found in response (height)"
-    foundValue = context.response.json()["height"]
-    if context.byon:
-        print("Containers::", [(c.containerName, c.chainHeight) for c in context.compose_containers])
-        prevHeight = str(context.compose_containers[0].chainHeight)
-        print("Previous height:", prevHeight)
-        print("New height:", str(int(prevHeight)+1))
-        expected = int(prevHeight) + int(expectedValue)
-        #assert (str(foundValue) in (prevHeight, str(expected))), "For attribute height, expected (%s), instead found (%s)" % (expected, foundValue)
-        assert (foundValue > int(prevHeight)), "For attribute height, expected (%s), instead found (%s)" % (expected, foundValue)
-    elif expectedValue == 'store':
-        context.height = context.response.json()["height"]
-        print("Stored height:", context.height)
-    elif expectedValue == 'previous':
-        assert (foundValue == context.height), "For attribute height, expected (%s), instead found (%s)" % (context.height, foundValue)
-    else:
-        assert (str(foundValue) == expectedValue), "For attribute height, expected (%s), instead found (%s)" % (expectedValue, foundValue)
-
-@then(u'I should get a JSON response containing "{attribute}" attribute')
-def step_impl(context, attribute):
-    getAttributeFromJSON(attribute, context.response.json(), "Attribute not found in response (%s)" %(attribute))
-
-@then(u'I should get a JSON response containing no "{attribute}" attribute')
-def step_impl(context, attribute):
-    try:
-        getAttributeFromJSON(attribute, context.response.json(), "")
-        assert None, "Attribute found in response (%s)" %(attribute)
-    except AssertionError:
-        print("Attribute not found as was expected.")
-
 def getAttributeFromJSON(attribute, jsonObject, msg):
     return getHierarchyAttributesFromJSON(attribute.split("."), jsonObject, msg)
 
@@ -316,33 +262,6 @@ def formatStringToCompare(value):
     # double quotes are replaced by simple quotes because is not possible escape double quotes in the attribute parameters.
     return str(value).replace("\"", "'")
 
-@then(u'I should get a JSON response with "{attribute}" = "{expectedValue}"')
-def step_impl(context, attribute, expectedValue):
-    foundValue = getAttributeFromJSON(attribute, context.response.json(), "Attribute not found in response (%s)" %(attribute))
-    assert (formatStringToCompare(foundValue) == expectedValue), "For attribute %s, expected (%s), instead found (%s)" % (attribute, expectedValue, foundValue)
-
-@then(u'I should get a JSON response with array "{attribute}" contains "{expectedValue}" elements')
-def step_impl(context, attribute, expectedValue):
-    assert attribute in context.response.json(), "Attribute not found in response (%s)" %(attribute)
-    #foundValue = context.response.json()[attribute]
-    foundValue = getAttributeFromJSON(attribute, context.response.json(), "Attribute not found in response (%s)" %(attribute))
-    if context.byon:
-        assert (len(foundValue) == context.containerCount), "For attribute %s, expected array of size (%s), instead found (%s)" % (attribute, context.containerCount, len(foundValue))
-    else:
-        assert (len(foundValue) == int(expectedValue)), "For attribute %s, expected array of size (%s), instead found (%s)" % (attribute, expectedValue, len(foundValue))
-
-@given(u'I wait "{seconds}" seconds')
-def step_impl(context, seconds):
-    time.sleep(float(seconds))
-
-@when(u'I wait "{seconds}" seconds')
-def step_impl(context, seconds):
-    time.sleep(float(seconds))
-
-@then(u'I wait "{seconds}" seconds')
-def step_impl(context, seconds):
-    time.sleep(float(seconds))
-
 def getChaincodeTypeValue(chainLang):
     if chainLang == "GOLANG":
         return 1
@@ -356,154 +275,11 @@ def getChaincodeTypeValue(chainLang):
         return 0
     return 1
 
-@when(u'I deploy lang chaincode "{chaincodePath}" of "{chainLang}" with ctor "{ctor}" to "{containerName}"')
-def step_impl(context, chaincodePath, chainLang, ctor, containerName):
-    print("Printing chaincode language " + chainLang)
-    base_url = bdd_test_util.ipFromContainerNamePart(containerName, context.compose_containers, context.byon)
-    #request_url = buildUrl(context, base_url, "/devops/deploy")
-    request_url = buildUrl(context, base_url, "/chaincode")
-    print("Requesting path = {0}".format(request_url))
-    args = []
-    if 'table' in context:
-       # There is ctor arguments
-       args = context.table[0].cells
-
-    # Create a ChaincodeSpec structure
-    chaincodeSpec = {
-        "type": getChaincodeTypeValue(chainLang),
-        "chaincodeID": {
-            "path" : chaincodePath,
-            "name" : ""
-        },
-        "ctorMsg":  {
-            "function" : ctor,
-            "args" : args
-        },
-    }
-    if context.byon:
-        chaincodeSpec["secureContext"] = get_primary_user(context)[0]
-    elif 'userName' in context:
-        chaincodeSpec["secureContext"] = context.userName
-
-    chaincodeOpPayload = createChaincodeOpPayload("deploy", chaincodeSpec)
-
-    resp = requests.post(request_url, headers={'Content-type': 'application/json'}, data=json.dumps(chaincodeOpPayload), verify=False)
-    assert resp.status_code == 200, "Failed to POST to %s:  %s" %(request_url, resp.text)
-    context.response = resp
-    chaincodeName = resp.json()['result']['message']
-    chaincodeSpec['chaincodeID']['name'] = chaincodeName
-    context.chaincodeSpec = chaincodeSpec
-    print(json.dumps(chaincodeSpec, indent=4))
-    print("")
-
 def get_primary_user(context):
     for user in context.user_creds:
         if user['peer'] == 'vp0':
             return (user['username'], user['secret'])
     return (context.user_creds[0]['username'], context.user_creds[0]['secret'])
-
-@when(u'I deploy chaincode "{chaincodePath}" with ctor "{ctor}" to "{containerName}"')
-def step_impl(context, chaincodePath, ctor, containerName):
-    base_url = bdd_test_util.ipFromContainerNamePart(containerName, context.compose_containers, context.byon)
-    if context.byon:
-        context = login(context, base_url)
-    #request_url = buildUrl(context, base_url, "/devops/deploy")
-    request_url = buildUrl(context, base_url, "/chaincode")
-    print("Requesting path = {0}".format(request_url))
-    args = []
-    if 'table' in context:
-          # There is ctor arguments
-          args = context.table[0].cells
-    typeGolang = 1
-
-    # Create a ChaincodeSpec structure
-    chaincodeSpec = {
-        "type": typeGolang,
-        "chaincodeID": {
-            "path" : chaincodePath,
-            "name" : ""
-        },
-        "ctorMsg":  {
-            "function" : ctor,
-            "args" : args
-        },
-#        "secureContext" : "binhn"
-    }
-    if context.byon:
-        chaincodeSpec["secureContext"] = get_primary_user(context)[0]
-    elif 'userName' in context:
-        chaincodeSpec["secureContext"] = context.userName
-
-    if 'metadata' in context:
-        chaincodeSpec["metadata"] = context.metadata
-
-    print("Chaincode specs = {0}".format(json.dumps(chaincodeSpec)))
-    print("")
-
-    #resp = requests.post(request_url, headers={'Content-type': 'application/json'}, data=json.dumps(chaincodeSpec), verify=False)
-    chaincodeOpPayload = createChaincodeOpPayload("deploy", chaincodeSpec)
-
-    resp = requests.post(request_url, headers={'Content-type': 'application/json'}, data=json.dumps(chaincodeOpPayload), verify=False)
-    assert resp.status_code == 200, "Failed to POST to %s:  %s" %(request_url, resp.text)
-    context.response = resp
-    chaincodeName = resp.json()['result']['message']
-    chaincodeSpec['chaincodeID']['name'] = chaincodeName
-    context.chaincodeSpec = chaincodeSpec
-    print(json.dumps(chaincodeSpec, indent=4))
-    print("")
-
-@then(u'I should have received a chaincode name')
-def step_impl(context):
-    if 'chaincodeSpec' in context:
-        assert context.chaincodeSpec['chaincodeID']['name'] != ""
-        # Set the current transactionID to the name passed back
-        context.transactionID = context.chaincodeSpec['chaincodeID']['name']
-    elif 'grpcChaincodeSpec' in context:
-        assert context.grpcChaincodeSpec.chaincodeID.name != ""
-        # Set the current transactionID to the name passed back
-        context.transactionID = context.grpcChaincodeSpec.chaincodeID.name
-    else:
-        fail('chaincodeSpec not in context')
-
-@when(u'I invoke chaincode "{chaincodeName}" function name "{functionName}" on "{containerName}" with "{idGenAlg}"')
-def step_impl(context, chaincodeName, functionName, containerName, idGenAlg):
-    assert 'chaincodeSpec' in context, "chaincodeSpec not found in context"
-    invokeChaincode(context, "invoke", functionName, containerName, idGenAlg)
-
-@when(u'I invoke chaincode "{chaincodeName}" function name "{functionName}" on "{containerName}" "{times}" times')
-def step_impl(context, chaincodeName, functionName, containerName, times):
-    assert 'chaincodeSpec' in context, "chaincodeSpec not found in context"
-    for i in range(int(times)):
-        invokeChaincode(context, "invoke", functionName, containerName)
-
-@when(u'I invoke chaincode "{chaincodeName}" function name "{functionName}" with attributes "{attrs}" on "{containerName}"')
-def step_impl(context, chaincodeName, functionName, attrs, containerName):
-    assert 'chaincodeSpec' in context, "chaincodeSpec not found in context"
-    assert attrs, "attrs were not specified"
-    invokeChaincode(context, "invoke", functionName, containerName, None, attrs.split(","))
-
-@when(u'I invoke chaincode "{chaincodeName}" function name "{functionName}" on "{containerName}"')
-def step_impl(context, chaincodeName, functionName, containerName):
-    assert 'chaincodeSpec' in context, "chaincodeSpec not found in context"
-    invokeChaincode(context, "invoke", functionName, containerName)
-
-@when(u'I invoke master chaincode "{chaincodeName}" function name "{functionName}" on "{containerName}"')
-def step_impl(context, chaincodeName, functionName, containerName):
-    invokeMasterChaincode(context, "invoke", chaincodeName, functionName, containerName)
-
-@then(u'I should have received a transactionID')
-def step_impl(context):
-    assert 'transactionID' in context, 'transactionID not found in context'
-    assert context.transactionID != ""
-    pass
-
-@when(u'I unconditionally query chaincode "{chaincodeName}" function name "{functionName}" on "{containerName}"')
-def step_impl(context, chaincodeName, functionName, containerName):
-    invokeChaincode(context, "query", functionName, containerName)
-
-@when(u'I query chaincode "{chaincodeName}" function name "{functionName}" on "{containerName}"')
-def step_impl(context, chaincodeName, functionName, containerName):
-    invokeChaincode(context, "query", functionName, containerName)
 
 def createChaincodeOpPayload(method, chaincodeSpec):
     chaincodeOpPayload = {
@@ -566,7 +342,7 @@ def invokeUsingChaincodeService(context, devopsFunc, functionName, containerName
 
     request_url = buildUrl(context, base_url, "/chaincode")
     print("{0} POSTing path = {1}".format(currentTime(), request_url))
-    print("Using attributes {0}".format(context.chaincodeSpec['attributes']))
+    print("Using attributes {0}".format(chaincodeOpPayload))
 
     resp = requests.post(request_url, headers=headers, data=json.dumps(chaincodeOpPayload), verify=False)
     assert resp.status_code == 200, "Failed to POST to %s:  %s" %(request_url, resp.text)
@@ -578,6 +354,7 @@ def invokeUsingChaincodeService(context, devopsFunc, functionName, containerName
         if 'message' in result:
             transactionID = result['message']
             context.transactionID = transactionID
+    resp.connection.close()
 
 def invokeUsingDevopsService(context, devopsFunc, functionName, containerName, idGenAlg):
     # Invoke the POST
@@ -599,6 +376,7 @@ def invokeUsingDevopsService(context, devopsFunc, functionName, containerName, i
     if 'message' in resp.json():
         transactionID = context.response.json()['message']
         context.transactionID = transactionID
+    resp.connection.close()
 
 def invokeMasterChaincode(context, devopsFunc, chaincodeName, functionName, containerName):
     args = []
@@ -636,6 +414,268 @@ def invokeMasterChaincode(context, devopsFunc, chaincodeName, functionName, cont
         if 'message' in result:
             transactionID = result['message']
             context.transactionID = transactionID
+    resp.connection.close()
+
+def multiRequest(context, seconds, containerDataList, pathBuilderFunc):
+    """Perform a multi request against the system"""
+    headers = {'Accept': 'application/json'}
+    if context.byon and context.tls:
+        headers = {'Accept': 'application/json', 'zACI-API': 'com.ibm.zaci.system/1.0'}
+    # Build map of "containerName" : response
+    respMap = {container.containerName:None for container in containerDataList}
+    # Set the max time before stopping attempts
+    maxTime = datetime.now() + timedelta(seconds = int(seconds))
+    for container in containerDataList:
+        request_url = buildUrl(context, container.url, pathBuilderFunc(context, container))
+
+        # Loop unless failure or time exceeded
+        while (datetime.now() < maxTime):
+            print("{0} GETing path = {1}".format(currentTime(), request_url))
+            resp = requests.get(request_url, headers=headers, verify=False)
+            respMap[container.containerName] = resp
+            resp.connection.close()
+        else:
+            raise Exception("Max time exceeded waiting for multiRequest with current response map = {0}".format(respMap))
+
+def getContainerDataValuesFromContext(context, aliases, callback):
+    """Returns the IPAddress based upon a name part of the full container name"""
+    assert 'compose_containers' in context, "compose_containers not found in context"
+    values = []
+    containerNamePrefix = os.path.basename(os.getcwd()) + "_"
+    for namePart in aliases:
+        for containerData in context.compose_containers:
+            if containerData.containerName.startswith(containerNamePrefix + namePart):
+                values.append(callback(containerData))
+                break
+    return values
+
+@given(u'we compose "{composeYamlFile}"')
+def step_impl(context, composeYamlFile):
+    print("BYON?????", str(context.byon))
+    context.compose_yaml = composeYamlFile
+    if not context.byon:
+        fileArgsToDockerCompose = getDockerComposeFileArgsFromYamlFile(context.compose_yaml)
+        context.compose_output, context.compose_error, context.compose_returncode = \
+            bdd_test_util.cli_call(context, ["docker-compose"] + fileArgsToDockerCompose + ["up","--force-recreate", "-d"], expect_success=True)
+        assert context.compose_returncode == 0, "docker-compose failed to bring up {0}".format(composeYamlFile)
+    parseComposeOutput(context)
+    time.sleep(10)       # Should be replaced with a definitive interlock guaranteeing that all peers/membersrvc are ready
+
+@given(u'I wait "{seconds}" seconds')
+def step_impl(context, seconds):
+    time.sleep(float(seconds))
+
+@when(u'requesting "{path}" from "{containerName}"')
+def step_impl(context, path, containerName):
+    headers = {'Accept': 'application/json'}
+    if context.byon and context.tls:
+        headers = {'Accept': 'application/json', 'zACI-API': 'com.ibm.zaci.system/1.0'}
+    base_url = bdd_test_util.ipFromContainerNamePart(containerName, context.compose_containers, context.byon)
+    request_url = buildUrl(context, base_url, path)
+    print("Requesting path = {0}".format(request_url))
+    resp = requests.get(request_url, headers=headers, verify=False)
+    assert resp.status_code == 200, "Failed to GET url %s:  %s" % (request_url,resp.text)
+    context.response = resp
+    resp.connection.close()
+    print("")
+
+@when(u'I wait "{seconds}" seconds')
+def step_impl(context, seconds):
+    time.sleep(float(seconds))
+
+@when(u'I deploy lang chaincode "{chaincodePath}" of "{chainLang}" with ctor "{ctor}" to "{containerName}"')
+def step_impl(context, chaincodePath, chainLang, ctor, containerName):
+    print("Printing chaincode language " + chainLang)
+    base_url = bdd_test_util.ipFromContainerNamePart(containerName, context.compose_containers, context.byon)
+    #request_url = buildUrl(context, base_url, "/devops/deploy")
+    request_url = buildUrl(context, base_url, "/chaincode")
+    print("Requesting path = {0}".format(request_url))
+    args = []
+    if 'table' in context:
+       # There is ctor arguments
+       args = context.table[0].cells
+
+    # Create a ChaincodeSpec structure
+    chaincodeSpec = {
+        "type": getChaincodeTypeValue(chainLang),
+        "chaincodeID": {
+            "path" : chaincodePath,
+            "name" : ""
+        },
+        "ctorMsg":  {
+            "function" : ctor,
+            "args" : args
+        },
+    }
+    if context.byon:
+        chaincodeSpec["secureContext"] = get_primary_user(context)[0]
+    elif 'userName' in context:
+        chaincodeSpec["secureContext"] = context.userName
+
+    chaincodeOpPayload = createChaincodeOpPayload("deploy", chaincodeSpec)
+
+    resp = requests.post(request_url, headers={'Content-type': 'application/json'}, data=json.dumps(chaincodeOpPayload), verify=False)
+    assert resp.status_code == 200, "Failed to POST to %s:  %s" %(request_url, resp.text)
+    context.response = resp
+    chaincodeName = resp.json()['result']['message']
+    resp.connection.close()
+    chaincodeSpec['chaincodeID']['name'] = chaincodeName
+    context.chaincodeSpec = chaincodeSpec
+    print(json.dumps(chaincodeSpec, indent=4))
+    print("")
+
+@when(u'I deploy chaincode "{chaincodePath}" with ctor "{ctor}" to "{containerName}"')
+def step_impl(context, chaincodePath, ctor, containerName):
+    base_url = bdd_test_util.ipFromContainerNamePart(containerName, context.compose_containers, context.byon)
+    if context.byon:
+        context = login(context, base_url)
+    #request_url = buildUrl(context, base_url, "/devops/deploy")
+    request_url = buildUrl(context, base_url, "/chaincode")
+    print("Requesting path = {0}".format(request_url))
+    args = []
+    if 'table' in context:
+          # There is ctor arguments
+          args = context.table[0].cells
+    typeGolang = 1
+
+    # Create a ChaincodeSpec structure
+    chaincodeSpec = {
+        "type": typeGolang,
+        "chaincodeID": {
+            "path" : chaincodePath,
+            "name" : ""
+        },
+        "ctorMsg":  {
+            "function" : ctor,
+            "args" : args
+        },
+    }
+    if context.byon:
+        chaincodeSpec["secureContext"] = get_primary_user(context)[0]
+    elif 'userName' in context:
+        chaincodeSpec["secureContext"] = context.userName
+
+    if 'metadata' in context:
+        chaincodeSpec["metadata"] = context.metadata
+
+    print("Chaincode specs = {0}".format(json.dumps(chaincodeSpec)))
+    print("")
+
+    chaincodeOpPayload = createChaincodeOpPayload("deploy", chaincodeSpec)
+
+    resp = requests.post(request_url, headers={'Content-type': 'application/json'}, data=json.dumps(chaincodeOpPayload), verify=False)
+    assert resp.status_code == 200, "Failed to POST to %s:  %s" %(request_url, resp.text)
+    context.response = resp
+    chaincodeName = resp.json()['result']['message']
+    chaincodeSpec['chaincodeID']['name'] = chaincodeName
+    resp.connection.close()
+    context.chaincodeSpec = chaincodeSpec
+    print(json.dumps(chaincodeSpec, indent=4))
+    print("")
+
+@when(u'I invoke chaincode "{chaincodeName}" function name "{functionName}" on "{containerName}" with "{idGenAlg}"')
+def step_impl(context, chaincodeName, functionName, containerName, idGenAlg):
+    assert 'chaincodeSpec' in context, "chaincodeSpec not found in context"
+    invokeChaincode(context, "invoke", functionName, containerName, idGenAlg)
+
+@when(u'I invoke chaincode "{chaincodeName}" function name "{functionName}" on "{containerName}" "{times}" times')
+def step_impl(context, chaincodeName, functionName, containerName, times):
+    assert 'chaincodeSpec' in context, "chaincodeSpec not found in context"
+    for i in range(int(times)):
+        invokeChaincode(context, "invoke", functionName, containerName)
+
+@when(u'I invoke chaincode "{chaincodeName}" function name "{functionName}" with attributes "{attrs}" on "{containerName}"')
+def step_impl(context, chaincodeName, functionName, attrs, containerName):
+    assert 'chaincodeSpec' in context, "chaincodeSpec not found in context"
+    assert attrs, "attrs were not specified"
+    invokeChaincode(context, "invoke", functionName, containerName, None, attrs.split(","))
+
+@when(u'I invoke chaincode "{chaincodeName}" function name "{functionName}" on "{containerName}"')
+def step_impl(context, chaincodeName, functionName, containerName):
+    assert 'chaincodeSpec' in context, "chaincodeSpec not found in context"
+    invokeChaincode(context, "invoke", functionName, containerName)
+
+@when(u'I invoke master chaincode "{chaincodeName}" function name "{functionName}" on "{containerName}"')
+def step_impl(context, chaincodeName, functionName, containerName):
+    invokeMasterChaincode(context, "invoke", chaincodeName, functionName, containerName)
+
+@when(u'I unconditionally query chaincode "{chaincodeName}" function name "{functionName}" on "{containerName}"')
+def step_impl(context, chaincodeName, functionName, containerName):
+    invokeChaincode(context, "query", functionName, containerName)
+
+@when(u'I query chaincode "{chaincodeName}" function name "{functionName}" on "{containerName}"')
+def step_impl(context, chaincodeName, functionName, containerName):
+    invokeChaincode(context, "query", functionName, containerName)
+
+@then(u'I should get a JSON response with "height" = "{expectedValue}"')
+def step_impl(context, expectedValue):
+    assert "height" in context.response.json(), "Attribute not found in response (height)"
+    foundValue = context.response.json()["height"]
+    if context.byon:
+        print("Containers::", [(c.containerName, c.chainHeight) for c in context.compose_containers])
+        prevHeight = str(context.compose_containers[0].chainHeight)
+        print("Previous height:", prevHeight)
+        print("New height:", str(int(prevHeight)+1))
+        expected = int(prevHeight) + int(expectedValue)
+        #assert (str(foundValue) in (prevHeight, str(expected))), "For attribute height, expected (%s), instead found (%s)" % (expected, foundValue)
+        assert (foundValue >= int(prevHeight)), "For attribute height, expected greater than (%s), instead found (%s)" % (prevHeight, foundValue)
+    elif expectedValue == 'store':
+        context.height = context.response.json()["height"]
+        print("Stored height:", context.height)
+    elif expectedValue == 'previous':
+        assert (foundValue == context.height), "For attribute height, expected (%s), instead found (%s)" % (context.height, foundValue)
+    else:
+        assert (str(foundValue) == expectedValue), "For attribute height, expected (%s), instead found (%s)" % (expectedValue, foundValue)
+
+@then(u'I should get a JSON response containing "{attribute}" attribute')
+def step_impl(context, attribute):
+    getAttributeFromJSON(attribute, context.response.json(), "Attribute not found in response (%s)" %(attribute))
+
+@then(u'I should get a JSON response containing no "{attribute}" attribute')
+def step_impl(context, attribute):
+    try:
+        getAttributeFromJSON(attribute, context.response.json(), "")
+        assert None, "Attribute found in response (%s)" %(attribute)
+    except AssertionError:
+        print("Attribute not found as was expected.")
+
+@then(u'I should get a JSON response with "{attribute}" = "{expectedValue}"')
+def step_impl(context, attribute, expectedValue):
+    foundValue = getAttributeFromJSON(attribute, context.response.json(), "Attribute not found in response (%s)" %(attribute))
+    assert (formatStringToCompare(foundValue) == expectedValue), "For attribute %s, expected (%s), instead found (%s)" % (attribute, expectedValue, foundValue)
+
+@then(u'I should get a JSON response with array "{attribute}" contains "{expectedValue}" elements')
+def step_impl(context, attribute, expectedValue):
+    assert attribute in context.response.json(), "Attribute not found in response (%s)" %(attribute)
+    #foundValue = context.response.json()[attribute]
+    foundValue = getAttributeFromJSON(attribute, context.response.json(), "Attribute not found in response (%s)" %(attribute))
+    if context.byon:
+        assert (len(foundValue) == context.containerCount), "For attribute %s, expected array of size (%s), instead found (%s)" % (attribute, context.containerCount, len(foundValue))
+    else:
+        assert (len(foundValue) == int(expectedValue)), "For attribute %s, expected array of size (%s), instead found (%s)" % (attribute, expectedValue, len(foundValue))
+
+@then(u'I wait "{seconds}" seconds')
+def step_impl(context, seconds):
+    time.sleep(float(seconds))
+
+@then(u'I should have received a chaincode name')
+def step_impl(context):
+    if 'chaincodeSpec' in context:
+        assert context.chaincodeSpec['chaincodeID']['name'] != ""
+        # Set the current transactionID to the name passed back
+        context.transactionID = context.chaincodeSpec['chaincodeID']['name']
+    elif 'grpcChaincodeSpec' in context:
+        assert context.grpcChaincodeSpec.chaincodeID.name != ""
+        # Set the current transactionID to the name passed back
+        context.transactionID = context.grpcChaincodeSpec.chaincodeID.name
+    else:
+        fail('chaincodeSpec not in context')
+
+@then(u'I should have received a transactionID')
+def step_impl(context):
+    assert 'transactionID' in context, 'transactionID not found in context'
+    assert context.transactionID != ""
+    pass
 
 @then(u'I wait "{seconds}" seconds for chaincode to build')
 def step_impl(context, seconds):
@@ -660,26 +700,7 @@ def step_impl(context, seconds, containerName):
     resp = requests.get(request_url, headers=headers, verify=False)
     assert resp.status_code == 200, "Failed to GET from %s:  %s" %(request_url, resp.text)
     context.response = resp
-
-def multiRequest(context, seconds, containerDataList, pathBuilderFunc):
-    """Perform a multi request against the system"""
-    headers = {'Accept': 'application/json'}
-    if context.byon and context.tls:
-        headers = {'Accept': 'application/json', 'zACI-API': 'com.ibm.zaci.system/1.0'}
-    # Build map of "containerName" : response
-    respMap = {container.containerName:None for container in containerDataList}
-    # Set the max time before stopping attempts
-    maxTime = datetime.now() + timedelta(seconds = int(seconds))
-    for container in containerDataList:
-        request_url = buildUrl(context, container.url, pathBuilderFunc(context, container))
-
-        # Loop unless failure or time exceeded
-        while (datetime.now() < maxTime):
-            print("{0} GETing path = {1}".format(currentTime(), request_url))
-            resp = requests.get(request_url, headers=headers, verify=False)
-            respMap[container.containerName] = resp
-        else:
-            raise Exception("Max time exceeded waiting for multiRequest with current response map = {0}".format(respMap))
+    resp.connection.close()
 
 @then(u'I wait up to "{seconds}" seconds for transaction to be committed to all peers')
 def step_impl(context, seconds):
@@ -713,6 +734,7 @@ def step_impl(context, seconds):
                 break
             else:
                 raise Exception("Error requesting {0}, returned result code = {1}".format(request_url, resp.status_code))
+            resp.connection.close()
         else:
             raise Exception("Max time exceeded waiting for transactions with current response map = {0}".format(respMap))
     print("Result of request to all peers = {0}".format(respMap))
@@ -722,18 +744,6 @@ def step_impl(context, seconds):
 def step_impl(context, tUUID):
     assert 'transactionID' in context, "transactionID not found in context"
     assert context.transactionID == tUUID, "transactionID is not tUUID"
-
-def getContainerDataValuesFromContext(context, aliases, callback):
-    """Returns the IPAddress based upon a name part of the full container name"""
-    assert 'compose_containers' in context, "compose_containers not found in context"
-    values = []
-    containerNamePrefix = os.path.basename(os.getcwd()) + "_"
-    for namePart in aliases:
-        for containerData in context.compose_containers:
-            if containerData.containerName.startswith(containerNamePrefix + namePart):
-                values.append(callback(containerData))
-                break
-    return values
 
 @then(u'I wait up to "{seconds}" seconds for transaction to be committed to peers that fail')
 def step_impl(context, seconds):
@@ -767,6 +777,7 @@ def step_impl(context, seconds):
                 continue
             else:
                 raise Exception("Error requesting {0}, returned result code = {1}".format(request_url, resp.status_code))
+            resp.connection.close()
         else:
             assert respMap[container.containerName] in (404, 0), "response from transactions/{0}: {1}".format(context.transactionID, resp.status_code)
     print("Result of request to all peers = {0}".format(respMap))
@@ -808,6 +819,7 @@ def step_impl(context, seconds):
                 break
             else:
                 raise Exception("Error requesting {0}, returned result code = {1}".format(request_url, resp.status_code))
+            resp.connection.close()
         else:
             raise Exception("Max time exceeded waiting for transactions with current response map = {0}".format(respMap))
     print("Result of request to all peers = {0}".format(respMap))
@@ -846,6 +858,7 @@ def step_impl(context, chaincodeName, functionName):
         resp = requests.post(request_url, headers={'Content-type': 'application/json'}, data=json.dumps(chaincodeOpPayload), verify=False)
         assert resp.status_code == 200, "Failed to POST to %s:  %s" %(request_url, resp.text)
         responses.append(resp)
+        resp.connection.close()
     context.responses = responses
 
 @when(u'I unconditionally query chaincode "{chaincodeName}" function name "{functionName}" with value "{value}" on peers')
@@ -891,6 +904,7 @@ def query_common(context, chaincodeName, functionName, value, failOnError):
         print("RESULT from {0} of chaincode from peer {1}".format(functionName, container.containerName))
         print(json.dumps(resp.json(), indent = 4))
         responses.append(resp)
+        resp.connection.close()
     context.responses = responses
 
 @then(u'I should get a JSON response from all peers with "{attribute}" = "{expectedValue}"')
@@ -937,6 +951,7 @@ def login(context, base_url, userName=None, secret=None):
     assert resp.status_code == 200, "Failed to POST to %s:  %s" %(request_url, resp.text)
     context.response = resp
     print("message = {0}".format(resp.json()))
+    resp.connection.close()
     return context
 
 @given(u'I register with CA supplying username "{userName}" and secret "{secret}" on peers')
@@ -1002,10 +1017,12 @@ def step_impl(context):
         assert resp.status_code == 200, "Failed to POST to %s:  %s" %(request_url, resp.text)
         context.response = resp
         print("message = {0}".format(resp.json()))
+        resp.connection.close()
         peerToSecretMessage[peer] = secretMsg
-        request_url = buildUrl(context, base_url, "/registrar/{0}/tcert".format(userName))
-        resp = requests.get(request_url, headers={'Content-type': 'application/json'}, verify=False)
-        print("TCERT??? {0}".format(resp))
+        #request_url = buildUrl(context, base_url, "/registrar/{0}/tcert".format(userName))
+        #resp = requests.get(request_url, headers={'Content-type': 'application/json'}, verify=False)
+        #print("TCERT??? {0}".format(resp))
+        #resp.connection.close()
     context.peerToSecretMessage = peerToSecretMessage
 
 
@@ -1275,6 +1292,7 @@ def compose_op(context, op):
                resp = requests.post(request_url, headers={'Content-type': 'application/json', 'zACI-API': 'com.ibm.zaci.system/1.0'}, verify=False)
                assert resp.status_code == 200, "Failed to POST to %s:  %s" %(request_url, resp.text)
                result = resp.text
+               resp.connection.close()
            elif context.remote_ip is not None:
                command = "sudo iptables -D INPUT -p tcp --destination-port 30303 -j DROP"
                result = subprocess.check_output('ssh -p %s %s@%s "%s"' % (port, context.remote_user, context.remote_ip, command), shell=True)

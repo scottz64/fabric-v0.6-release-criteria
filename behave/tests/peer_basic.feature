@@ -596,7 +596,7 @@ Feature: Network of Peers
 
 #    @doNotDecompose
     @issue_724
-#@scat
+@scat
 	Scenario Outline: chaincode example02 with 4 peers and 1 membersrvc, issue #724
 
 	    Given we compose "<ComposeFile>"
@@ -661,7 +661,7 @@ Feature: Network of Peers
 #@doNotDecompose
 #@wip
 #@skip
-@scat
+#@scat
    Scenario Outline: 4 peers and 1 membersrvc, consensus still works if one backup replica fails
 
       Given we compose "<ComposeFile>"
@@ -783,7 +783,7 @@ Feature: Network of Peers
      #@doNotDecompose
      #@wip
      #@skip
-#@scat
+@scat
       Scenario Outline: 4 peers and 1 membersrvc, consensus still works if 1 peer (vp3) is byzantine
 
          Given we compose "<ComposeFile>"
@@ -1556,7 +1556,7 @@ Scenario: chaincode example02 with 4 peers, stop and start vp0
 
     @issue_2116
     #@doNotDecompose
-#@scat
+@scat
     Scenario Outline: chaincode authorizable_counter with 4 peers, two stopped, bring back both
         Given we compose "<ComposeFile>"
         And I register with CA supplying username "diego" and secret "DRJ23pEQl16a" on peers:

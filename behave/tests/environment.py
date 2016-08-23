@@ -104,7 +104,7 @@ def decompose_remote(context, scenario):
             request_url = "https://{0}/api/com.ibm.zBlockchain/peers/{1}/restart".format(context.remote_ip, target)
             print("POSTing path = {0}".format(request_url))
             resp = requests.post(request_url, headers={'Content-type': 'application/json', 'zACI-API': 'com.ibm.zaci.system/1.0'}, verify=False)
-            print("Restart result:>>{0}<<".format(resp.text))
+            resp.connection.close()
     else:
         command = " export SUDO_ASKPASS=~/.remote_pass.sh;sudo iptables -A INPUT -p tcp --destination-port 30303 -j DROP"
         ssh_call(context, command)
@@ -123,6 +123,7 @@ def get_logs_from_network(context, file_suffix):
                 print("response = {0}".format(resp.reason))
                 print("response = {0}".format(resp.status_code))
                 print("Unable to pull log through zACI API: {0}".format(resp.status_code))
+            resp.connection.close()
     else:
         # SCP from the network
         print("SCP from nodes in the network...")
