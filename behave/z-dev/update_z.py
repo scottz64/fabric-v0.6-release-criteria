@@ -1,5 +1,6 @@
 #!/usr/bin/python
 import json
+import re
 import getpass
 from optparse import OptionParser
 
@@ -17,6 +18,8 @@ def handleOptions():
                       help="password for the user of the 9.x system in use", metavar="PASSWORD")
     parser.add_option("-b", "--bluemix", dest="blue_mix", action="store_true", default=False,
                       help="set for a BlueMix formatted network file")
+    parser.add_option("--behave", dest="behave", action="store_true", default=False,
+                      help="set for a BlueMix formatted network file for behave tests")
 
     (options, args) = parser.parse_args()
     return options
@@ -31,6 +34,8 @@ def readNetworkFile(network_file):
     # Read the given network file
     with open(network_file, "r") as fd:
         network_info = json.loads(fd.read())
+    if 'credentials' in network_info.keys():
+        return network_info['credentials']
     return network_info
 
  
@@ -65,7 +70,13 @@ def saveData_BM(peerList, user_info):
     for peerInfo in peerList:
         if peerInfo['type'] != 'peer':
             continue
-        index = peerList.index(peerInfo)
+
+        index_match = re.match(r'.*_vp(?P<num>\d)-api.*', peerInfo['api_host'])
+        if not index_match:
+            index = peerList.index(peerInfo)
+        else:
+            index = index_match.group('num')
+
         data['PeerData'].append( {'name': 'PEER%d' % index,
                                   'api-port': peerInfo["api_port"],
                                   'api-host': peerInfo['api_url']} )
@@ -77,30 +88,43 @@ def saveData_BM(peerList, user_info):
     return data
 
 
-def saveData(ip_address, network_info, user_info):
+def saveData(options, peerList, user_info):
     '''Save and format data for use in test'''
     data = { "UserData": [], "PeerData": [] }
 
+    ip_address = options.ip_address
+    if not options.behave and not ip_address:
+        ip_address = raw_input("Please enter the IP address for the system: ")
+
     # Save all the peer information for connecting to the peers
     rest_port = 20000
-    peerList = network_info['peers'].items()
     for peerInfo in peerList:
-        index = peerList.index(peerInfo)
+        if isinstance(peerInfo, tuple):
+            index = peerList.index(peerInfo)
+            long_peerName = peerInfo[0].split('_')
+            peerName = long_peerName[1]
+        else:
+            index_match = re.match(r'.*_vp(?P<num>\d)-api.*', peerInfo.get('api_host', ""))
+            index = index_match.group('num')
+            peerName = "vp%s" % index
 
-        long_peerName = peerInfo[0].split('_')
-        peerName = long_peerName[1]
+        if options.blue_mix:
+            url = peerInfo['api_url']
+        else:
+            url = "%s:%d" %(ip_address, rest_port)
+
         peerData = {'port': "unknown",
                     'host': "internal",
-                    'api-host': "%s:%d" %(ip_address, rest_port),
+                    'api-host': url,
                     'name': peerName}
         userData = dict(peer=peerName,
-                        username=user_info[index]['username'],
-                        secret=user_info[index]['secret'])
+                        username=user_info[int(index)]['username'],
+                        secret=user_info[int(index)]['secret'])
         rest_port = rest_port + 100
 
         # Pull the user name for the vp0 user for all of the peers
         if peerName == 'vp0':
-            main_user = user_info[index]['username']
+            main_user = user_info[int(index)]['username']
 
         data['PeerData'].append(peerData)
         data['UserData'].append(userData)
@@ -114,19 +138,15 @@ def savePrimaryUser(main_user, data):
     return data
 
 
-def saveCAInfo(options, data):
+def saveCAInfo(options, data, network_id="My Network"):
     '''Save the CA information for connecting to the peers'''
     username = options.username
     if username == "root":
         username = raw_input("Please enter the username for the 9.x system [default=root]: ")
 
-    secret = options.secret
-    if secret is None:
-        secret = getpass.getpass("Please enter the password: ")
-
     data['CA_username'] = username
-    data['CA_secret'] = secret
-    data['name'] = network_info["lpar"]
+    data['CA_secret'] = options.secret
+    data['name'] = network_info.get("lpar", network_id)
     return data
 
 
@@ -141,10 +161,16 @@ if __name__ == "__main__":
     network_info = readNetworkFile(options.network_file)
     if options.blue_mix:
         user_info = getUserData_BM(network_info['users'])
-        data = saveData_BM(network_info["peers"], user_info)
+        if options.behave:
+            (main_user, data) = saveData(options, network_info["peers"], user_info)
+            updated = savePrimaryUser(main_user, data)
+            data = saveCAInfo(options, updated, network_info['peers'][0]['network_id'])
+        else:
+            data = saveData_BM(network_info["peers"], user_info)
     else:
         user_info = getUserData(network_info)
-        (main_user, data) = saveData(options.ip_address, network_info, user_info)
+        peerList = network_info['peers'].items()
+        (main_user, data) = saveData(options, peerList, user_info)
         updated = savePrimaryUser(main_user, data)
         data = saveCAInfo(options, updated)
     saveNetworkFile(data)
