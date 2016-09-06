@@ -2,6 +2,7 @@
 import json
 import re
 import getpass
+import requests
 from optparse import OptionParser
 
 
@@ -23,6 +24,15 @@ def handleOptions():
 
     (options, args) = parser.parse_args()
     return options
+
+
+def pullServiceCreds(network_id):
+    '''Pull the service credentials file based on the network ID entered'''
+    headers = {'Accept': 'application/json', 'Content-type': 'application/json'}
+    resp = requests.get("https://obc-service-broker-prod.mybluemix.net/api/network/%s"%network_id, headers=headers)
+    if resp.status_code == 200:
+        return resp.json()
+    print "Unable to access the service credentials page. %d(%s): %s" % (resp.status_code, resp.reason, str(resp.content))
 
 
 def readNetworkFile(network_file):
@@ -78,10 +88,10 @@ def saveData_BM(peerList, user_info):
             index = index_match.group('num')
 
         data['PeerData'].append( {'name': 'PEER%s' % str(index),
-                                  'api-port': peerInfo["api_port"],
+                                  'api-port': str(peerInfo["api_port"]),
                                   'api-host': peerInfo['api_url']} )
         data['PeerGrpc'].append( {'api-host': peerInfo['api_host'],
-                                  'api-port': grpc_port} )
+                                  'api-port': str(grpc_port)} )
         grpc_port = grpc_port + 2
     data['UserData'] = user_info
     data['name'] = peerInfo["network_id"]
