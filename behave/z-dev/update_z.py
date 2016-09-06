@@ -89,7 +89,7 @@ def saveData_BM(peerList, user_info):
 
         data['PeerData'].append( {'name': 'PEER%s' % str(index),
                                   'api-port': str(peerInfo["api_port"]),
-                                  'api-host': peerInfo['api_url']} )
+                                  'api-host': peerInfo['api_host']} )
         data['PeerGrpc'].append( {'api-host': peerInfo['api_host'],
                                   'api-port': str(grpc_port)} )
         grpc_port = grpc_port + 2
@@ -119,7 +119,7 @@ def saveData(options, peerList, user_info):
             peerName = "vp%s" % index
 
         if options.blue_mix:
-            url = peerInfo['api_url']
+            url = peerInfo['api_host']
         else:
             url = "%s:%d" %(ip_address, rest_port)
 
