@@ -1,0 +1,27 @@
+{
+    "transType": "Query",
+    "nPeers": "4",
+    "nThread": "4",
+    "nRequest": "1000",
+    "runDur": "60",
+	"TCertBatchSize": "200",
+	"ccType": "general",
+    "deploy": {
+        "chaincodePath": "github.com/chaincode_example02",
+        "fcn": "init",
+        "args": "a,100,b,200"
+    },
+    "query": {
+        "fcn": "query",
+        "args": ["a"]
+    },
+    "invoke": {
+        "fcn": "invoke",
+        "args": ["a","b","1"]
+    },   
+	"SCFile": [
+		{"ServiceCredentials":"SCFiles/ServiceCredentials0000.json"},
+		{"ServiceCredentials":"SCFiles/ServiceCredentials0001.json"},
+		{"ServiceCredentials":"SCFiles/ServiceCredentials0002.json"}
+	]
+}
