@@ -4,12 +4,24 @@
   "deployWaitTime": "40",
   "duration": "4320",
   "ca": {
-    "ca_url":"grpc://127.0.0.1:7054"
+    "ca_url":"grpc://172.17.0.2:7054"
   },
   "peers":[
     {
       "name":"vp0",
-      "peer_url":"grpc://127.0.0.1:30001"
+      "peer_url":"grpc://172.17.0.3:7051"
+    },
+    {
+      "name":"vp0",
+      "peer_url":"grpc://172.17.0.4:7051"
+    },
+    {
+      "name":"vp0",
+      "peer_url":"grpc://172.17.0.5:7051"
+    },
+    {
+      "name":"vp0",
+      "peer_url":"grpc://172.17.0.6:7051"
     }
   ],
   "users": [

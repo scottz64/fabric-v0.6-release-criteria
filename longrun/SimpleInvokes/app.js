@@ -64,6 +64,9 @@ if (process.argv.length == 4) {
 init();
 
 function init() {
+    // TODO: This is for testing purpose
+    //duration = 10;
+    var ms = duration * 60 * 1000 ;
     setTimeout(function() {
         console.log("Exiting the program ......");
         fs.appendFile('results.txt', "\n ##### Completed " + duration + " hours, EXITING PROGRAM ###", function(err) {
@@ -72,7 +75,7 @@ function init() {
             }
         });
         process.exit(2);
-    }, duration);
+    }, ms);
     //Avoid enroll and deploy if chaincode already deployed
     if (!fileExists(chaincodeIDPath)) {
         registerAndEnrollUsers();
