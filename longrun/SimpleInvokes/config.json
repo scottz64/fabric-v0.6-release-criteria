@@ -1,0 +1,36 @@
+{
+  "chainName" : "client",
+  "KeyValStore" :"keyValStore",
+  "deployWaitTime": "40",
+  "duration": "4320",
+  "ca": {
+    "ca_url":"grpc://127.0.0.1:7054"
+  },
+  "peers":[
+    {
+      "name":"vp0",
+      "peer_url":"grpc://127.0.0.1:30001"
+    }
+  ],
+  "users": [
+    {
+      "username":"admin",
+      "secret":"Xurw3yU9zI0l",
+      "affiliation": "bank_a"
+    },
+    {
+      "username":"JohnDoe",
+      "secret":"",
+      "affiliation": "bank_a"
+    }
+  ],
+  "deployRequest":{
+    "chaincodePath":"chaincode",
+    "functionName":"init",
+    "args":[]
+  },
+  "invokeRequest":{
+    "functionName":"PostUser",
+    "args":["100", "USER", "Ashley Hart", "TRD",  "Morrisville Parkway, #216, Morrisville, NC 27560", "9198063535", "ashley@itpeople.com", "SUNTRUST", "0001732345", "0234678"]
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "name": "perf-test",
+  "version": "0.0.1",
+  "description": "A Node.js based program for Longruns via NodeSdk Apis",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js"
+  },
+  "engines": {
+    "node": "*"
+  },
+  "keywords": [
+    "perf-test",
+    "Blockchain"
+  ],
+  "author": "Ratnakar",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "hfc": "^0.6.1"
+  }
+}
