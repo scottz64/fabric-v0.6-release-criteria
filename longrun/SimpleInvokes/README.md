@@ -2,8 +2,13 @@
 
 This program will send multiple invokes (based on the threads configured) and runs for a long duration i.e., 72 hrs
 
-##WIP: Need to add more programs 
+### This is prettymuch WIP, will be updating with more programs
 
+```
+Make sure you have 4 peer network up and running and configure network details (IP and PORT) in config.json
+also change duration if required
+
+```
 
 ###Step1: Install dependent modules
 
