@@ -7,12 +7,16 @@ This program will send multiple invokes (based on the threads configured) and ru
 
 ###Step1: Install dependent modules
 
-`npm install`
+`   npm install  `
 
-###Step2 : Run the application
+or
+
+make sure installed hfc@0.6.2
+
+###Step2 : Run the application in the background
 
 ```
-$node app.js
+$node app.js &
 
 Enrolled admin successfully
 
