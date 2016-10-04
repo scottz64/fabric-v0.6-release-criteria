@@ -1,6 +1,6 @@
 {
   "chainName" : "client",
-  "KeyValStore" :"keyValStore",
+  "KeyValStore" :"/tmp/keyValStore_SimpleInvokes",
   "deployWaitTime": "40",
   "duration": "4320",
   "ca": {
