@@ -8,7 +8,7 @@ var config = JSON.parse(fs.readFileSync('config.json', 'utf8'));
 var nTrans = 0;
 var nFailed = 0;
 var tStamp = 0;
-var oFile = fs.createWriteStream('results.txt');
+var oFile = fs.createWriteStream('results.log');
 var buff;
 
 
@@ -17,7 +17,7 @@ var chain = hfc.newChain(config.chainName);
 
 // Configure the KeyValStore which is used to store sensitive keys
 // as so it is important to secure this storage.
-var keyValStorePath = __dirname + "/" + config.KeyValStore;
+var keyValStorePath = config.KeyValStore;
 chain.setKeyValStore(hfc.newFileKeyValStore(keyValStorePath));
 
 chain.setMemberServicesUrl(config.ca.ca_url);
@@ -69,7 +69,7 @@ function init() {
     var ms = duration * 60 * 1000 ;
     setTimeout(function() {
         console.log("Exiting the program ......");
-        fs.appendFile('results.txt', "\n ##### Completed " + duration + " hours, EXITING PROGRAM ###", function(err) {
+        fs.appendFile('results.log', "\n ##### Completed " + duration + " hours, EXITING PROGRAM ###", function(err) {
             if (err) {
                 return console.log(err);
             }
@@ -169,7 +169,7 @@ function invoke() {
     tStamp = new Date().getTime();
     buff = 'tran#:' + nTrans + ' Failed:' + nFailed + ' time:' + tStamp + '\n';
 
-    fs.appendFile('results.txt', buff, function(err) {
+    fs.appendFile('results.log', buff, function(err) {
         if (err) {
             return console.log(err);
         }
