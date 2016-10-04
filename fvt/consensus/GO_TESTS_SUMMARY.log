@@ -1,0 +1,144 @@
+
+=========== GROUP START TIME Wed Sep 28 23:23:20 UTC 2016, using GERRIT COMMIT IMAGE gerritv0.6
+
+BEGIN  CAT_100_Startup_IQ.go (Enforce Q=true CH=true, MustMatch Q=true CH=false AllRunningNodes=true) [STARTED: 2016-09-28 23:23:21.643234778 +0000 UTC]
+PASSED CAT_100_Startup_IQ.go (Q_Pass=true CH_Pass=true, Enforce Q=true CH=true, MustMatch Q=true CH=false AllVP=true) [2m18.272583511s]  
+
+BEGIN  CAT_101_BasicConsensus_S1_R1_S2_S1_R1_R2.go (Enforce Q=true CH=true, MustMatch Q=true CH=false AllRunningNodes=true) [STARTED: 2016-09-28 23:25:41.490205815 +0000 UTC]
+PASSED CAT_101_BasicConsensus_S1_R1_S2_S1_R1_R2.go (Q_Pass=true CH_Pass=true, Enforce Q=true CH=true, MustMatch Q=true CH=false AllVP=false) [5m41.145255015s]  
+
+BEGIN  CAT_102_S1_IQDQIQ.go (Enforce Q=true CH=true, MustMatch Q=true CH=false AllRunningNodes=true) [STARTED: 2016-09-28 23:31:24.061428376 +0000 UTC]
+PASSED CAT_102_S1_IQDQIQ.go (Q_Pass=true CH_Pass=true, Enforce Q=true CH=true, MustMatch Q=true CH=true AllVP=true) [3m24.580160583s]  
+
+BEGIN  CAT_103_S0_IQDQIQ.go (Enforce Q=true CH=true, MustMatch Q=true CH=false AllRunningNodes=true) [STARTED: 2016-09-28 23:34:55.082642221 +0000 UTC]
+PASSED CAT_103_S0_IQDQIQ.go (Q_Pass=true CH_Pass=true, Enforce Q=true CH=true, MustMatch Q=true CH=false AllVP=true) [3m58.345013375s]  
+
+BEGIN  CAT_104_SnIQRnIQDQIQ_CycleAndRepeat.go (Enforce Q=true CH=true, MustMatch Q=true CH=false AllRunningNodes=true) [STARTED: 2016-09-28 23:38:54.863552616 +0000 UTC]
+PASSED CAT_104_SnIQRnIQDQIQ_CycleAndRepeat.go (Q_Pass=true CH_Pass=true, Enforce Q=true CH=true, MustMatch Q=true CH=false AllVP=false) [39m45.735404367s]  
+
+BEGIN  CAT_105_S1_IQDQIQ_R1_IQIQ_repeats.go (Enforce Q=true CH=true, MustMatch Q=true CH=false AllRunningNodes=true) [STARTED: 2016-09-29 00:18:42.547169116 +0000 UTC]
+PASSED CAT_105_S1_IQDQIQ_R1_IQIQ_repeats.go (Q_Pass=true CH_Pass=true, Enforce Q=true CH=true, MustMatch Q=true CH=false AllVP=false) [13m21.738397107s]  
+
+BEGIN  CAT_106_S1_IQDQIQ_R1_IQ_S2_IQ.go (Enforce Q=true CH=true, MustMatch Q=true CH=false AllRunningNodes=true) [STARTED: 2016-09-29 00:32:05.790729309 +0000 UTC]
+PASSED CAT_106_S1_IQDQIQ_R1_IQ_S2_IQ.go (Q_Pass=true CH_Pass=true, Enforce Q=true CH=true, MustMatch Q=true CH=false AllVP=false) [7m43.434033602s]  
+
+BEGIN  CAT_107_S1_IQDQIQ_R1_IQ_S0_IQ.go (Enforce Q=true CH=true, MustMatch Q=true CH=false AllRunningNodes=true) [STARTED: 2016-09-29 00:39:50.693666082 +0000 UTC]
+PASSED CAT_107_S1_IQDQIQ_R1_IQ_S0_IQ.go (Q_Pass=true CH_Pass=true, Enforce Q=true CH=true, MustMatch Q=true CH=false AllVP=false) [6m34.935483096s]  
+
+BEGIN  CAT_108_S0_IQDQIQ_R0_IQIQ_repeats.go (Enforce Q=true CH=true, MustMatch Q=true CH=false AllRunningNodes=true) [STARTED: 2016-09-29 00:46:27.177707444 +0000 UTC]
+PASSED CAT_108_S0_IQDQIQ_R0_IQIQ_repeats.go (Q_Pass=true CH_Pass=true, Enforce Q=true CH=true, MustMatch Q=true CH=false AllVP=false) [15m43.90325715s]  
+
+BEGIN  CAT_109_S0_IQDQIQ_R0_IQ_S2_IQ.go (Enforce Q=true CH=true, MustMatch Q=true CH=false AllRunningNodes=true) [STARTED: 2016-09-29 01:02:12.693861484 +0000 UTC]
+PASSED CAT_109_S0_IQDQIQ_R0_IQ_S2_IQ.go (Q_Pass=true CH_Pass=true, Enforce Q=true CH=true, MustMatch Q=true CH=false AllVP=false) [8m17.528972759s]  
+
+BEGIN  CAT_110_S0_IQDQIQ_R0_IQ_S1_IQ.go (Enforce Q=true CH=true, MustMatch Q=true CH=false AllRunningNodes=true) [STARTED: 2016-09-29 01:10:36.680100739 +0000 UTC]
+PASSED CAT_110_S0_IQDQIQ_R0_IQ_S1_IQ.go (Q_Pass=true CH_Pass=true, Enforce Q=true CH=true, MustMatch Q=true CH=false AllVP=false) [7m7.339842864s]  
+
+BEGIN  CAT_111_SnIQRnIQ_cycleDownLoop.go (Enforce Q=true CH=true, MustMatch Q=true CH=false AllRunningNodes=true) [STARTED: 2016-09-29 01:17:45.489989936 +0000 UTC]
+FAILED CAT_111_SnIQRnIQ_cycleDownLoop.go (Q_Pass=false CH_Pass=true, Enforce Q=true CH=true, MustMatch Q=true CH=false AllVP=false) [35m24.796476963s]  !!!!!!!!!!!!!!!!!!!!
+
+BEGIN  CAT_112_SnIQRnIQ_cycleUpLoop.go (Enforce Q=true CH=true, MustMatch Q=true CH=false AllRunningNodes=true) [STARTED: 2016-09-29 01:53:11.754438666 +0000 UTC]
+PASSED CAT_112_SnIQRnIQ_cycleUpLoop.go (Q_Pass=true CH_Pass=true, Enforce Q=true CH=true, MustMatch Q=true CH=false AllVP=false) [1h5m14.857681185s]  
+
+BEGIN  CAT_113_StopAndStartMemberServices.go (Enforce Q=true CH=true, MustMatch Q=true CH=false AllRunningNodes=true) [STARTED: 2016-09-29 02:58:28.076500659 +0000 UTC]
+PASSED CAT_113_StopAndStartMemberServices.go (Q_Pass=true CH_Pass=true, Enforce Q=true CH=true, MustMatch Q=false CH=false AllVP=true) [6m41.423857176s]  
+
+BEGIN  CAT_114_S1_IQ_R1_IQcatchup.go (Enforce Q=true CH=true, MustMatch Q=true CH=false AllRunningNodes=true) [STARTED: 2016-09-29 03:05:10.911788897 +0000 UTC]
+PASSED CAT_114_S1_IQ_R1_IQcatchup.go (Q_Pass=true CH_Pass=true, Enforce Q=true CH=true, MustMatch Q=true CH=false AllVP=true) [4m49.707932399s]  
+
+BEGIN  CAT_201_S2S1_IQDIQ.go (Enforce Q=true CH=true, MustMatch Q=true CH=false AllRunningNodes=true) [STARTED: 2016-09-29 03:10:02.098079579 +0000 UTC]
+PASSED CAT_201_S2S1_IQDIQ.go (Q_Pass=true CH_Pass=true, Enforce Q=true CH=true, MustMatch Q=true CH=true AllVP=true) [3m16.496903076s]  
+
+BEGIN  CAT_202_S2S1_IQredeployIQ.go (Enforce Q=true CH=true, MustMatch Q=true CH=false AllRunningNodes=true) [STARTED: 2016-09-29 03:13:20.128246799 +0000 UTC]
+PASSED CAT_202_S2S1_IQredeployIQ.go (Q_Pass=true CH_Pass=true, Enforce Q=true CH=true, MustMatch Q=true CH=true AllVP=true) [3m15.928124082s]  
+
+BEGIN  CAT_203_S0S1_IQDI.go (Enforce Q=true CH=true, MustMatch Q=true CH=false AllRunningNodes=true) [STARTED: 2016-09-29 03:16:37.515693225 +0000 UTC]
+PASSED CAT_203_S0S1_IQDI.go (Q_Pass=true CH_Pass=true, Enforce Q=true CH=true, MustMatch Q=true CH=true AllVP=true) [3m35.914903127s]  
+
+BEGIN  CAT_204_S2_IQDQIQ_S1_IQDD.go (Enforce Q=true CH=true, MustMatch Q=true CH=false AllRunningNodes=true) [STARTED: 2016-09-29 03:20:14.887016092 +0000 UTC]
+PASSED CAT_204_S2_IQDQIQ_S1_IQDD.go (Q_Pass=true CH_Pass=true, Enforce Q=true CH=true, MustMatch Q=true CH=false AllVP=true) [6m2.720265788s]  
+
+BEGIN  CAT_205_S0_IQDQIQ_S1_IQDD.go (Enforce Q=true CH=true, MustMatch Q=true CH=false AllRunningNodes=true) [STARTED: 2016-09-29 03:26:19.093323277 +0000 UTC]
+PASSED CAT_205_S0_IQDQIQ_S1_IQDD.go (Q_Pass=true CH_Pass=true, Enforce Q=true CH=true, MustMatch Q=true CH=false AllVP=true) [6m54.453246773s]  
+
+BEGIN  CAT_206_S1_IQ_S2_R1_IQ.go (Enforce Q=true CH=true, MustMatch Q=true CH=false AllRunningNodes=true) [STARTED: 2016-09-29 03:33:20.087579761 +0000 UTC]
+PASSED CAT_206_S1_IQ_S2_R1_IQ.go (Q_Pass=true CH_Pass=true, Enforce Q=true CH=true, MustMatch Q=true CH=false AllVP=true) [6m14.077171218s]  
+
+BEGIN  CAT_207_S2_IQ_S1_IQ_R1_IQ.go (Enforce Q=true CH=true, MustMatch Q=true CH=false AllRunningNodes=true) [STARTED: 2016-09-29 03:39:35.783268416 +0000 UTC]
+PASSED CAT_207_S2_IQ_S1_IQ_R1_IQ.go (Q_Pass=true CH_Pass=true, Enforce Q=true CH=true, MustMatch Q=true CH=false AllVP=true) [4m47.390927585s]  
+
+BEGIN  CAT_208_S1_IQ_S0_R0_IQ.go (Enforce Q=true CH=true, MustMatch Q=true CH=false AllRunningNodes=true) [STARTED: 2016-09-29 03:44:24.705317973 +0000 UTC]
+PASSED CAT_208_S1_IQ_S0_R0_IQ.go (Q_Pass=true CH_Pass=true, Enforce Q=true CH=true, MustMatch Q=true CH=false AllVP=true) [5m10.864965204s]  
+
+BEGIN  CAT_209_S0_IQ_S1_IQ_R0_IQ.go (Enforce Q=true CH=true, MustMatch Q=true CH=false AllRunningNodes=true) [STARTED: 2016-09-29 03:49:37.080133172 +0000 UTC]
+PASSED CAT_209_S0_IQ_S1_IQ_R0_IQ.go (Q_Pass=true CH_Pass=true, Enforce Q=true CH=true, MustMatch Q=true CH=false AllVP=true) [5m55.592226625s]  
+
+BEGIN  CAT_210_S2S1_IQ_R1_IQ.go (Enforce Q=true CH=true, MustMatch Q=true CH=false AllRunningNodes=true) [STARTED: 2016-09-29 03:55:34.247682359 +0000 UTC]
+PASSED CAT_210_S2S1_IQ_R1_IQ.go (Q_Pass=true CH_Pass=true, Enforce Q=true CH=true, MustMatch Q=true CH=false AllVP=true) [3m33.528512119s]  
+
+BEGIN  CAT_211_S2S1_IQ_R1R2_IQ.go (Enforce Q=true CH=true, MustMatch Q=true CH=false AllRunningNodes=true) [STARTED: 2016-09-29 03:59:14.237306713 +0000 UTC]
+PASSED CAT_211_S2S1_IQ_R1R2_IQ.go (Q_Pass=true CH_Pass=true, Enforce Q=true CH=true, MustMatch Q=true CH=false AllVP=false) [5m57.982884097s]  
+
+BEGIN  CAT_212_S0S1_IQ_R0_IQ.go (Enforce Q=true CH=true, MustMatch Q=true CH=false AllRunningNodes=true) [STARTED: 2016-09-29 04:05:13.704667748 +0000 UTC]
+PASSED CAT_212_S0S1_IQ_R0_IQ.go (Q_Pass=true CH_Pass=true, Enforce Q=true CH=true, MustMatch Q=true CH=false AllVP=true) [3m57.082797926s]  
+
+BEGIN  CAT_213_S0S1_IQ_R0R1_IQ.go (Enforce Q=true CH=true, MustMatch Q=true CH=false AllRunningNodes=true) [STARTED: 2016-09-29 04:09:12.213296331 +0000 UTC]
+PASSED CAT_213_S0S1_IQ_R0R1_IQ.go (Q_Pass=true CH_Pass=true, Enforce Q=true CH=true, MustMatch Q=true CH=false AllVP=false) [6m50.170711873s]  
+
+BEGIN  CAT_301_S0S1S2_IQ_R0_IQ_R1_IQ.go (Enforce Q=true CH=true, MustMatch Q=true CH=false AllRunningNodes=true) [STARTED: 2016-09-29 04:16:03.883545156 +0000 UTC]
+PASSED CAT_301_S0S1S2_IQ_R0_IQ_R1_IQ.go (Q_Pass=true CH_Pass=true, Enforce Q=true CH=true, MustMatch Q=true CH=false AllVP=true) [8m51.206977921s]  
+
+BEGIN  CAT_302_S0S1S2_IQ_R0R1_IQIQ.go (Enforce Q=true CH=true, MustMatch Q=true CH=false AllRunningNodes=true) [STARTED: 2016-09-29 04:25:01.568606464 +0000 UTC]
+PASSED CAT_302_S0S1S2_IQ_R0R1_IQIQ.go (Q_Pass=true CH_Pass=true, Enforce Q=true CH=true, MustMatch Q=true CH=false AllVP=true) [9m21.760203258s]  
+
+BEGIN  CAT_303_S0S1S2_IQ_R0R1R2_IQ.go (Enforce Q=true CH=true, MustMatch Q=true CH=false AllRunningNodes=true) [STARTED: 2016-09-29 04:34:29.787604345 +0000 UTC]
+FAILED CAT_303_S0S1S2_IQ_R0R1R2_IQ.go (Q_Pass=false CH_Pass=true, Enforce Q=true CH=true, MustMatch Q=true CH=false AllVP=false) [16m59.44600154s]  !!!!!!!!!!!!!!!!!!!!
+
+BEGIN  CAT_304_S1S2S3_IQ_R1R2_IQ.go (Enforce Q=true CH=true, MustMatch Q=true CH=false AllRunningNodes=true) [STARTED: 2016-09-29 04:51:30.731427535 +0000 UTC]
+PASSED CAT_304_S1S2S3_IQ_R1R2_IQ.go (Q_Pass=true CH_Pass=true, Enforce Q=true CH=true, MustMatch Q=true CH=false AllVP=true) [7m58.523384342s]  
+
+BEGIN  CAT_305_S1S2S3_IQ_R1R2R3_IQ.go (Enforce Q=true CH=true, MustMatch Q=true CH=false AllRunningNodes=true) [STARTED: 2016-09-29 04:59:30.728249702 +0000 UTC]
+FAILED CAT_305_S1S2S3_IQ_R1R2R3_IQ.go (Q_Pass=false CH_Pass=true, Enforce Q=true CH=true, MustMatch Q=true CH=false AllVP=false) [16m6.429596947s]  !!!!!!!!!!!!!!!!!!!!
+
+BEGIN  CAT_306_S0S1S2S3_R0R1R2_IQ_R3_IQ.go (Enforce Q=true CH=true, MustMatch Q=true CH=false AllRunningNodes=true) [STARTED: 2016-09-29 05:15:38.615535825 +0000 UTC]
+PASSED CAT_306_S0S1S2S3_R0R1R2_IQ_R3_IQ.go (Q_Pass=true CH_Pass=true, Enforce Q=true CH=true, MustMatch Q=true CH=false AllVP=false) [10m49.313426632s]  
+
+BEGIN  CAT_307_S0S1S2S3_R0R1R2R3_IQ.go (Enforce Q=true CH=true, MustMatch Q=true CH=false AllRunningNodes=true) [STARTED: 2016-09-29 05:26:29.47291092 +0000 UTC]
+PASSED CAT_307_S0S1S2S3_R0R1R2R3_IQ.go (Q_Pass=true CH_Pass=true, Enforce Q=true CH=true, MustMatch Q=true CH=false AllVP=false) [10m5.534888862s]  
+
+BEGIN  CAT_401_DQIQDQIQ.go (Enforce Q=true CH=true, MustMatch Q=true CH=false AllRunningNodes=true) [STARTED: 2016-09-29 05:36:36.51434796 +0000 UTC]
+PASSED CAT_401_DQIQDQIQ.go (Q_Pass=true CH_Pass=true, Enforce Q=true CH=true, MustMatch Q=true CH=false AllVP=true) [4m57.698941591s]  
+
+BEGIN  CAT_402_S1_DQIQDQIQ.go (Enforce Q=true CH=true, MustMatch Q=true CH=false AllRunningNodes=true) [STARTED: 2016-09-29 05:41:35.668622841 +0000 UTC]
+PASSED CAT_402_S1_DQIQDQIQ.go (Q_Pass=true CH_Pass=true, Enforce Q=true CH=true, MustMatch Q=true CH=false AllVP=true) [4m53.550551503s]  
+
+BEGIN  CAT_403_S0_IQ_DQIQDQIQ.go (Enforce Q=true CH=true, MustMatch Q=true CH=false AllRunningNodes=true) [STARTED: 2016-09-29 05:46:30.661900724 +0000 UTC]
+PASSED CAT_403_S0_IQ_DQIQDQIQ.go (Q_Pass=true CH_Pass=true, Enforce Q=true CH=true, MustMatch Q=true CH=false AllVP=true) [5m41.688697267s]  
+
+BEGIN  CAT_404_S1S2_D_I_R1_IQ.go (Enforce Q=true CH=true, MustMatch Q=true CH=false AllRunningNodes=true) [STARTED: 2016-09-29 05:52:13.842162422 +0000 UTC]
+PASSED CAT_404_S1S2_D_I_R1_IQ.go (Q_Pass=true CH_Pass=true, Enforce Q=true CH=true, MustMatch Q=true CH=false AllVP=true) [6m17.893573302s]  
+
+BEGIN  CAT_405_S0S1_D_I_R0_IQ.go (Enforce Q=true CH=true, MustMatch Q=true CH=false AllRunningNodes=true) [STARTED: 2016-09-29 05:58:33.214779848 +0000 UTC]
+PASSED CAT_405_S0S1_D_I_R0_IQ.go (Q_Pass=true CH_Pass=true, Enforce Q=true CH=true, MustMatch Q=true CH=false AllVP=true) [6m8.035305562s]  
+
+BEGIN  CAT_406_S0S1_D_I_R0R1_IQ.go (Enforce Q=true CH=true, MustMatch Q=true CH=false AllRunningNodes=true) [STARTED: 2016-09-29 06:04:47.814277507 +0000 UTC]
+PASSED CAT_406_S0S1_D_I_R0R1_IQ.go (Q_Pass=true CH_Pass=true, Enforce Q=true CH=true, MustMatch Q=true CH=false AllVP=false) [7m52.822372621s]  
+
+BEGIN  CAT_407_S0S1S2_D_I_R0R1_IQ.go (Enforce Q=true CH=true, MustMatch Q=true CH=false AllRunningNodes=true) [STARTED: 2016-09-29 06:12:42.058870271 +0000 UTC]
+FAILED CAT_407_S0S1S2_D_I_R0R1_IQ.go (Q_Pass=false CH_Pass=true, Enforce Q=true CH=true, MustMatch Q=true CH=false AllVP=true) [10m39.523251904s]  !!!!!!!!!!!!!!!!!!!!
+
+BEGIN  CAT_408_S0S1S2_D_I_R0R1R2_IQ.go (Enforce Q=true CH=true, MustMatch Q=true CH=false AllRunningNodes=true) [STARTED: 2016-09-29 06:23:23.051843047 +0000 UTC]
+FAILED CAT_408_S0S1S2_D_I_R0R1R2_IQ.go (Q_Pass=false CH_Pass=true, Enforce Q=true CH=true, MustMatch Q=true CH=false AllVP=false) [14m37.496740687s]  !!!!!!!!!!!!!!!!!!!!
+
+BEGIN  CAT_409_S1S2S3_D_I_R1R2_IQ.go (Enforce Q=true CH=true, MustMatch Q=true CH=false AllRunningNodes=true) [STARTED: 2016-09-29 06:38:02.046657092 +0000 UTC]
+FAILED CAT_409_S1S2S3_D_I_R1R2_IQ.go (Q_Pass=false CH_Pass=true, Enforce Q=true CH=true, MustMatch Q=true CH=false AllVP=true) [10m47.010689274s]  !!!!!!!!!!!!!!!!!!!!
+
+BEGIN  CAT_410_S1S2S3_D_I_R1R2R3_IQ.go (Enforce Q=true CH=true, MustMatch Q=true CH=false AllRunningNodes=true) [STARTED: 2016-09-29 06:48:50.495156199 +0000 UTC]
+FAILED CAT_410_S1S2S3_D_I_R1R2R3_IQ.go (Q_Pass=false CH_Pass=true, Enforce Q=true CH=true, MustMatch Q=true CH=false AllVP=false) [13m49.023874169s]  !!!!!!!!!!!!!!!!!!!!
+
+BEGIN  CAT_ip_debug.go (Enforce Q=true CH=true, MustMatch Q=true CH=false AllRunningNodes=true) [STARTED: 2016-09-29 07:02:41.20464935 +0000 UTC]
+PASSED CAT_ip_debug.go (Q_Pass=true CH_Pass=true, Enforce Q=true CH=true, MustMatch Q=true CH=false AllVP=false) [21m10.280749503s]  
+
+=========== GROUP END, using GERRIT COMMIT IMAGE gerritv0.6
+=========== STARTTIME Wed Sep 28 23:23:20 UTC 2016
+=========== STOP TIME Thu Sep 29 07:23:51 UTC 2016, TESTS STARTED=46 PASS=39 FAIL=7 STOPPED=0
