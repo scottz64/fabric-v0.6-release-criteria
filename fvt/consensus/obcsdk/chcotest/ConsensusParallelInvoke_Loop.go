@@ -12,9 +12,9 @@ import (
 	"strconv"
 	"time"
 
-	"obcsdk/chaincode"
-	"obcsdk/peernetwork"
-	"obcsdk/threadutil"
+	"../chaincode"
+	"../peernetwork"
+	"../threadutil"
 )
 
 func main() {

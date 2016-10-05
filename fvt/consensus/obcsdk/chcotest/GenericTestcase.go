@@ -6,10 +6,9 @@ import (
 	"strconv"
 	"time"
 
-	"obcsdk/chaincode"
-	"obcsdk/peernetwork"
-	"obcsdk/peerrest"
-
+	"../chaincode"
+	"../peernetwork"
+	"../peerrest"
 )
 
 //TODO: 1. have a single program to call various testcases using the existing SDK Apis

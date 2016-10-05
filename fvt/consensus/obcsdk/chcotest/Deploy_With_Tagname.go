@@ -3,10 +3,8 @@ package main
 
 import (
 	"fmt"
-	//"workingbackup/obcsdk/peernetwor"
-	//"obc-test/obcsdk/chaincode"
 	"time"
-	"obcsdk/chaincode"
+	"../chaincode"
 )
 
 func deployUsingTagName() {

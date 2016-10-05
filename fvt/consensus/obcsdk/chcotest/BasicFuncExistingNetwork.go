@@ -3,15 +3,15 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"obcsdk/chaincode"
-	"obcsdk/peernetwork"
-	"obcsdk/threadutil"
+	"../chaincode"
+	"../peernetwork"
+	"../threadutil"
 	"os"
 	"strconv"
 	"strings"
 	"time"
 	"math/rand"
-	"obcsdk/chco2"
+	"../chco2"
 )
 
 var f *os.File

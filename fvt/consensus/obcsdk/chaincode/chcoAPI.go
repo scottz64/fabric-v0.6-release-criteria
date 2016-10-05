@@ -6,12 +6,11 @@ import (
 	"log"
 	"strconv"
 	"strings"
-	"obcsdk/peernetwork"
+	"../peernetwork"
 	"os"
 	"os/exec"
 	"bytes"
-	//"obcsdk/util"
-	"obcsdk/threadutil"
+	"../threadutil"
 )
 
 var verbose = bool(false)

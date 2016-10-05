@@ -17,10 +17,8 @@ import (
 	"strconv"
 	"time"
 
-	//"github.com/hyperledger/fabric/obcsdk/peernetwork"
-	//"github.com/hyperledger/fabric/obcsdk/chaincode"
-	"obcsdk/peernetwork"
-	"obcsdk/chaincode"
+	"../peernetwork"
+	"../chaincode"
 )
 
 func main() {

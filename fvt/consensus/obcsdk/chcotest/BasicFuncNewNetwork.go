@@ -3,9 +3,9 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"obcsdk/chaincode"
-	"obcsdk/peernetwork"
-	"obcsdk/threadutil"
+	"../chaincode"
+	"../peernetwork"
+	"../threadutil"
 	"os"
 	"strconv"
 	"strings"

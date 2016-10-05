@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"time"
 
-	"obcsdk/chaincode"
+	"../chaincode"
 )
 
 // A Utility program, contains several utility methods that can be used across programs

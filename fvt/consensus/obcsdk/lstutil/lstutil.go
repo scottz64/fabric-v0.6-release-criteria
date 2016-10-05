@@ -7,8 +7,8 @@ import (
 	"sync"
 	"time"
 	"strings"
-	"obcsdk/chaincode"
-	"obcsdk/peernetwork"
+	"../chaincode"
+	"../peernetwork"
 )
 
 /* *********************************************************************************************
@@ -58,6 +58,12 @@ var NUM_CLIENTS int
 var NUM_PEERS int
 var THROUGHPUT_RATE int
 var lstCounter int64
+
+ // Instead, we should make the counter atomic. Or better yet, we could also just let each thread
+ // keep their own counter... although then we couldn't get exact time deltas for every BUNDLE of Tx
+ // import "sync/atomic"
+ // var lstCounter = new(int64)
+ // atomic.AddInt64(lstCounter, 1000)
 
 // The seconds required for 1000 transactions to be processed by the peer network: 30 implies a rate of about 33/sec.
 // Our network can handle that for example02. And hopefully for this custom network too.

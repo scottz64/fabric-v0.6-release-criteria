@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"strconv"
 	"time"
-	"obcsdk/chaincode"
-	"obcsdk/peernetwork"
-	"obcsdk/lstutil"
+	"../chaincode"
+	"../peernetwork"
+	"../lstutil"
 )
 
 var peerNetworkSetup peernetwork.PeerNetwork

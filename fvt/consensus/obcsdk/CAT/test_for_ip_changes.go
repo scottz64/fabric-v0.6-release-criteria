@@ -25,13 +25,11 @@ import (
 	"os/exec"
 	"time"
 	"bufio"
-	"obcsdk/chco2"
-	"obcsdk/threadutil"
+	"../chco2"
+	"../threadutil"
 	"fmt"
 	"strconv"
 	// "bufio"
-	// "obcsdk/chaincode"
-	// "obcsdk/peernetwork"
 	// "log"
 )
 

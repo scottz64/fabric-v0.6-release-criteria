@@ -15,10 +15,8 @@ import (
 	"strconv"
 	"time"
 
-	//"github.com/hyperledger/fabric/obcsdk/chaincode"
-	//"github.com/hyperledger/fabric/obcsdk/peernetwork"
-	"obcsdk/chaincode"
-	"obcsdk/peernetwork"
+	"../chaincode"
+	"../peernetwork"
 )
 
 var peerNetworkSetup peernetwork.PeerNetwork

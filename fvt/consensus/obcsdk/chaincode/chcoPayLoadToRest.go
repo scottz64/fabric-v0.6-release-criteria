@@ -7,7 +7,7 @@ import (
 	"log"
 	"strconv"
 	"strings"
-	"obcsdk/peerrest"
+	"../peerrest"
 )
 
 // These structures describe the response to a  POST /chaincode API call

@@ -7,8 +7,8 @@ import (
 	"os"
 	"strconv"
 	"time"
-	"obcsdk/chaincode"
-	"obcsdk/peernetwork"
+	"../chaincode"
+	"../peernetwork"
 )
 
 // A Utility program, contains several utility methods that can be used across

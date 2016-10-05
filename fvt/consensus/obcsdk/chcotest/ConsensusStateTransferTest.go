@@ -5,8 +5,8 @@ import (
 	"strconv"
 	"time"
 
-	"obcsdk/chaincode"
-	"obcsdk/peernetwork"
+	"../chaincode"
+	"../peernetwork"
 )
 
 func main() {

@@ -2,14 +2,14 @@ package main
 
 import (
 	"fmt"
-	"obcsdk/chaincode"
-	"obcsdk/peernetwork"
+	"../chaincode"
+	"../peernetwork"
 	"os"
 	//"strconv"
 	"strings"
 	"time"
-	"obcsdk/lstutil"
-	"obcsdk/chco2"
+	"../lstutil"
+	"../chco2"
 )
 
 var f *os.File

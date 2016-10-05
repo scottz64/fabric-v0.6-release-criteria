@@ -1,7 +1,7 @@
 package main
 
 import (
-	"obcsdk/lstutil"
+	"../lstutil"
 )
 
 /*************** Test Objective : Ledger Stress with 2 Clients and 1 Peers, long run ***********

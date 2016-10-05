@@ -14,8 +14,8 @@ import (
 	"time"
         "os"
         "bufio"
-	"obcsdk/chaincode"
-	"obcsdk/peernetwork"
+	"../chaincode"
+	"../peernetwork"
 )
 
 var f *os.File

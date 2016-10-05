@@ -3,8 +3,8 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"obcsdk/chaincode"
-	"obcsdk/peernetwork"
+	"../chaincode"
+	"../peernetwork"
 	"os"
 	"time"
 )

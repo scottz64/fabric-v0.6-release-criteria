@@ -2,8 +2,8 @@ package main
 
 import (
 	"fmt"
-	"obcsdk/peernetwork"
-	"obcsdk/chaincode"
+	"../peernetwork"
+	"../chaincode"
 	"time"
 )
 

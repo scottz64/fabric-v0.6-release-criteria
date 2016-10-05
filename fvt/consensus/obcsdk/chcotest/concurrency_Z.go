@@ -10,8 +10,7 @@ package main
 import (
 	"fmt"
 	"time"
-	"obcsdk/chaincode"
-	//"obcsdk/peernetwork"
+	"../chaincode"
 	"sync"
 	"math/rand"
 )

@@ -10,7 +10,7 @@ package main
 import (
 	"fmt"
 	"time"
-	"obcsdk/chaincode"
+	"../chaincode"
 	"sync"
 )
 

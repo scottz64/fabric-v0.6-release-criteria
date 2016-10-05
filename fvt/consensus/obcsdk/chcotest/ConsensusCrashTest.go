@@ -5,10 +5,8 @@ import (
 	"strconv"
 	"time"
 
-	//"github.com/hyperledger/fabric/obcsdk/chaincode"
-	//"github.com/hyperledger/fabric/obcsdk/peernetwork"
-	"obcsdk/chaincode"
-	"obcsdk/peernetwork"
+	"../chaincode"
+	"../peernetwork"
 )
 
 //TODO: 1. have a single program to call various testcases using the existing SDK Apis

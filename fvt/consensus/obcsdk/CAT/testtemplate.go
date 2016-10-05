@@ -24,12 +24,10 @@ import (
 	"os"
 	"time"
 	"bufio"
-	"obcsdk/chco2"
 	"fmt"
+	"../chco2"
 	//"strconv"
 	// "bufio"
-	// "obcsdk/chaincode"
-	// "obcsdk/peernetwork"
 	// "log"
 )
 
