@@ -129,12 +129,12 @@ func Sleep(secs int64) {
 }
 
 func InitLogger(fileName string) {
-	layout := "Jan__2_2006"
+	layout := "Jan_02_2006"
 	// Format Now with the layout const.
 	t := time.Now()
 	res := t.Format(layout)
 	var err error
-	logFile, err = os.OpenFile(res+"-"+fileName+".txt", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	logFile, err = os.OpenFile(res+"-"+fileName+".log", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {
 		panic(fmt.Sprintf("error opening file: %s", err))
 	}
