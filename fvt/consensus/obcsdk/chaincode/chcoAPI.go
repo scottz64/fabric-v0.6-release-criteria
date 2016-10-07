@@ -61,7 +61,7 @@ func Init() {
 
 func GetURL(ip, port string) string {
 	var url string
-	if os.Getenv("TEST_NET_COMM_PROTOCOL") == "HTTPS" || os.Getenv("TEST_NETWORK") == "Z" {
+	if strings.ToUpper(os.Getenv("TEST_NET_COMM_PROTOCOL")) == "HTTPS" {
 		url = "https://" + ip + ":" + port
 	} else {
 		url = "http://" + ip + ":" + port
@@ -225,7 +225,7 @@ func RegisterCustomUsers() bool {
 			errStatusStr := register(url, user, secret)
 			if errStatusStr == "" { successfuls++ } else { fmt.Println("ERROR registering custom user:", user, " err:", errStatusStr) }
 			if (i == len(Peers)-1) {
-				if os.Getenv("TEST_NETWORK") == "Z" {
+				if strings.ToUpper(os.Getenv("TEST_NETWORK")) == "Z" {
 					// custom users in Z network
 					for u := 0; u < threadutil.NumberCustomUsersOnLastPeer; u++ {
 						user = threadutil.ZUsersOnLastPeer[u]

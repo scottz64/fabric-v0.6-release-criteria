@@ -35,6 +35,8 @@ const (
 	// Two lines for each test are appended to this file which will contain a handy running summary.
 
 	OutputSummaryFileName = "GO_TESTS_SUMMARY.log"
+
+	CHCO_NAME = "example02"
 )
 
 
@@ -388,6 +390,8 @@ func setup_part3_verifyNetworkAndDeployCC() {
 	if !(queryTestsPass && chainHeightTestsPass) {
 		// If existing network, then that might explain it since it is not a freshly created network; let's try to fix it if we can.
 		if ExistingNetwork {
+			queryTestsPass = true
+			chainHeightTestsPass = true
 			if IsLocalNetwork  {
 				ExistingNetwork = false // steer setup_part2 to rerun the local_fabric script
 				fmt.Println("\n\n>>>>>> Trying to recover an unstable network: docker kill and restart entire local network >>>>>>\n\n")
@@ -430,7 +434,7 @@ func QueryAllHostsToGetCurrentValues(mynetwork peernetwork.PeerNetwork, a *int, 
 	runningPeerCounter := 0
         qArgsa := []string{"a"}
         qArgsb := []string{"b"}
-	qAPIArgs := []string{"example02", "query", threadutil.GetPeer(0)}
+	qAPIArgs := []string{CHCO_NAME, "query", threadutil.GetPeer(0)}
 
 	// loop through and query all hosts to determine the current values
 	for n:=0; n < N; n++ {
@@ -440,7 +444,7 @@ func QueryAllHostsToGetCurrentValues(mynetwork peernetwork.PeerNetwork, a *int, 
 		if peerIsRunning(n,mynetwork) {
 			runningPeerCounter++
 			ht[n], _ = chaincode.GetChainHeight(threadutil.GetPeer(n))
-			qAPIArgs = []string{ "example02", "query", threadutil.GetPeer(n) }
+			qAPIArgs = []string{ CHCO_NAME, "query", threadutil.GetPeer(n) }
 			chco2_QueryOnHost(qAPIArgs, qArgsa, qArgsb, &queryData[n].resA, &queryData[n].resB)
 		}
         	if Verbose { fmt.Println(fmt.Sprintf("QueryAllHosts() found on Peer %d :  A=%d, B=%d, CH=%d", n, queryData[n].resA, queryData[n].resB, ht[n])) }
@@ -587,15 +591,19 @@ func DeployNewOnPeer(a int, b int, peer int) {
 	DeployInit(peer)
 }
 
+func ExtraTimeForLargerNetworks() (extraSleepTime int) {
+	return ( (NumberOfPeersInNetwork % 5) * 30 )	// 30 seconds extra time for every 5 peer nodes to sync up
+}
 func DeployInit(peerNum int) {
 	peerStr := threadutil.GetPeer(peerNum)
 	fmt.Println("\nPOST/Chaincode: DEPLOY chaincode on peer " + peerStr + ", A=" + initA + " B=" + initB)
-	dAPIArgs := []string{"example02", "init", peerStr}
+	dAPIArgs := []string{CHCO_NAME, "init", peerStr}
 	depArgs := []string{"a", initA, "b", initB}
 	txId, err := chaincode.DeployOnPeer(dAPIArgs, depArgs)
 	Check(err) 	// if we cannot deploy, then panic
-	if (Verbose) { fmt.Println("Sleep 60 secs, after deployed, txId=" + txId) }
-	time.Sleep(60 * time.Second)
+	sleepsecs := 60 + ExtraTimeForLargerNetworks()
+	if (Verbose) { fmt.Println("Sleep extra secs, deployed txId: ", sleepsecs, txId) }
+	time.Sleep(time.Duration(sleepsecs) * time.Second)
 	incrHeightCount(1, peerNum)
 	setQueuedTransactionCounter(1)
 
@@ -871,13 +879,13 @@ func QueryAllPeers(stepName string) {
 	fmt.Println("\nPOST/Chaincode: QUERY all running peers for a and b, and chainheight\n" + stepName)
         qArgsa := []string{"a"}
         qArgsb := []string{"b"}
-	qAPIArgs := []string{"example02", "query", threadutil.GetPeer(0) }
+	qAPIArgs := []string{CHCO_NAME, "query", threadutil.GetPeer(0) }
 	n := 0
 	for n=0; n < NumberOfPeersInNetwork; n++ {
 		qData[n].resA = 0
 		qData[n].resB = 0
 		if peerIsRunning(n,MyNetwork) {
-			qAPIArgs = []string{ "example02", "query", threadutil.GetPeer(n) }
+			qAPIArgs = []string{ CHCO_NAME, "query", threadutil.GetPeer(n) }
 			chco2_QueryOnHost(qAPIArgs, qArgsa, qArgsb, &qData[n].resA, &qData[n].resB)
 		}
 	}
@@ -1289,7 +1297,7 @@ func doInvoke(num_invokes int, nodename string)  {
 
 	startTime := time.Now()
 	invArgs := []string{"a", "b", "1"}
-	iAPIArgs := []string{"example02", "invoke", nodename}
+	iAPIArgs := []string{CHCO_NAME, "invoke", nodename}
 	for j:=1; j <= num_invokes; j++ {
 		_, _ = DoOneInvoke(iAPIArgs, invArgs)
 
@@ -1357,25 +1365,25 @@ func QueryMatch(currA int, currB int) { 	// legacy previous API
         qArgsa := []string{"a"}
         qArgsb := []string{"b"}
         fmt.Println("\nPOST/Chaincode: QUERY a and b >>>>>>>>>>> ")
-        qAPIArgs00 := []string{"example02", "query", threadutil.GetPeer(0)}
+        qAPIArgs00 := []string{CHCO_NAME, "query", threadutil.GetPeer(0)}
         res0A, _ := chaincode.QueryOnHost(qAPIArgs00, qArgsa)
         res0B, _ := chaincode.QueryOnHost(qAPIArgs00, qArgsb)
         res0AI, _ := strconv.Atoi(res0A)
         res0BI, _ := strconv.Atoi(res0B)
 
-        qAPIArgs01 := []string{"example02", "query", threadutil.GetPeer(1)}
+        qAPIArgs01 := []string{CHCO_NAME, "query", threadutil.GetPeer(1)}
         res1A, _ := chaincode.QueryOnHost(qAPIArgs01, qArgsa)
         res1B, _ := chaincode.QueryOnHost(qAPIArgs01, qArgsb)
         res1AI, _ := strconv.Atoi(res1A)
         res1BI, _ := strconv.Atoi(res1B)
 
-        qAPIArgs02 := []string{"example02", "query", threadutil.GetPeer(2)}
+        qAPIArgs02 := []string{CHCO_NAME, "query", threadutil.GetPeer(2)}
         res2A, _ := chaincode.QueryOnHost(qAPIArgs02, qArgsa)
         res2B, _ := chaincode.QueryOnHost(qAPIArgs02, qArgsb)
         res2AI, _ := strconv.Atoi(res2A)
         res2BI, _ := strconv.Atoi(res2B)
 
-        qAPIArgs03 := []string{"example02", "query", threadutil.GetPeer(3)}
+        qAPIArgs03 := []string{CHCO_NAME, "query", threadutil.GetPeer(3)}
         res3A, _ := chaincode.QueryOnHost(qAPIArgs03, qArgsa)
         res3B, _ := chaincode.QueryOnHost(qAPIArgs03, qArgsb)
         res3AI, _ := strconv.Atoi(res3A)

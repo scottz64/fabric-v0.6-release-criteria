@@ -3,6 +3,7 @@ package threadutil
 
 import (
         "os"
+        "strconv"
 )
 
 // A Utility program, contains several utility methods that can be used across test programs for multithreading
@@ -30,9 +31,17 @@ func GetUser(userNumber int) string {
 //Get the peer name based on network environment:  Z | LOCAL [default]
 func GetPeer(peerNumber int) string {
 	if os.Getenv("TEST_NETWORK") == "Z" {
-		return ZPeers[peerNumber]
+		if peerNumber < len(ZPeers) {
+			return ZPeers[peerNumber]
+		} else {
+			return "vp"+ strconv.Itoa(peerNumber)
+		}
 	} else {
-		return LocalPeers[peerNumber]
+		if peerNumber < len(ZPeers) {
+			return LocalPeers[peerNumber]
+		} else {
+			return "PEER"+ strconv.Itoa(peerNumber)
+		}
 	}
 }
 

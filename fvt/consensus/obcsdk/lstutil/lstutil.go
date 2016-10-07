@@ -9,6 +9,7 @@ import (
 	"strings"
 	"../chaincode"
 	"../peernetwork"
+	"sync/atomic"
 )
 
 /* *********************************************************************************************
@@ -29,10 +30,10 @@ import (
 *	go run <test2.go>
 * 
 *   Tester may also set these env vars to override the test settings:
-*	NUM_CLIENTS
-*	NUM_PEERS
-*	TX_COUNT
-*	THROUGHPUT_RATE
+*	TEST_LST_NUM_CLIENTS
+*	TEST_LST_NUM_PEERS
+*	TEST_LST_TX_COUNT
+*	TEST_LST_THROUGHPUT_RATE
 * 
 *   Ensure the users+passwords are set correctly in credentials file.
 * 
@@ -44,10 +45,10 @@ const (
 	//    v05 Z or HSBN Network: only 1.5 - 2  on one client thread
 	THROUGHPUT_RATE_DEFAULT = 10
 	// THROUGHPUT_RATE_MAX = 160 	// normally should be well under 160, but this blast rate might be useful for short tests
-	THROUGHPUT_RATE_MAX = 50
+	THROUGHPUT_RATE_MAX = 80
 
 	BUNDLE_OF_TRANSACTIONS = 1000 	// in each client, after sending this many transactions, print a status msg and sleep for ntwk to catch up
-	MAX_CLIENTS = 20
+	MAX_CLIENTS = 50
 )
 
 var peerNetworkSetup peernetwork.PeerNetwork
@@ -57,13 +58,7 @@ var TX_COUNT int64
 var NUM_CLIENTS int
 var NUM_PEERS int
 var THROUGHPUT_RATE int
-var lstCounter int64
-
- // Instead, we should make the counter atomic. Or better yet, we could also just let each thread
- // keep their own counter... although then we couldn't get exact time deltas for every BUNDLE of Tx
- // import "sync/atomic"
- // var lstCounter = new(int64)
- // atomic.AddInt64(lstCounter, 1000)
+var lstCounter int64 = 0
 
 // The seconds required for 1000 transactions to be processed by the peer network: 30 implies a rate of about 33/sec.
 // Our network can handle that for example02. And hopefully for this custom network too.
@@ -102,17 +97,17 @@ func InvokeChaincode(mynetwork peernetwork.PeerNetwork, counter *int64) (invokeR
 
 // this func just uses the specified user 
 func invokeChaincodeWithUser(user string) {
-	lstCounter++
+	cntr := atomic.AddInt64(&lstCounter, 1)	// lstCounter++
 	arg1Construct := []string{CHAINCODE_NAME, INVOKE, user}
-	arg2Construct := []string{"a" + strconv.FormatInt(lstCounter, 10), DATA, "counter"}
+	arg2Construct := []string{"a" + strconv.FormatInt(cntr, 10), DATA, "counter"}
 	_, _ = chaincode.InvokeAsUser(arg1Construct, arg2Construct)
 }
 
 // this func finds and uses a username on the specified peer
 func invokeChaincodeOnPeer(peer string) {
-        lstCounter++
+	cntr := atomic.AddInt64(&lstCounter, 1)	// lstCounter++
         arg1Construct := []string{CHAINCODE_NAME, INVOKE, peer}
-        arg2Construct := []string{"a" + strconv.FormatInt(lstCounter, 10), DATA, "counter"}
+        arg2Construct := []string{"a" + strconv.FormatInt(cntr, 10), DATA, "counter"}
         _, _ = chaincode.InvokeOnPeer(arg1Construct, arg2Construct)
 }
 
@@ -172,152 +167,24 @@ func Init() {
 	initNetwork(localNetworkType)
 
 	//Deploy chaincode
-	lstCounter = DeployChaincode(peerNetworkSetup)
+	actualLstCounter := DeployChaincode(peerNetworkSetup)
 
 	// since may be using an exisiting network that has handled some transactions (and thus has non-zero counter),
 	// get the current counter value (which would not be zero since we probably deployed again the same original fixed values for A and Counter)
-	queryCounterSuccess := QueryAllHostsToGetCurrentCounter(peerNetworkSetup, TESTNAME, &lstCounter)
+	queryCounterSuccess := QueryAllHostsToGetCurrentCounter(peerNetworkSetup, TESTNAME, &actualLstCounter)
 	if !queryCounterSuccess {
 		Logger(fmt.Sprintf("%s: Init() WARNING: CANNOT find consensus in network for lstCounter value; it may not match expected value later", TESTNAME))
 		// panic(errors.New("CANNOT find consensus in existing network"))
 	}
-	Logger(fmt.Sprintf("%s: AFTER deploy,QueryAllHosts retrieved lstCounter value = %d", TESTNAME, lstCounter))
+	Logger(fmt.Sprintf("%s: AFTER deploy, QueryAllHosts retrieved lstCounter value = %d", TESTNAME, actualLstCounter))
+	lstCounter = actualLstCounter
 }
 
-// use this func when using single thread per peer
-func InvokeSingleThreadsOnPeers() {
-
-	// Number of NUM_CLIENTS = Number of peers : this func creates one client thread for each peer
-
-	startTime := time.Now()
-	startCount := lstCounter
- /*
-	curTime := time.Now()
-	nobodySleeping := true
-
-	// All clients are submitting transactions as a whole; they all increment the shared counter.
-	// The throughput rate is what can be handled by the network as a whole.
-
-	var sleepSecs int64
-	sleepSecs = int64(SLEEP_SECS) 	// do not multiply by NUM_CLIENTS, as long as we monitor the shared "counter"
- */
-
-	// Send invokes to each peer, one client per peer; create NUM_CLIENTS threads: Client0 on Peer0, Client1 on Peer1, etc.
-
-	if NUM_CLIENTS > len(peerNetworkSetup.Peers) { panic("Not enough peers in network to run this test") }
-
-	for t := 0; t < NUM_CLIENTS; t++ {
-		go func(clientThread int) {
-			peername := peerNetworkSetup.Peers[clientThread].PeerDetails["name"] 	// get a user on the next peer
-			if peername == "" { Logger(fmt.Sprintf("Undefined/Blank peername for peer %d", clientThread)) }
-			var i int64
-			var numTxOnThisClient int64
-			numTxOnThisClient = TX_COUNT / int64(NUM_CLIENTS)
-			if clientThread == 0 { numTxOnThisClient = numTxOnThisClient + (TX_COUNT % int64(NUM_CLIENTS)) }
-			Logger(fmt.Sprintf("========= Started CLIENT %d thread on peer %s, to run %d Tx", clientThread, peername, numTxOnThisClient))
-			for i = 0; i < numTxOnThisClient; i++ {
-				invokeChaincodeOnPeer(peername)		// this function increments counter too
-				if (lstCounter-startCount) % BUNDLE_OF_TRANSACTIONS == 0 {
-					Logger(fmt.Sprintf("==== %d Tx accumulated (discovered by client %d), accumulated elapsed time : %s", (lstCounter-startCount), clientThread, time.Since(startTime)))
-					/*  *****************************
-					 *  **	9/20/16 - We can run only 11 per sec from laptop in local env in one thread, so there is no need
-					 *  **  to sleep unless for example we are running 4 peers while the target tps is set to less than 40!
-
-					if nobodySleeping {
-						nobodySleeping = false
-						elapsed := time.Since(curTime)
-						accum := time.Since(startTime)
-						curTime = time.Now() 		// yes this will include the sleep time in the next cycle
-						Logger(fmt.Sprintf("==== %d Tx accumulated (discovered by client %d). Elapsed Time prev=%s, accum=%s", (lstCounter-startCount), clientThread, elapsed, accum))
-						Logger(fmt.Sprintf("Client %d myTx=%d going to sleep %d secs", clientThread, i+1, sleepSecs))
-						Sleep( sleepSecs )
-						nobodySleeping = true
-					} else {
-						Logger(fmt.Sprintf("Client %d myTx=%d going to sleep %d secs", clientThread, i+1, sleepSecs))
-						Sleep( sleepSecs )
-					}
-					*********************************  */
-				}
-			}
-			Logger(fmt.Sprintf("========= Finished CLIENT %d thread on peer %s, Tx=%d", clientThread, peername, i))
-			wg.Done()
-		}(t)
-	}
-}
-
-// use this func when using multiple threads to send requests to one peer
-func InvokeMultiThreads() {
-
-	peerNum := 1
-
-	//  Number of NUM_CLIENTS = Number of threads : this func creates multiple client threads sending to one peer (the last vp, PEER3)
-	//  assuming the usernames are all registered on that same peer (which they are)
-
-	startTime := time.Now()
-	startCount := lstCounter
- /*
-	curTime := time.Now()
-	nobodySleeping := true
-
-	// All clients are submitting transactions as a whole; they all increment the shared counter.
-	// The throughput rate is what can be handled by the network as a whole.
-
-	var sleepSecs int64
-	sleepSecs = int64(SLEEP_SECS) 	// do not multiply by NUM_CLIENTS, as long as we monitor the shared "counter"
- */
-
-	for t := 0; t < NUM_CLIENTS ; t++ {
-		go func(clientThread int) {
-			username := peernetwork.GetAUserFromPeer(peerNetworkSetup, peerNum) 	// get a user on selected peer; probably same user for all clients
-			if username == "" { panic(fmt.Sprintf("Cannot find a user on peer %d", peerNum)) }
-			var i int64
-			var numTxOnThisClient int64
-			numTxOnThisClient = TX_COUNT / int64(NUM_CLIENTS)
-			if clientThread == 0 { numTxOnThisClient = numTxOnThisClient + (TX_COUNT % int64(NUM_CLIENTS)) }
-			Logger(fmt.Sprintf("========= Started CLIENT %d thread on peer %d, to run %d Tx", clientThread, peerNum, numTxOnThisClient))
-			for i = 0; i < numTxOnThisClient; i++ {
-				invokeChaincodeWithUser(username)	// this function increments counter too, and sends invoke to the peer that contains the given user
-				if (lstCounter-startCount) % BUNDLE_OF_TRANSACTIONS == 0 {
-					Logger(fmt.Sprintf("==== %d Tx accumulated (discovered by client %d), accumulated elapsed time : %s", (lstCounter-startCount), clientThread, time.Since(startTime)))
-					/*  *****************************
-					 *  **	9/20/16 - We can run only 11 per sec from laptop in local env in one thread, so there is no need
-					 *  **  to sleep unless for example we are running 4 peers while the target tps is set to less than 40!
-					 *  **	Using multiple threads will increase the rate (maybe up to 180/sec), so we should check the
-					 *  **	elapsed time and sleep only as much as needed.
-					 *  **	e.g., if tps = 40, then we should allow the peers network 25 seconds to process 1000 transactions;
-					 *  **	e.g., if elapsed time since the last sleep was 22 seconds, then sleep for 3 secs.
-
-					// Here in thread code, multiply sleep_secs by the number of concurrent peers
-					// (which are all submitting transactions/blocks at the same rate) to get the sleeptime.
-					// Each peer will hit this; the throughput rate is what can be handled by the network as a whole, not each peer.
-					if nobodySleeping {
-						nobodySleeping = false
-						elapsed := time.Since(curTime)
-						accum := time.Since(startTime)
-						curTime = time.Now() 	// doing this here means we include the sleep time within the next cycle elapsed time
-						Logger(fmt.Sprintf("==== %d Tx accumulated (discovered by client %d). Elapsed Time prev=%s, accum=%s", (lstCounter-startCount), clientThread, elapsed, accum))
-						Logger(fmt.Sprintf("Client %d myTx=%d going to sleep %d secs", clientThread, i+1, sleepSecs))
-						Sleep( sleepSecs )
-						nobodySleeping = true
-					} else {
-						Logger(fmt.Sprintf("Client %d myTx=%d going to sleep %d secs", clientThread, i+1, sleepSecs))
-						Sleep( sleepSecs )
-					}
-					*********************************  */
-				}
-			}
-			Logger(fmt.Sprintf("========= Finished CLIENT %d thread on peer %s, Tx=%d", clientThread, peerNum, i))
-			wg.Done()
-		}(t)
-	}
-}
-
-// I think we can probably use this for all now, and get rid of the two functions above...
 func InvokeAllThreadsOnAllPeers() {
 
 	//  Number of NUM_CLIENTS = Number of threads : this func creates multiple client threads on each peer
 
-	startCount := lstCounter
+	startCount := lstCounter	// we need to discount the invokes done before this test starts
 	startTime := time.Now()
 	curTime := time.Now()
 	nobodySleeping := true
@@ -349,8 +216,9 @@ func InvokeAllThreadsOnAllPeers() {
 			Logger(fmt.Sprintf("========= Started CLIENT %d thread on peer %d, to run %d Tx", clientThread, peerNum, numTxOnThisClient))
 			for i = 0; i < numTxOnThisClient; i++ {
 				invokeChaincodeWithUser(username)	// this function increments counter too, and sends invoke to the peer that contains the given user
-				if (lstCounter-startCount) % BUNDLE_OF_TRANSACTIONS == 0 {
-					// Logger(fmt.Sprintf("==== %d Tx accumulated (discovered by client %d), total elapsed: %s", (lstCounter-startCount), clientThread, time.Since(startTime)))
+				currGlobalCounter := lstCounter-startCount // the number of Tx added by all client threads since this test started
+				if currGlobalCounter % BUNDLE_OF_TRANSACTIONS == 0 {
+					// Logger(fmt.Sprintf("==== %d Tx accumulated (discovered by client %d), total elapsed: %s", currGlobalCounter, clientThread, time.Since(startTime)))
 					//  *****************************
 					//  **	9/20/16 - We can run only 11 per sec from laptop in local env in one thread, so there is no need
 					//  **  to sleep unless for example we are running 4 peers while the target tps is set to less than 40!
@@ -365,26 +233,19 @@ func InvokeAllThreadsOnAllPeers() {
 					sleepSecs := int64(0)
 					if elapsedSecs < float64(secsPerTxGroup) { sleepSecs = int64(float64(secsPerTxGroup) - elapsedSecs) }
 
-					// Here in thread code, multiply sleep_secs by the number of concurrent peers
-					// (which are all submitting transactions/blocks at the same rate) to get the sleeptime.
-					// Each peer will hit this; the throughput rate is what can be handled by the network as a whole, not each peer.
-
 					if nobodySleeping {
-
 						nobodySleeping = false
-						//  Logger(fmt.Sprintf("==== %d Tx accumulated (discovered by client %d). Elapsed Time prev=%s, accum=%s", (lstCounter-startCount), clientThread, elapsed, accum))
-						//  Logger(fmt.Sprintf("Client %d myTx=%d, sleepSecs = %d", clientThread, i+1, sleepSecs))
-
-						if (lstCounter-startCount) % (BUNDLE_OF_TRANSACTIONS * 10) == 0 {
-							Logger(fmt.Sprintf("%d=Tx prev=%s accum=%s (client=%d myTx=%d, sleep=%d)", (lstCounter-startCount), elapsed, accum, clientThread, i+1, sleepSecs))
+						if currGlobalCounter % (BUNDLE_OF_TRANSACTIONS * 10) == 0 {
+							Logger(fmt.Sprintf("%d=Tx prev=%s accum=%s (client=%d myTx=%d, sleep=%d)", currGlobalCounter, elapsed, accum, clientThread, i+1, sleepSecs))
 						}
 						if sleepSecs > 0 { Sleep( sleepSecs ) }
 
-						// setting curTime here after sleeping means we include the sleep time within the current/prior cycle of elapsed time, which means the other clients will also use this as their "previous started time" and compute their own sleep time similar to this first client
+						// Setting curTime here, AFTER sleeping, means we include the sleep time within the
+						// current/prior cycle of elapsed time, which means the other clients will also use this as
+						// their "previous started time" and compute their own sleep time similar to this first client
+
 						curTime = time.Now()
-
 						nobodySleeping = true
-
 					} else {
 						//  Logger(fmt.Sprintf("Client %d myTx=%d, sleepSecs = %d", clientThread, i+1, sleepSecs))
 						if sleepSecs > 0 { Sleep( sleepSecs ) }
@@ -396,6 +257,7 @@ func InvokeAllThreadsOnAllPeers() {
 		}(t)
 	}
 }
+
 
 //Execution starts here ...
 func RunLedgerStressTest(testname string, numClients int, numPeers int, numTx int64) {
@@ -410,24 +272,9 @@ func RunLedgerStressTest(testname string, numClients int, numPeers int, numTx in
 
 	// time to measure overall execution of the testcase
 	defer TimeTracker(time.Now(), "Total execution time for " + TESTNAME)
-
 	Init()
 	Logger("========= Transactions execution started =========")
-
-	InvokeAllThreadsOnAllPeers()	// use this for multiple threads on multiple peers, such as TwoClientsPerFourPeers (total 8 threads)
-
-    /*  ***********
-	if NUM_CLIENTS > 4 {
-		InvokeAllThreadsOnAllPeers()	// use this for multiple threads on multiple peers, such as TwoClientsPerFourPeers (total 8 threads)
-	} else {
-		if numPeers > 1 || NUM_CLIENTS == 1 {
-			InvokeSingleThreadsOnPeers()	// use this for tests using single thread per peer, e.g. FourClientsFourPeers
-		} else {
-			InvokeMultiThreads()		// use this for multiple threads sending requests to one peer, such as TwoClientsOnePeer
-		}
-	}
-    ************** */
-
+	InvokeAllThreadsOnAllPeers()
 	wg.Wait()
 	Logger("========= Transactions execution ended =========")
 	TearDown(peerNetworkSetup)

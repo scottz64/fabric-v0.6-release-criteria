@@ -16,7 +16,7 @@ import (
 const (
 	// CHAINCODE_NAME = "example02"
 	// CHAINCODE_NAME = "example02_addrecs"
-	CHAINCODE_NAME = "mycc"
+	CHAINCODE_NAME = "addrecs"
 	INIT           = "init"
 	INVOKE         = "invoke"
 	QUERY          = "query"

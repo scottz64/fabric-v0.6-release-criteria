@@ -308,6 +308,7 @@ fi
 ##### Comment out for now, so we don't see logfiles when running automatically from jenkins
 ##### We can figure out something later how to deal with these...
 # # Printing Log files
+# echo "creating docker LOGFILEs for all peers" 
 # for (( container_id=1; $container_id<="$((NUM_CONTAINERS))"; container_id++ ))
 # do
 #         CONTAINER_ID=$(echo $CONTAINERS | awk -v con_id=$container_id '{print $con_id}')
