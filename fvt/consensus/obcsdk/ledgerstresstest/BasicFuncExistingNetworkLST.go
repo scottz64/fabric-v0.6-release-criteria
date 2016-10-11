@@ -61,7 +61,7 @@ func main() {
 	subTestsFailures = 0
 	lstutil.TESTNAME = "BasicFuncExistingNetworkLST"
 	lstutil.InitLogger(lstutil.TESTNAME)
-	lstutil.Logger("\n*********** " + lstutil.TESTNAME + " ***************")
+	lstutil.Logger("\nSTART " + lstutil.TESTNAME + "******************************") 
 
 	defer timeTrack(time.Now(), "Total execution time for " + lstutil.TESTNAME)
 
@@ -109,7 +109,7 @@ func main() {
 	}
 	lstutil.Logger(fmt.Sprintf("-----BasicFuncExistingNetworkLST, AFTER deploy,QueryAllHosts retrieved counter value (and this is now the expected value): %d", counter))
 
-        height := chaincode.Monitor_ChainHeight(url) // and save the height; it will be needed below for getHeight()
+        height := chaincode.Monitor_ChainHeight(url) // save the height, to be used below for validation in getHeight()
 
 	queryDeploySuccess := lstutil.QueryAllHosts(chco2.MyNetwork, "DEPLOY", counter)
 	if !queryDeploySuccess { subTestsFailures++ }
@@ -117,29 +117,30 @@ func main() {
 	lstutil.Logger("\n===== /chaincode Invoke Test =====")
 	invRes := lstutil.InvokeChaincode(chco2.MyNetwork, &counter)  // increments counter inside
 	height++
-	time.Sleep(10 * time.Second)
+	time.Sleep(time.Duration(10 + chco2.NumberOfPeersInNetwork) * time.Second)
 	queryInvokeSuccess := lstutil.QueryAllHosts(chco2.MyNetwork, "INVOKE", counter)
 	if !queryInvokeSuccess { subTestsFailures++ }
 
 	lstutil.Logger("\n===== /chain Blockchain Test =====")
-	getHeight(chco2.MyNetwork, height)  // this gets height from all peers and validates all match
+	getHeight(chco2.MyNetwork, height)  // this validates height on all peers all match the expected height
 
 	lstutil.Logger("\n===== /chain/blocks Block Test =====")
-	chaincode.BlockStats(url, height)
+	blockNum := height - 1
+	chaincode.BlockStats(url, blockNum)
 
 	if len(chco2.MyNetwork.Peers) < 1 { panic("No peers in network; cannot run this test") }
 	peername := chco2.MyNetwork.Peers[0].PeerDetails["name"]
-	txList, _ := chaincode.GetBlockTrxInfoByHost(peername, height-1)
+	txList, _ := chaincode.GetBlockTrxInfoByHost(peername, blockNum)
 	myStr = "\nGetBlocks API TEST "
 	//if strings.Contains(txList.TransactionResult[0].Uuid, invRes) { 	// v0.5
 	if txList != nil && strings.Contains(txList[0].Txid, invRes) {  // these should be equal, if the invoke transaction was successful
 		myStr += fmt.Sprintf("PASS: Transaction Successfully stored in Block")
-		myStr += fmt.Sprintf("\nCH_Block = %d, txid = %s, InvokeTransactionResult = %s\n", height-1, txList[0].Txid, invRes)
+		myStr += fmt.Sprintf("\nCH_Block = %d, txid = %s, InvokeTransactionResult = %s\n", blockNum, txList[0].Txid, invRes)
 		lstutil.Logger(myStr)
 	} else {
 		subTestsFailures++
 		myStr += fmt.Sprintf("FAIL!!! Transaction NOT stored in Block")
-		myStr += fmt.Sprintf("\nCH_Block = %d, txid = %s, InvokeTransactionResult = %s\n", height-1, txList[0].Txid, invRes)
+		myStr += fmt.Sprintf("\nCH_Block = %d, txid = %s, InvokeTransactionResult = %s\n", blockNum, txList[0].Txid, invRes)
 		lstutil.Logger(myStr)
 		getBlockTxInfo(chco2.MyNetwork,0)
 	}
@@ -151,11 +152,11 @@ func main() {
 	chaincode.Transaction_Detail(url, invRes)
 
 	if subTestsFailures == 0 {
-		myStr = "PASS"
+		myStr = "PASSED"
 	} else {
-        	myStr = fmt.Sprintf("FAIL (failed %d sub-tests)", subTestsFailures)
+        	myStr = fmt.Sprintf("FAILED (failed %d sub-tests)", subTestsFailures)
 	}
-	lstutil.Logger(fmt.Sprintf("\n*********** END BasicFuncExistingNetworkLST OVERALL TEST RESULT = %s ***************\n", myStr))
+	lstutil.Logger(fmt.Sprintf("\nFINAL RESULT " + lstutil.TESTNAME + " = %s ******************************\n", myStr))
 }
 
 func setupNetwork() {
@@ -282,41 +283,47 @@ func userRegisterTest(url string, username string) {
 }
 
 func getHeight(mynetwork peernetwork.PeerNetwork, expectedToMatch int) {
-        ht0, _ := chaincode.GetChainHeight(mynetwork.Peers[0].PeerDetails["name"])
-        ht1, _ := chaincode.GetChainHeight(mynetwork.Peers[1].PeerDetails["name"])
-        ht2, _ := chaincode.GetChainHeight(mynetwork.Peers[2].PeerDetails["name"])
-        ht3, _ := chaincode.GetChainHeight(mynetwork.Peers[3].PeerDetails["name"])
-        numPeers := peernetwork.GetNumberOfPeers(chco2.MyNetwork)
-        if numPeers != 4 {
-		fmt.Println(fmt.Sprintf("TEST FAILURE: TODO: Must fix code %d peers, rather than default=4 peers in network!!!", numPeers))
-		panic("Not enough peers in network to run this test")
+        htVal, _ := chaincode.GetChainHeight(mynetwork.Peers[0].PeerDetails["name"])
+	matches := 1
+	numPeers := len(mynetwork.Peers)
+	p := 0
+	for p = 1 ; p < numPeers ; p++ {
+        	ht, _ := chaincode.GetChainHeight(mynetwork.Peers[p].PeerDetails["name"])
+		if ht == htVal && htVal != 0 {
+			matches++ 
+		} else {
+			if htVal == 0 { htVal = ht }  // skip all nodes with invalid (zero) values until find one
+		}
 	}
 
+	allMatchEachOther := false
+	if p == matches { allMatchEachOther = true }
 
-        // before declaring failure, we will first check if we at least have consensus, with enough nodes with the correct height
-        agree := 1
-        if (ht0 == ht1) { agree++ }
-        if (ht0 == ht2) { agree++ }
-        if (ht0 == ht3) { agree++ }
-        if agree < numPeers - ((numPeers-1) / 3) {
-                agree = 1
-                if (ht1 == ht2) { agree++ }
-                if (ht1 == ht3) { agree++ }
-        }
-        if (ht0 == expectedToMatch) && (ht1 == expectedToMatch) && (ht2 == expectedToMatch) && (ht3 == expectedToMatch) {
-                myStr := fmt.Sprintf("CHAIN HEIGHT TEST PASS : value match on all Peers, after deploy and single invoke:\n")
-                myStr += fmt.Sprintf("  Height Verified: ht0=%d, ht1=%d, ht2=%d, ht3=%d", ht0, ht1, ht2, ht3)
-                lstutil.Logger(myStr)
-        } else if agree >= numPeers - ((numPeers-1) / 3) {
-                myStr := fmt.Sprintf("CHAIN HEIGHT TEST PASS : value match on enough Peers for consensus, after deploy and single invoke:\n")
-                myStr += fmt.Sprintf("  Height Verified: ht0=%d, ht1=%d, ht2=%d, ht3=%d", ht0, ht1, ht2, ht3)
-                lstutil.Logger(myStr)
+	consensusReached := false
+	numRequired := numPeers - ((numPeers-1) / 3)
+        if matches >= numRequired { consensusReached = true }
+
+	consensusValueMatchesExpected := false
+	if htVal == expectedToMatch { consensusValueMatchesExpected = true }
+
+	myStr := fmt.Sprintf("CHAIN HEIGHT TEST ")
+        if consensusValueMatchesExpected && consensusReached {
+		if allMatchEachOther {
+                	myStr += fmt.Sprintf("PASS : value %d matches expected value on all Peers\n", htVal)
+        	} else {
+                	myStr += fmt.Sprintf("PASS : value %d matches expected value on %d Peers (%d are required for consensus in this Network of %d Peers)\n", htVal, matches, numRequired, numPeers)
+		}
         } else {
                 subTestsFailures++
-                myStr := fmt.Sprintf("CHAIN HEIGHT TEST FAIL : value in chain height DOES NOT MATCH expected value %d ON ALL PEERS after deploy and single invoke:\n", expectedToMatch)
-                myStr += fmt.Sprintf("  All heights DO NOT MATCH expected value: ht0=%d, ht1=%d, ht2=%d, ht3=%d", ht0, ht1, ht2, ht3)
-                lstutil.Logger(myStr)
+                myStr += fmt.Sprintf("FAIL : ")
+		if !consensusReached {
+                	myStr += fmt.Sprintf("Cannot reach consensus - only %d peers can agree. ", matches)
+		}
+		if !consensusValueMatchesExpected {
+                	myStr += fmt.Sprintf("Value %d DOES NOT MATCH expected %d. ", htVal, expectedToMatch)
+		}
         }
+	lstutil.Logger(myStr)
 }
 
 // pass in 0 to get ALL blocks

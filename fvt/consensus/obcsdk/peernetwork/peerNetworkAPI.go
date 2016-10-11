@@ -65,6 +65,7 @@ func GetCCDetailByName(name string, lcc LibChainCodes) (ccDetail map[string]stri
 	var errStr string
 	for k, v := range lcc.ChainCodes {
 		if strings.Contains(k, name) {
+		//if k == name {
 			return v.Detail, v.Versions, nil
 		}
 	}
@@ -320,9 +321,10 @@ func GetPeerState(thisNetwork PeerNetwork, peername string) (currPeer *Peer, err
 	var aPeer *Peer
 	var errStr string
 	fullName, _ := GetFullPeerName(thisNetwork, peername)
-	for peerIter := range Peers {
+	for peerIter := 0; peerIter < len(Peers); peerIter++  {
 		if (len(Peers[peerIter].UserData) > 0) && (len(Peers[peerIter].PeerDetails) > 0) {
-			if strings.Contains(Peers[peerIter].PeerDetails["name"], fullName) {
+			//if strings.Contains(Peers[peerIter].PeerDetails["name"],fullName) {
+			if Peers[peerIter].PeerDetails["name"] == fullName {
 				aPeer = &Peers[peerIter]
 			}
 		}
@@ -351,9 +353,10 @@ func SetPeerState(thisNetwork PeerNetwork, peername string, curstate int) (peerD
 	//fmt.Println("Inside function")
 	//get a peerDetails from peername
 	fullName, _ := GetFullPeerName(thisNetwork, peername)
-	for peerIter := range Peers {
+	for peerIter := 0; peerIter < len(Peers); peerIter++  {
 		if (len(Peers[peerIter].UserData) > 0) && (len(Peers[peerIter].PeerDetails) > 0) {
-			if strings.Contains(Peers[peerIter].PeerDetails["name"], fullName) {
+			//if strings.Contains(Peers[peerIter].PeerDetails["name"],fullName) {
+			if Peers[peerIter].PeerDetails["name"] == fullName {
 				aPeer = &Peers[peerIter]
 			}
 		}
@@ -528,7 +531,7 @@ func GetFullPeerName(thisNetwork PeerNetwork, shortname string) (name string, er
 	var errStr string
 	//fmt.Println("Inside function")
 	//get a peerDetails from peername
-	for peerIter := range Peers {
+	for peerIter := 0; peerIter < len(Peers); peerIter++  {
 		if (len(Peers[peerIter].UserData) > 0) && (len(Peers[peerIter].PeerDetails) > 0) {
 			if strings.Contains(Peers[peerIter].PeerDetails["name"], shortname) {
 				aPeer = &Peers[peerIter]
@@ -574,9 +577,11 @@ func LoadNetworkByName(name string) PeerNetwork {
 
   networks := LoadPeerNetworks()
 	pnetworks := networks.PNetworks
-	for peerIter := range pnetworks {
+	//for peerIter := range pnetworks {
+	for peerIter := 0; peerIter < len(pnetworks); peerIter++  {
 		//fmt.Println(pnetworks[peerIter].Name)
-		if strings.Contains(pnetworks[peerIter].Name, name) {
+		//if strings.Contains(pnetworks[peerIter].Name, name) {
+		if pnetworks[peerIter].Name == name {
 			return pnetworks[peerIter]
 		}
 	}

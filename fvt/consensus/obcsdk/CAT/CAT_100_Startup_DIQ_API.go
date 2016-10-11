@@ -150,7 +150,7 @@ func main() {
 
 	chco2.DeployNew(1000000,1000000)
 	chco2.QueryAllPeers( "STEP 2, Query all peers after Redeploy initial network settings" )
-	chco2.InvokeOnEachPeer( 10 )
+	chco2.InvokeOnEachPeer( 3 )
 	chco2.QueryAllPeers( "STEP 4, Query all peers after " + strconv.Itoa(10) + " Invokes on each peer" )
 
 	// API TESTS
@@ -196,7 +196,7 @@ func main() {
 	invArgs := []string{"a", "b", "1"}
 	iAPIArgs := []string{"example02", "invoke", peerName}
 	invRes, err := chco2.DoOneInvoke(iAPIArgs, invArgs)
-	time.Sleep(2 * time.Second)
+	time.Sleep(time.Duration(chco2.NumberOfPeersInNetwork) * time.Second)
 	if err != nil {
 		apiTestsPass = false
 		myStr = fmt.Sprintf("ERROR from invoke: ", err)
@@ -206,31 +206,31 @@ func main() {
 	fmt.Println("\n===== GetBlockStats API Test =====")
 
 	height, err := chaincode.GetChainHeight(peerName)
+	//fmt.Println("height: ", height)
+	blockNum := height-1
 	if err != nil {
 		myStr = fmt.Sprintf("GetChainHeight with peerName=<%s> returned ERROR <%s>", peerName, err)
 		fmt.Println(myStr)
 	}
-	txList, err := chaincode.GetBlockTrxInfoByHost(peerName, height-1)
+	txList, err := chaincode.GetBlockTrxInfoByHost(peerName, blockNum)
 	if err != nil {
-		myStr = fmt.Sprintf("GetBlockTrxInfoByHost with peerName=<%s> and height=%d returned ERROR <%s>", peerName, height-1, err)
+		myStr = fmt.Sprintf("GetBlockTrxInfoByHost with peerName=<%s> and blockNum=%d returned ERROR <%s>", peerName, blockNum, err)
 		fmt.Println(myStr)
 	}
 
 	if err == nil && txList != nil && strings.Contains(txList[0].Txid, invRes) { 	// these should be equal, if the invoke transaction was successful
-		myStr = fmt.Sprintf("\nGetBlocks API TEST PASSED: Transaction Successfully stored in Block")
-		if chco2.Verbose { myStr += fmt.Sprintf("\n CH_Block = %d, txid = %s, InvokeTransactionResult = %s", height-1, txList[0].Txid, invRes) }
+		myStr = fmt.Sprintf("\nGetBlocks API TEST PASSED: Block %d contains Transaction %s as expected", blockNum, invRes)
 		fmt.Println(myStr)
 		fmt.Fprintln(chco2.Writer, myStr)
 		chco2.Writer.Flush()
 	} else {
 		apiTestsPass = false
-                myStr = fmt.Sprintf("\nGetBlocks API TEST FAILED: Transaction NOT stored in CH_Block=%d, InvokeTransactionResult=%s", height-1, invRes)
+                myStr = fmt.Sprintf("\nGetBlocks API TEST FAILED: Transaction NOT stored in CH_Block=%d, InvokeTransactionResult=%s", blockNum, invRes)
 		if txList != nil { 	// && txList[0] != nil 
 			myStr += fmt.Sprintf("\n txid = %s", txList[0].Txid)
 		} else {
-			myStr += fmt.Sprintf("\n Transaction Result is nil!")
+			myStr += fmt.Sprintf("\n Transaction Result is nil")
 		}
-		if err != nil {  myStr += fmt.Sprintf("\nerr = ", err) }
 		fmt.Println(myStr)
 		fmt.Fprintln(chco2.Writer, myStr)
 		chco2.Writer.Flush()
@@ -341,11 +341,12 @@ func getBlockTxInfo(blockNumber int) {
 
 	for i := 1; i <= height; i++ {
 		fmt.Printf("+++++ Current BLOCK %d +++++\n", i)
-		//nonHashData, _ := chaincode.GetBlockTrxInfoByHost(peerName, i)
+		//nonHashData, _ := chaincode.GetBlockTrxInfoByHost(peerName, i) // obsoleted; useful only in v0.5
 		txList, _ := chaincode.GetBlockTrxInfoByHost(peerName, i)
 		length := len(txList)
 		for j := 0; j < length; j++ {
-				myStr1 := fmt.Sprintln("Block[%d] TX [%d] Txid [%d]", i, j, txList[j].Txid)
+				myStr1 := fmt.Sprintf("Block[%d] TX [%d] Txid [%s]", i, j, txList[j].Txid)
+				//myStr1 := fmt.Sprintf("Block[%d] TX [%d] Txid [%s] Payload [%s]", i, j, txList[j].Txid, txList[j].Payload)
 				fmt.Println(myStr1)
 				fmt.Fprintln(chco2.Writer, myStr1)
 		//	// Print Error info only when transaction failed

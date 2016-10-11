@@ -63,6 +63,10 @@ func FixedString(strlen int) string {
 	return string(result)
 }
 
+func ExtraDeployTimeForLargerNetworks(mynetwork peernetwork.PeerNetwork) (extraSleepTime int64) {
+	return ( int64( (len(mynetwork.Peers) / 5) * 60 ) )	// several seconds extra time for every additional 5 peer nodes
+}
+
 // Utility function to deploy chaincode available @ http://urlmin.com/4r76d
 func DeployChaincode(mynetwork peernetwork.PeerNetwork) (cntr int64) {		// ledger stress test (LST) chaincode
 	var funcArgs = []string{CHAINCODE_NAME, INIT}
@@ -78,12 +82,9 @@ func DeployChaincode(mynetwork peernetwork.PeerNetwork) (cntr int64) {		// ledge
 		panic(err)
 	}
 	var sleepTime int64
-	sleepTime = 60
-	// Wait for deploy to complete; sleep based on network environment:  Z | LOCAL [default]
-	// Increase sleep from 60 secs (works in LOCAL network, the defalt) by 60 to sum of 120 secs in external/remote networks
-	//ntwk := os.Getenv("TEST_NETWORK")
-	//if ntwk != "" && ntwk != "LOCAL" { sleepTime += 60 }
-	if !mynetwork.IsLocal { sleepTime += 60 }
+	sleepTime = 60	// Wait for deploy to complete; 1 minute is plenty in default 4-peer LOCAL network
+	sleepTime += ExtraDeployTimeForLargerNetworks(mynetwork)	// sleep longer for larger networks
+	if !mynetwork.IsLocal { sleepTime += 60 }	// sleep more for external/remote networks  Z | LOCAL [default]
 	Logger(fmt.Sprintf("<<<<<< DeployID=%s. cntr=%d. Need to give it some time; sleep for %d secs >>>>>>", deployID, cntr, sleepTime))
 	Sleep(sleepTime)
 	return cntr
@@ -168,14 +169,11 @@ func TearDown(mynetwork peernetwork.PeerNetwork) {
 	cntrVal, err := strconv.ParseInt(cntrStr, 10, 64)
 	if err != nil { Logger(fmt.Sprintf("TearDown() Failed to convert cntr <%s> to int64\n Error: %s\n", cntrStr, err)) }
 
-	//TODO: Block size again depends on the Block configuration in pbft config file
-	//Test passes when 2 * block height match with total transactions, else fails
-
 	if err == nil && cntrVal == lstCounter {
 		testPassed = true
 	}
 
-	// keep rechecking, as long as there are no errors, and cntr keeps advancing (catching up processing backlog of invokes)
+	// keep rechecking, as long as (1) there are no errors, and (2) cntr keeps advancing/processing backlog of invokes
 
 	var sleepSecs = int64(60) 	// sleep and query again every few secs
 	prevCntr := int64(0)
@@ -195,15 +193,15 @@ func TearDown(mynetwork peernetwork.PeerNetwork) {
 		}
 	}
 	if testPassed {
-		Logger(fmt.Sprintf("\nPASSED TEST %s , ledger counter = %d.\n", TESTNAME, lstCounter))
+		Logger(fmt.Sprintf("\nFINAL RESULT PASSED %s , ledger counter = %d.\n", TESTNAME, lstCounter))
 	} else {
 		Logger(fmt.Sprintf("\nWARNING: ledger counter = %d does NOT match expected = %d.\n", cntrVal, lstCounter))
 
 		queryCounterSuccess := QueryAllHostsToGetCurrentCounter(mynetwork, TESTNAME, &cntrVal)
 		if !queryCounterSuccess {
-			Logger(fmt.Sprintf("\nFAILED TEST %s : no consensus for ledger counter\n", TESTNAME))
+			Logger(fmt.Sprintf("\nFINAL RESULT FAILED %s : no consensus for ledger counter\n", TESTNAME))
 		} else {
-			Logger(fmt.Sprintf("\nPASSED TEST %s : after QueryAllHosts, consensus reached for ledger counter = %d (but expected = %d)\n", TESTNAME, cntrVal, lstCounter))
+			Logger(fmt.Sprintf("\nFINAL RESULT PASSED %s : after QueryAllHosts, consensus reached for ledger counter = %d (but expected = %d)\n", TESTNAME, cntrVal, lstCounter))
 		}
 	}
 }

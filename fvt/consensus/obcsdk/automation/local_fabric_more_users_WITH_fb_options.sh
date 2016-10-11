@@ -282,7 +282,7 @@ echo "--------> Pulling Base Docker Images from Docker Hub"
 #Pulling latest docker image from rameshthoomu/baseimage repository
 docker pull rameshthoomu/baseimage:v0.6
 docker tag rameshthoomu/baseimage:v0.6 hyperledger/fabric-baseimage:latest
-# if using LATEST, we may want to comment out these two following lines, since the LATEST tag may point to different/wrong repository:
+# if using LATEST, we may want to comment out these two following lines, since the LATEST tag may point to different/wrong repos...
 docker pull $PEER_IMAGE:$COMMIT
 docker pull $MEMBERSRVC_IMAGE:$COMMIT
 

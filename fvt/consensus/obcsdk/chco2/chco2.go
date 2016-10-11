@@ -208,7 +208,12 @@ func setup_part1(testName string, started time.Time) {
 	envvar = strings.TrimSpace(os.Getenv("CORE_PBFT_GENERAL_N"))
 	if envvar != "" { NumberOfPeersInNetwork, _ = strconv.Atoi(envvar) }
 	envvar = strings.TrimSpace(os.Getenv("CORE_PBFT_GENERAL_F"))
-	if envvar != "" { NumberOfPeersOkToFail, _  = strconv.Atoi(envvar) }
+	if envvar != "" {
+		NumberOfPeersOkToFail, _  = strconv.Atoi(envvar)
+	} else {
+		// User did not set F. For a default, set F to its maximum value: (N-1)/3
+		NumberOfPeersOkToFail = (NumberOfPeersInNetwork-1)/3
+	}
 	envvar = strings.TrimSpace(os.Getenv("CORE_LOGGING_LEVEL"))
 	if envvar != "" { LoggingLevel = envvar }
 	envvar = strings.TrimSpace(os.Getenv("CORE_SECURITY_ENABLED"))
@@ -573,7 +578,7 @@ func DeployNewOnPeer(a int, b int, peer int) {
 	strA := strconv.Itoa(a)
 	strB := strconv.Itoa(b)
 	if initA == strA && initB == strB {
-		fmt.Println("\nPOST/Chaincode: NEW DEPLOY, on peer " + threadutil.GetPeer(peer) + ", using SAME INIT VALUES (and therefore no new chaincode instance, so this will be ignored), A=" + strA + " B=" + strB)
+		fmt.Println("\nPOST/Chaincode: NEW DEPLOY, on peer " + threadutil.GetPeer(peer) + ", using SAME INIT VALUES (and therefore no new chaincode instance, so A/B values should be unaffected, and CH should increase by 1), A=" + strA + " B=" + strB)
 		// same values for A and B ==>
 		// the request will be mapped to same hash ==>
 		// there will NOT be a new network deployed with new values ==>
@@ -592,8 +597,9 @@ func DeployNewOnPeer(a int, b int, peer int) {
 }
 
 func ExtraTimeForLargerNetworks() (extraSleepTime int) {
-	return ( (NumberOfPeersInNetwork % 5) * 30 )	// 30 seconds extra time for every 5 peer nodes to sync up
+	return ( (NumberOfPeersInNetwork / 5) * 60 )	// extra time for every additional 5 peer nodes
 }
+
 func DeployInit(peerNum int) {
 	peerStr := threadutil.GetPeer(peerNum)
 	fmt.Println("\nPOST/Chaincode: DEPLOY chaincode on peer " + peerStr + ", A=" + initA + " B=" + initB)
@@ -602,7 +608,7 @@ func DeployInit(peerNum int) {
 	txId, err := chaincode.DeployOnPeer(dAPIArgs, depArgs)
 	Check(err) 	// if we cannot deploy, then panic
 	sleepsecs := 60 + ExtraTimeForLargerNetworks()
-	if (Verbose) { fmt.Println("Sleep extra secs, deployed txId: ", sleepsecs, txId) }
+	fmt.Println("Sleep extra secs, deployed txId: ", sleepsecs, txId)
 	time.Sleep(time.Duration(sleepsecs) * time.Second)
 	incrHeightCount(1, peerNum)
 	setQueuedTransactionCounter(1)
@@ -701,6 +707,7 @@ func invokeOnAnyPeer(totalNumInvokes int) {
 func InvokesUniqueOnEveryPeer() {
 	powerOf2 := 1
 	for i := 0 ; i < NumberOfPeersInNetwork ; i++ {
+		if i % 8 == 0 { powerOf2 = 1 } // 1 2 4 8 16 32 64 128 1 2 4 8 16 32 64 128 1 2 4 8 16 32 64 128 ...
        		if peerIsRunning(i,MyNetwork) { InvokeOnThisPeer( powerOf2, i ) }
 		powerOf2 = powerOf2 * 2
 	}
@@ -1203,7 +1210,7 @@ func RestartMemberServices() {
 func TimeTrack(start time.Time, name string) {
 	//fmt.Println("+++ENTERED_TIMETRACK+++")
         elapsed := time.Since(start)
-        preStr := ""
+        preStr := "FINAL RESULT "
         postStr := ""
         myOutStr := fmt.Sprintf(" %s (Q_Pass=%t CH_Pass=%t, Enforce Q=%t CH=%t, MustMatch Q=%t CH=%t AllVP=%t) [%s]  ",
 			 		name, queryTestsPass, chainHeightTestsPass, EnforceQueryTestsPass, EnforceChainHeightTestsPass,

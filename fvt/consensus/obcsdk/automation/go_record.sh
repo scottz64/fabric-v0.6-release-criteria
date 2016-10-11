@@ -139,7 +139,7 @@ To override any default script parameters: set and export them from your ENV, or
 	COMMIT 					- hash commit image to use for the ca and peers; use prefix 'master-' for gerrit images
 	REPOSITORY_SOURCE 			- location of the fabric COMMIT image [ GERRIT (default, for master) | GITHUB (for v0.5) ]
 	CORE_PBFT_GENERAL_N 			- number of validating peers in the network [ 4 ]; note currently users are defined only for 10 nodes
-	CORE_PBFT_GENERAL_F 			- max # possible faulty nodes while still can reach consensus [ 1 ] ; do not set to a value exceeding (2n-1)/3
+	CORE_PBFT_GENERAL_F 			- max # possible faulty nodes while still can reach consensus [ (N-1)/3 ] ; do not set to a value exceeding default
 	CORE_LOGGING_LEVEL			- [ critical | error | warning | notice | info | debug ] as defined in peer/core.yaml
 	CORE_SECURITY_ENABLED 			- use secure network using MemberSrvc CA [ Y | N ]
 	CORE_PEER_VALIDATOR_CONSENSUS_PLUGIN 	- consensus mode [ pbft | ... ]
@@ -220,7 +220,7 @@ CORE_SECURITY_ENABLED=$(echo $CORE_SECURITY_ENABLED | tr a-z A-Z)
 : ${CORE_PBFT_GENERAL_N="4"}
 
 # number of peers in the network that can fail or go rogue, with the others being correct and can still reach consensus
-: ${CORE_PBFT_GENERAL_F="1"}
+: ${CORE_PBFT_GENERAL_F=$((($CORE_PBFT_GENERAL_N-1)/3))}
 
 # Unless the caller has set CORE_PBFT_GENERAL_BATCHSIZE on the command line or in their environment,
 # let's change batchsize environment variable here. This will allow scripts to run most quickly.
