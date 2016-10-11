@@ -28,6 +28,8 @@ var util = require('util');
 var fs = require('fs');
 const https = require('https');
 const child_process = require('child_process');
+var os = require('os');
+console.log('perf-main: nCPUs=', os.cpus().length);
 
 
 // input: userinput json file
@@ -37,10 +39,12 @@ var uiContent = JSON.parse(fs.readFileSync(uiFile));
 
 var svcFile = uiContent.SCFile[LPARid].ServiceCredentials;
 var ccPath = process.argv[4];
-console.log('LPAR=%d, svcFile: %s, ccPath: %s', LPARid, svcFile, ccPath);
-
 var tStart = parseInt(process.argv[5]);
+var bcHost = process.argv[6];
+console.log('LPAR=%d, svcFile:%s, ccPath:%s, bcHost:%s', LPARid, svcFile, ccPath, bcHost);
 
+process.env['GOPATH'] = __dirname;
+var chaincodeIDPath = __dirname + "/chaincodeID";
 
 // Create a client blockchin.
 var chainName = 'targetChain'+LPARid;
@@ -53,11 +57,11 @@ var nRequest=0;
 var rDur=0;
 var t_end=0;
 var testChaincodeID;
-var ccType;
+var ccType=uiContent.ccType;
 
 // sanity check: transaction type
 var transType = uiContent.transType;
-if ((transType.toUpperCase() != 'QUERY') && (transType.toUpperCase() != 'INVOKE') ){
+if ((transType.toUpperCase() != 'QUERY') && (transType.toUpperCase() != 'INVOKE') && (transType.toUpperCase() != 'MIX')){
     console.log('LPAR=%d, invalid transaction type : %s', LPARid, transType);
     process.exit();
 }
@@ -99,7 +103,7 @@ if (uiContent.nPeers) {
     nPeers = 4;
 }
 
-console.log('LPAR=%d, Peers=%d, Threads=%d, duration=%d sec, request=%d', LPARid, nPeers, nThread, rDur, nRequest);
+console.log('LPAR=%d, Peers=%d, Threads=%d, duration=%d sec, request=%d, ccType=%s', LPARid, nPeers, nThread, rDur, nRequest, ccType);
 
 // Configure the KeyValStore which is used to store sensitive keys.
 // This data needs to be located or accessible any time the users enrollmentID
@@ -107,7 +111,8 @@ console.log('LPAR=%d, Peers=%d, Threads=%d, duration=%d sec, request=%d', LPARid
 // this data.
 // Please ensure you have a /tmp directory prior to placing the keys there.
 // If running on windows or mac please review the path setting.
-var keydir = '/tmp/keyValStore'+ LPARid;
+//var keydir = '/tmp/keyValStore'+ LPARid;
+var keydir = __dirname + '/keyValStore' + LPARid;
 chain.setKeyValStore(hfc.newFileKeyValStore(keydir));
 //console.log('LPAR=%d, keydir=%s', LPARid, keydir);
 
@@ -134,15 +139,19 @@ console.log('LPAR=%d, isHSBN:', LPARid, isHSBN);
 
 var peerAddress = [];
 var network_id = Object.keys(network.credentials.ca);
-var ca_url = "grpcs://" + network.credentials.ca[network_id].discovery_host + ":" + network.credentials.ca[network_id].discovery_port;
+var ca_url = "grpc://" + network.credentials.ca[network_id].discovery_host + ":" + network.credentials.ca[network_id].discovery_port;
+console.log('LPAR=%d, ca_url: %s', LPARid, ca_url);
 
 if (!isHSBN) {
     //HSBN uses RSA generated keys
-    chain.setECDSAModeForGRPC(true)
+    chain.setECDSAModeForGRPC(true);
 }
 
-var certFile = ccPath + '/certificate.pem';
-var certUrl = network.credentials.cert;
+
+if ( bcHost == 'bluemix' ) {
+    var certFile = ccPath + '/certificate.pem';
+    var certUrl = network.credentials.cert;
+}
 
 setTimeout(function(){
     enrollAndRegisterUsers();
@@ -150,26 +159,36 @@ setTimeout(function(){
 
 
 function enrollAndRegisterUsers() {
-    var cert = fs.readFileSync(certFile);
-    chain.setMemberServicesUrl(ca_url, {
-        pem: cert
-    });
-
-    // Adding all the peers to blockchain
-    // this adds high availability for the client
-    for (var i = 0; i < peers.length; i++) {
-        chain.addPeer("grpcs://" + peers[i].discovery_host + ":" + peers[i].discovery_port, {
+    if ( bcHost == 'bluemix' ) {
+        var cert = fs.readFileSync(certFile);
+        chain.setMemberServicesUrl(ca_url, {
             pem: cert
         });
+
+        // Adding all the peers to blockchain
+        // this adds high availability for the client
+        for (var i = 0; i < peers.length; i++) {
+            chain.addPeer("grpcs://" + peers[i].discovery_host + ":" + peers[i].discovery_port, {
+                pem: cert
+            });
+        }
+    } else {
+        chain.setMemberServicesUrl(ca_url);
+
+        // Adding all the peers to blockchain
+        // this adds high availability for the client
+        for (var i = 0; i < peers.length; i++) {
+            chain.addPeer("grpc://" + peers[i].discovery_host + ":" + peers[i].discovery_port);
+        }
     }
-	
 
     // Enroll a 'admin' who is already registered because it is
     // listed in fabric/membersrvc/membersrvc.yaml with it's one time password.
+    //console.log('username=%s, secret=%s', users[0].username, users[0].secret);
     chain.enroll(users[0].username, users[0].secret, function(err, admin) {
         if (err) throw Error("\nLPAR=%d, ERROR: failed to enroll admin : %s", LPARid, err);
 
-        //console.log("\nLPAR=%d, Enrolled admin successfully", LPARid);
+        console.log("\nLPAR=%d, Enrolled admin successfully", LPARid);
 
         // Set this user as the chain's registrar which is authorized to register other users.
         chain.setRegistrar(admin);
@@ -177,8 +196,7 @@ function enrollAndRegisterUsers() {
         var enrollName = "JohnDoe"; //creating a new user		
         var registrationRequest = {
             enrollmentID: enrollName,
-            account: "group1",
-            affiliation: "00001"
+            affiliation: "bank_a"
         };
         chain.registerAndEnroll(registrationRequest, function(err, user) {
             if (err) throw Error('LPAR=%d, Failed to register and enroll %s: %s', LPARid, enrollName, err);
@@ -199,17 +217,25 @@ var testDeployArgs = uiContent.deploy.args.split(",");
 
 function deployChaincode(user) {
     // Construct the deploy request
+if ( bcHost == 'bluemix' ) {
     var deployRequest = {
-		// chaincode path
-		chaincodePath: testChaincodePath,
+	// chaincode path
+	chaincodePath: testChaincodePath,
         // Function to trigger
         fcn: uiContent.deploy.fcn,
         // Arguments to the initializing function
         //args: ["a", "100", "b", "200"],
-		args: testDeployArgs,
+	args: testDeployArgs,
         // the location where the startup and HSBN store the certificates
         certificatePath: isHSBN ? "/root/" : "/certs/blockchain-cert.pem"
     };
+} else {
+    var deployRequest = {
+	chaincodePath: testChaincodePath,
+        fcn: uiContent.deploy.fcn,
+	args: testDeployArgs
+    };
+}
     //deployRequest.chaincodePath = "github.com/chaincode_example02/";
 	//deployRequest.chaincodePath = testChaincodePath;
 
@@ -241,10 +267,19 @@ function execTransactions(user) {
 
         // Start the transactions
         for (var i = 0; i < nThread; i++) {
+	    var workerProcess = child_process.spawn('node', ['./perf-execRequest.js', LPARid, i, testChaincodeID, tStart, uiFile, bcHost ]);
 
-		    var workerProcess = child_process.spawn('node', ['./perf-execRequest.js', LPARid, i, testChaincodeID, tStart, uiFile, certFile ]);
+/*
+            if ( transType.toUpperCase() == 'MIX' ){
+		    var workerProcess = child_process.spawn('node', ['./perf-execRequest-m1.js', LPARid, i, testChaincodeID, tStart, uiFile ]);
+		    //var workerProcess = child_process.spawn('node', ['./perf-execRequest-mix.js', LPARid, i, testChaincodeID, tStart, uiFile ]);
+		    //var workerProcess = child_process.spawn('node', ['./perf-execRequest.js', LPARid, i, testChaincodeID, tStart, uiFile, certFile ]);
 		    //var workerProcess = child_process.spawn('node', ['./perf-execRequest-rate.js', LPARid, i, testChaincodeID, tStart, uiFile, certFile ]);
-			
+            } else {
+		    var workerProcess = child_process.spawn('node', ['./perf-execRequest.js', LPARid, i, testChaincodeID, tStart, uiFile ]);
+            }
+*/
+
             workerProcess.stdout.on('data', function (data) {
                console.log('stdout: ' + data);
             });
