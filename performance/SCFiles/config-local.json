@@ -1,0 +1,48 @@
+{
+  "credentials": {
+    "peers": [
+      {
+        "discovery_host": "127.0.0.1",
+        "discovery_port": 30001
+      },
+      {
+        "discovery_host": "127.0.0.1",
+        "discovery_port": 30003
+      },
+      {
+        "discovery_host": "127.0.0.1",
+        "discovery_port": 30005
+      },
+      {
+        "discovery_host": "127.0.0.1",
+        "discovery_port": 30007
+      }
+    ],
+    "ca": {
+      "127.0.0.1_ca": {
+        "discovery_host": "127.0.0.1",
+        "discovery_port": 7054
+      }
+    },
+    "users": [
+      {
+        "username": "admin",
+        "secret": "Xurw3yU9zI0l",
+        "enrollId": "admin",
+        "enrollSecret": "Xurw3yU9zI0l"
+      },
+      {
+        "username": "lukas",
+        "secret": "NPKYL39uKbkj",
+        "enrollId": "lukas",
+        "enrollSecret": "NPKYL39uKbkj"
+      },
+      {
+        "username": "WebAppAdmin",
+        "secret": "1d5266a126",
+        "enrollId": "WebAppAdmin",
+        "enrollSecret": "1d5266a126"
+      }
+    ]
+  }
+}
