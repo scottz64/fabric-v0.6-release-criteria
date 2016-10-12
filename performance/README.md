@@ -16,24 +16,25 @@ for Node SDK installation.
 
 #Usages
 
-	./perf_driver.sh <user input json file> <chaincode path> <nLPARs>
+	./perf_driver.sh <user input json file> <chaincode path> <nLPARs> <bcHost>
 
     user input json file: the json file contains all user specified parameters for the test, see below for detailed description
-    chaincode path: the path to the chaincode
+    chaincode path: the path to the chaincode, this path is in src directory under current working directory, see example below
     nLPARs: number of LPARs
+    bcHost: location of the network.  For the local network (bcHost=local), no certificate to be used.  For bluemix network (bcHost=bluemix), the certificate will be downloaded from the address specified in the service credential file.
 
 ###Examples
 
 
-######./perf_driver.sh userInput-example02.json $GOPATH/src/github.com/chaincode_example02 1
+    ./perf_driver.sh userInput-example02.json src/chaincode_example02 1 bluemix
 
-The above command will execute chaincode example02 on 1 LPAR based on the setting of userInput-example02.json. 
+The above command will execute chaincode example02 on 1 LPAR based on the setting of userInput-example02.json with the bluemix network
 
 
 
-######./perf_driver.sh userInput-auction.json $GOPATH/src/github.com/auction 2
+    ./perf_driver.sh userInput-auction.json src/auction 2 local
 
-The above command will execute chaincode auction on 2 LPARs based on the setting of userInput-example02.json.
+The above command will execute chaincode auction on 2 LPARs based on the setting of userInput-example02.json with the local network
 
 
 #Scripts
@@ -78,11 +79,15 @@ The above command will execute chaincode auction on 2 LPARs based on the setting
     
 where:
 
-    transType: transaction type: Invoke or Query
+    transType: transaction type
+        Invoke: invokes only
+        Query: query only
+        Mix: each invoke is followed by a query on every thread, the frequency, nFreq, is a parameter in this user input file (see below). The value of nFreq should be set based on the characteristics of the chaincode.
     nPeer: number of peers, this number has to match with the peer netwrok, default is 4
     nThread: number of threads for the test, default is 4
     nRequest: number of transaction requests for each thread
     runDur: run duration in seconds when nRequest is 0
+    nFreq: frequency in seconds for Mix transaction type
     TCertBatchSize: TCert batch size, default is 200
     ccName: name of the chaincode, 
         auction: The first argument in the query and invoke request is incremented by 1 for every transaction.  And, the invoke payload is made of a random string with a random size between 1KB to 2KB.  This will make all invoke trnasactions different. 
@@ -95,11 +100,11 @@ where:
 
 #Service Credentials
 
-The service credentials for each LPAR can be either downloaded or created by copy and paste from Bluemix network.
+The service credentials for each LPAR can be either downloaded or created by copy and paste from Bluemix if the network is on bluemix.  For the local network, user will need to create a json file similar to the config-local.json in SCFiles directory. 
 
 #Chaincodes
 
-The following chaincodes are supported:
+The following chaincodes are tested and supported:
 
     example02
     auction chaincode

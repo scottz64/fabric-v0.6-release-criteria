@@ -558,7 +558,7 @@ function SendMix(pid, user, mix, callback) {
             } else { 
                 setTimeout(function(){
                     SendMix(pid, user, 'query', null) 
-                },2500);
+                },nFreq);
             };
         });
         invokeTx.on('error', function (err) {
@@ -581,7 +581,7 @@ function SendMix(pid, user, mix, callback) {
             } else { 
                 setTimeout(function(){
                     SendMix(pid, user, 'query', null) 
-                },2500);
+                },nFreq);
             };
         });
     } else if ( mix == 'query' ) {
@@ -645,11 +645,18 @@ function SendMix(pid, user, mix, callback) {
     }
 };
 
+var nFreq = 3000;
 function execMix(user) {
 
         // init TcertBatchSize
         user.setTCertBatchSize(TCertBatchSize);
-		
+        if (uiContent.nFreq) {
+            nFreq = parseInt(uiContent.nFreq);
+        } else {
+            nFreq = 3000;
+        }
+
+	console.log('Mix nFreq:',nFreq);
 	console.log('invoke:',invokeRequest);
 
         // get time
