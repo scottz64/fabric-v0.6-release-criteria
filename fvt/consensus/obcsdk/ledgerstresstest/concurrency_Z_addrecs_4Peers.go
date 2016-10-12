@@ -13,6 +13,7 @@ import (
 	"../chaincode"
 	"sync"
 	"math/rand"
+        "strconv"
 )
 
 var loopCtr, numReq int
@@ -46,7 +47,7 @@ func main() {
 
         loopCtr = 0
   	numReq = 50
-  	defer timeTrack(time.Now(), "Testcase execution Done")
+  	defer timeTrack(time.Now(), "concurrency_Z_addrecs_4Peers")
   	now := time.Now().Unix()
   	endTime := now + 1 * 60
         fmt.Println("Start now, End Time: ", now, endTime)
@@ -56,9 +57,6 @@ func main() {
             loopCtr++
             now = time.Now().Unix()
   	}
-  	var numRequestsSent = loopCtr * numReq * 4
-  	myStr = fmt.Sprintf("\nnum of requests sent =  %d in 1 min ", numRequestsSent)
-  	fmt.Println(myStr)
 
 }
 
@@ -133,9 +131,10 @@ func InvokeLoop(numReq int, data string) {
 	wg.Wait()
 }
 
-func QueryHeight(expectedCtr int, waitTime int) {
+func QueryHeight(expectedCtr int) (passed bool) {
 
-  time.Sleep(300000 * time.Millisecond)
+	passed = false
+
 	fmt.Println("\nPOST/Chaincode: Querying counter from addrecs chaincode after invoke >>>>>>>>>>> ")
 	qAPIArgs00 := []string{MY_CHAINCODE_NAME, "query", "PEER0"}
 	qAPIArgs01 := []string{MY_CHAINCODE_NAME, "query", "PEER1"}
@@ -145,36 +144,48 @@ func QueryHeight(expectedCtr int, waitTime int) {
 	qArgsb := []string{"counter"}
 
 	resCtr0, _ := chaincode.QueryOnHost(qAPIArgs00, qArgsb)
-
 	resCtr1, _ := chaincode.QueryOnHost(qAPIArgs01, qArgsb)
-
 	resCtr2, _ := chaincode.QueryOnHost(qAPIArgs02, qArgsb)
-
 	resCtr3, _ := chaincode.QueryOnHost(qAPIArgs03, qArgsb)
 
-
-
-
-	fmt.Println("Results in b vp0 : ", resCtr0)
-	fmt.Println("Results in b vp1 : ", resCtr1)
-	fmt.Println("Results in b vp2 : ", resCtr2)
-	fmt.Println("Results in b vp3 : ", resCtr3)
 
 	ht0, _ := chaincode.GetChainHeight("PEER0")
 	ht1, _ := chaincode.GetChainHeight("PEER1")
 	ht2, _ := chaincode.GetChainHeight("PEER2")
 	ht3, _ := chaincode.GetChainHeight("PEER3")
 
-	fmt.Printf("ht0: %d, ht1: %d, ht2: %d, ht3: %d ", ht0, ht1, ht2, ht3)
+	fmt.Println("Ht in  PEER0 : ", ht0)
+	fmt.Println("Ht in  PEER1 : ", ht1)
+	fmt.Println("Ht in  PEER2 : ", ht2)
+	fmt.Println("Ht in  PEER3 : ", ht3)
+
+	resCtrI0, _ := strconv.Atoi(resCtr0) 
+	resCtrI1, _ := strconv.Atoi(resCtr1) 
+	resCtrI2, _ := strconv.Atoi(resCtr2) 
+	resCtrI3, _ := strconv.Atoi(resCtr3) 
+	matches := 0
+	if resCtrI0 == expectedCtr { matches++ }
+	if resCtrI1 == expectedCtr { matches++ }
+	if resCtrI2 == expectedCtr { matches++ }
+	if resCtrI3 == expectedCtr { matches++ }
+	if matches == 4 {
+		passed = true
+		fmt.Printf("expected: %d.  ALL PEERS MATCH.\n", expectedCtr)
+	} else {
+		fmt.Printf("expected: %d\nresCtr0:  %d\nresCtr1:  %d\nresCtr2:  %d\nresCtr3:  %d\n", expectedCtr, resCtrI0, resCtrI1, resCtrI2, resCtrI3)
+	}
+	return passed
 }
 
 
 func timeTrack(start time.Time, name string) {
 	elapsed := time.Since(start)
         expectedValue := loopCtr * numReq * 4
-        QueryHeight(expectedValue, 300)
-	fmt.Printf("\n################# %s took %s \n", name, elapsed)
-	fmt.Println("################# Execution Completed #################")
+	result := "FAILED"
+        QueryHeight(expectedValue)
+	time.Sleep(510000 * time.Millisecond)  // 8.5 minutes
+        if QueryHeight(expectedValue) { result = "PASSED" }
+	fmt.Printf("\nFINAL RESULT %s %s, elapsed %s \n", name, result, elapsed)
 }
 
 func RandomString(strlen int) string {
