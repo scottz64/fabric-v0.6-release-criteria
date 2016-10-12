@@ -1,96 +1,59 @@
 #!/bin/bash
+# ------------------------------------------------------------------
+# TITLE : Spinup local peer network
+# AUTHOR: Ramesh Thoomu & Barry
+# VERSION: 1.0
 
-#IMAGE=latest
+# DESCRIPTION:
+# The purpose of this script is to spinup peers in local machine using docker.
+# Peers launches on tested peer and membersrvc docker images and latest hyperledger/fabric
+# base image. Script pulls these images from rameshthoomu docker hub account. Take the
+# latest commit of peer and membersrvc from rameshthoomu docker hub account.
 
-# Or, to override "latest" and use specific load, refer to Ramesh's slack hyperledger project testchannel msgs to correlate to dates.
-# e.g. set peer and membersrvc images to the following if want June 9th load (uploaded 9:27 am).
-# e.g. set peer and membersrvc images to rameshthoomu/peer:a94f5a7 if you want June 9th load (uploaded 9:27 am to rameshthoomu fork hub).
-# a94f5a7 6/09  927am
-# ee024d5 6/14 1122am This label contains new peer but not the new membersrvc image, so do not use.
-# f8ffcd1 6/15  426pm - includes 1798/1091 from jyellick
-# 04f076b 6/16 1002am - includes 1793/1056 from corecode
-# 2cd9baa 6/16  356pm - includes 1878 from jyellick - but this is not at ramesh's fork
-# ef10347 6/17  747am - includes 1877 from jyellick and 1888
-# 35326c2 6/18  930am - includes 1877 (another update)
-# 6524f7c 6/22  Kostas' private load with partial fixes for 1874
-# de2c77e 6/23  930am - latest on our release branch right now, hyperledger/fabric@v0.5-developer-preview
-# 9f5666f 6/24  230pm - contains fix for 1942 fixed by PR 1987 commit 9f5666f merged into hyperledger:v0.5-developer-preview
-# 5efed61 6/27  300pm - includes PR 2007/2016 for issue 1874 and 1942 (and PR 1987 for 1942) (I think this was the first major delivery to zACI team)
+# Pre-condition: Install docker in your local machine and start docker daemon
 
-# eab800e 6/29 1100am - latest commit of branch v0.5-developer-preview on rameshthoomu/peer and rameshthoomu/membersrvc docker hub repositories
-# 3e0e80a 7/19        - latest commit of branch v0.5-developer-preview on rameshthoomu/peer and rameshthoomu/membersrvc docker hub repositories
-# 346f9fb 7/27        - latest commit of master
+## USAGE:
+# local_fabric.sh [OPTIONS]
 
-#IMAGE=5efed61
-#IMAGE=eab800e
-IMAGE=3e0e80a 
-#IMAGE=346f9fb
-PEER_IMAGE=rameshthoomu/peer:$IMAGE
-MEMBERSRVC_IMAGE=rameshthoomu/membersrvc:$IMAGE
+# OPTIONS:
+#       -n   - Number of peers to launch
+#       -s   - Enable Security and Privacy
+#       -c   - Specific commit
+#       -l   - Enable logging method
+#       -m   - Enable consensus mode
+#       -b   - Set batch size, useful when using consensus pbft mode of batch
+#       -f   - Number of peers that can fail, when using pbft for consensus, maximum (n-1)/3
+#       -?/-h- Prints Usage
+#
+# SAMPLE :
+#       ./local_fabric.sh -n 4 -s -c x86_64-0.6.0-SNAPSHOT-f3c9a45 -l debug -m pbft
+#       ./local_fabric.sh -n 4 -s -c 346f9fb -l debug -m pbft
+# ------------------------------------------------------------------
 
-# cd fabric directory, gitpullr to get latest code. (If you want different view / commit-level, just set your environment first by:
+# `commit# 821a3c7` has been uploaded to `rameshthoomu` docker hub account.. Please download `local_fabric.sh` script from rameshthoomu github account... Please change image source to rameshthoomu/peer and rameshthoomu/membersrvc
 
-#  git log --oneline               // to find the commit you want
-#  git reset --hard  <commit#>     // to set your git to that commit level (stash first, since this will toss anything you might have developed locally)
-# Then make clean and make peer and make membersrvc (or make peer-image and make membersrvc-image).
-# Then set paths to obtain them locally here and below in the "docker pull..." commands, instead of pulling from elsewhere:
-
-#PEER_IMAGE=hyperledger/fabric-peer:$IMAGE
-#MEMBERSRVC_IMAGE=hyperledger/fabric-membersrvc:$IMAGE
-
-
+PEER_IMAGE=rameshthoomu/peer
+MEMBERSRVC_IMAGE=rameshthoomu/membersrvc
+#REST_PORT=7050 for GERRIT
 REST_PORT=5000
 USE_PORT=30000
-#PEER_IMAGE=pushdocker/working:vagrant2
-#OBCCA_IMAGE=pushdocker/obcca:vagrant2
-
-CONSENSUS=pbft
 PBFT_MODE=batch
-# PBFT_MODE=sieve
-
-# chco2 code runs with batch size = 2, to allow using CH verification in some tests.
-# So we need to override the default CORE_PBFT_GENERAL_BATCHSIZE (500) here to 2. Also note:
-# if you want to change to 500, or any other value, then also modify chco2 constant batchsize accordingly.
-PBFT_BATCHSIZE=500
-#PBFT_BATCHSIZE=2
-
-# If change any of these following parameters in this script from these default values, then
-# also should change constants in chco2.go and go build.
-#CORE_PBFT_GENERAL_N=4
-#CORE_PBFT_GENERAL_F=1
-#CORE_PBFT_GENERAL_K=10
-#CORE_PBFT_GENERAL_LOGMULTIPLIER=4
-#CORE_PBFT_GENERAL_BATCHSIZE=$PBFT_BATCHSIZE
-#CORE_PBFT_GENERAL_TIMEOUT_BATCH=2s
-
-# Others that can be set here too, but these do not require rebuilding:
-#CORE_PBFT_GENERAL_TIMEOUT_REQUEST=2s
-#CORE_PBFT_GENERAL_TIMEOUT_VIEWCHANGE=2s
-#CORE_PBFT_GENERAL_TIMEOUT_NULLREQUEST=0s 	# set to 1s to force handlers to run
-#		-e CORE_PBFT_GENERAL_TIMEOUT_NULLREQUEST=1s \
-
-
-
 WORKDIR=$(pwd)
-
-echo "STARTING AT: `date`"
-echo "PEER_IMAGE=$PEER_IMAGE"
-echo MEMBERSRVC_IMAGE=$MEMBERSRVC_IMAGE
-echo CONSENSUS=$CONSENSUS
-echo PBFT_MODE=$PBFT_MODE
-echo PBFT_BATCHSIZE=$PBFT_BATCHSIZE
 
 # Membersrvc
 membersrvc_setup()
 {
 curl -L https://raw.githubusercontent.com/hyperledger/fabric/master/membersrvc/membersrvc.yaml -o membersrvc.yaml
+# curl -L https://raw.githubusercontent.com/hyperledger/fabric/v0.6/membersrvc/membersrvc.yaml -o membersrvc.yaml
 
 local NUM_PEERS=$1
 local IP=$2
 local PORT=$3
 echo "--------> Starting membersrvc Server"
 
-docker run -d --name=caserver -p 50051:50051 -p 50052:30303 -it $MEMBERSRVC_IMAGE membersrvc
+sleep 5
+
+docker run -d --name=caserver -p 50051:50051 -p 50052:30303 -it $MEMBERSRVC_IMAGE:$COMMIT membersrvc
 
 echo "--------> Starting hyperledger PEER0"
 
@@ -105,25 +68,23 @@ docker run -d --name=PEER0 -it \
                 -e CORE_PEER_PKI_TCA_PADDR=$IP:50051 \
                 -e CORE_PEER_PKI_TLSCA_PADDR=$IP:50051 \
                 -e CORE_PEER_LISTENADDRESS=0.0.0.0:30303 \
-                -e CORE_PEER_VALIDATOR_CONSENSUS_PLUGIN=$CONSENSUS \
+                -e CORE_PEER_VALIDATOR_CONSENSUS_PLUGIN=$CONSENSUS_MODE \
                 -e CORE_PBFT_GENERAL_MODE=$PBFT_MODE \
                 -e CORE_PBFT_GENERAL_N=$NUM_PEERS \
-                -e CORE_PBFT_GENERAL_BATCHSIZE=$PBFT_BATCHSIZE \
+		-e CORE_PBFT_GENERAL_F=$F \
+		-e CORE_PBFT_GENERAL_BATCHSIZE=$PBFT_BATCHSIZE \
                 -e CORE_PBFT_GENERAL_TIMEOUT_REQUEST=10s \
-		-e CORE_LOGGING_LEVEL=DEBUG \
+                -e CORE_LOGGING_LEVEL=$PEER_LOG \
                 -e CORE_VM_DOCKER_TLS_ENABLED=false \
                 -e CORE_SECURITY_ENROLLID=test_vp0 \
-                -e CORE_SECURITY_ENROLLSECRET=MwYpmSRjupbT $PEER_IMAGE peer node start
-
+                -e CORE_SECURITY_ENROLLSECRET=MwYpmSRjupbT $PEER_IMAGE:$COMMIT peer node start
 
 CONTAINERID=$(docker ps | awk 'NR>1 && $NF!~/caserv/ {print $1}')
 PEER_IP_ADDRESS=$(docker inspect --format '{{.NetworkSettings.IPAddress}}' $CONTAINERID)
-echo PEER0 CONTAINERID=$CONTAINERID
-echo PEER0 PEER_IP_ADDRESS=$PEER_IP_ADDRESS
 
 for (( peer_id=1; $peer_id<"$NUM_PEERS"; peer_id++ ))
 do
-# Storing USER_NAME and SECRET_KEY Values from membersrvc.yaml file
+# Storing USER_NAME and SECRET_KEY Values from membersrvc.yaml file: Supports maximum 10 peers
 
 USER_NAME=$(awk '/users:/,/^[^ ]/' membersrvc.yaml | egrep "test_vp$((peer_id)):" | cut -d ":" -f 1 | tr -d " ")
 SECRET_KEY=$(awk '/users:/,/^[^ ]/' membersrvc.yaml | egrep "test_vp$((peer_id)):" | cut -d ":" -f 2 | cut -d " " -f 3)
@@ -143,20 +104,21 @@ docker run  -d --name=PEER$peer_id -it \
                 -e CORE_PEER_PKI_TCA_PADDR=$IP:50051 \
                 -e CORE_PEER_PKI_TLSCA_PADDR=$IP:50051 \
                 -e CORE_PEER_LISTENADDRESS=0.0.0.0:30303 \
-                -e CORE_PEER_VALIDATOR_CONSENSUS_PLUGIN=$CONSENSUS \
+                -e CORE_PEER_VALIDATOR_CONSENSUS_PLUGIN=$CONSENSUS_MODE \
                 -e CORE_PBFT_GENERAL_MODE=$PBFT_MODE \
                 -e CORE_PBFT_GENERAL_N=$NUM_PEERS \
-                -e CORE_PBFT_GENERAL_BATCHSIZE=$PBFT_BATCHSIZE \
+		-e CORE_PBFT_GENERAL_F=$F \
+		-e CORE_PBFT_GENERAL_BATCHSIZE=$PBFT_BATCHSIZE \
                 -e CORE_PBFT_GENERAL_TIMEOUT_REQUEST=10s \
-                -e CORE_LOGGING_LEVEL=DEBUG \
+                -e CORE_LOGGING_LEVEL=$PEER_LOG \
                 -e CORE_VM_DOCKER_TLS_ENABLED=false \
                 -e CORE_SECURITY_ENROLLID=$USER_NAME \
-                -e CORE_SECURITY_ENROLLSECRET=$SECRET_KEY $PEER_IMAGE peer node start
+                -e CORE_SECURITY_ENROLLSECRET=$SECRET_KEY $PEER_IMAGE:$COMMIT peer node start
 done
 }
-
-# Peer Setup without security and consensus
+# Peer Setup without security and privacy
 peer_setup()
+
 {
 
     local  NUM_PEERS=$1
@@ -167,10 +129,11 @@ docker run -d  -it --name=PEER0 \
                 -e CORE_VM_ENDPOINT="http://$IP:$PORT" \
                 -e CORE_PEER_ID="vp0" \
                 -p $REST_PORT:5000 -p `expr $USE_PORT + 1`:30303 \
+                -e CORE_PEER_ADDRESS=$IP:`expr $USE_PORT + 1` \
                 -e CORE_PEER_ADDRESSAUTODETECT=true \
                 -e CORE_PEER_LISTENADDRESS=0.0.0.0:30303 \
-                -e CORE_PEER_LOGGING_LEVEL=error \
-                -e CORE_VM_DOCKER_TLS_ENABLED=false $PEER_IMAGE peer node start
+                -e CORE_LOGGING_LEVEL=$PEER_LOG \
+                -e CORE_VM_DOCKER_TLS_ENABLED=false $PEER_IMAGE:$COMMIT peer node start
 
 CONTAINERID=$(docker ps | awk 'NR>1 && $NF!~/caserv/ {print $1}')
 PEER_IP_ADDRESS=$(docker inspect --format '{{.NetworkSettings.IPAddress}}' $CONTAINERID)
@@ -185,19 +148,30 @@ docker run -d -it --name=PEER$peer_id \
                 -e CORE_VM_ENDPOINT="http://$IP:$PORT" \
                 -e CORE_PEER_ID="vp"$peer_id \
                 -p $REST_PORT:5000 -p `expr $USE_PORT + 1`:30303 \
+                -e CORE_PEER_DISCOVERY_ROOTNODE=$IP:30001 \
                 -e CORE_PEER_ADDRESSAUTODETECT=false \
                 -e CORE_PEER_ADDRESS=$IP:`expr $USE_PORT + 1` \
-                -e CORE_PEER_DISCOVERY_ROOTNODE=$IP:30001 \
                 -e CORE_PEER_LISTENADDRESS=0.0.0.0:30303 \
-                -e CORE_PEER_LOGGING_LEVEL=error \
-                -e CORE_VM_DOCKER_TLS_ENABLED=false $PEER_IMAGE peer node start
+                -e CORE_LOGGING_LEVEL=$PEER_LOG \
+                -e CORE_VM_DOCKER_TLS_ENABLED=false $PEER_IMAGE:$COMMIT peer node start
 done
 }
 
-while getopts "\?hsn:" option; do
+function usage()
+{
+	echo "USAGE :  $0 -n <number of Peers> -f <max number of faulty peers> -s <enable security and privacy> -c <commit number> -l <logging level> -m <consensus mode> -b <batchsize>"
+	echo "ex: ./$0 -n 4 -f 1 -s -c 346f9fb -l debug -m pbft -b 2"
+}
+
+while getopts "\?hsn:f:c:l:m:b:" option; do
   case "$option" in
-     s)   SECURITY="Y"           ;;
+     s)   SECURITY="Y"     ;;
      n)   NUM_PEERS="$OPTARG" ;;
+     f)   F="$OPTARG" ;;
+     c)   COMMIT="$OPTARG"  ;;
+     l)   PEER_LOG="$OPTARG" ;;
+     m)   CONSENSUS_MODE="$OPTARG" ;;
+     b)   PBFT_BATCHSIZE="$OPTARG" ;;
    \?|h)  usage
           exit 1
           ;;
@@ -207,16 +181,21 @@ done
 
 #let's clean house
 
-#kill all running containers and LOGFILES...This may need to be revisited.
+#kill all running containers and LOGFILES...Yet to implement Log rotate logic
 
 docker kill $(docker ps -q) 1>/dev/null 2>&1
 docker ps -aq -f status=exited | xargs docker rm 1>/dev/null 2>&1
 rm LOG*
 docker rm -f $(docker ps -aq)
 
-echo  ; echo "--------> Setting default command line Arg values to without security & consensus and starts 4 PEERS and CA"
+echo "--------> Setting default command line Arg values to without security & consensus and starts 5 peers"
 : ${SECURITY:="N"}
 : ${NUM_PEERS="5"}
+: ${F:="1"}
+: ${COMMIT="latest"}
+: ${PEER_LOG="debug"}
+: ${CONSENSUS_MODE="pbft"}
+: ${PBFT_BATCHSIZE="500"}
 SECURITY=$(echo $SECURITY | tr a-z A-Z)
 
 echo "Number of PEERS are $NUM_PEERS"
@@ -227,20 +206,13 @@ fi
 
 echo "Is Security and Privacy enabled $SECURITY"
 
-Dockerps_ID=$(ps -ef | grep "tcp://" | grep 2375 | awk '{print $3}')
-echo $Dockerps_ID
-if [[ $Dockerps_ID -ne 1 ]] ; then echo " Docker daemon is not running " ; exit 1 ; else echo "Docker daemon is running" ; fi
-
 echo "--------> Pulling Base Docker Images from Docker Hub"
+
+#Pulling latest docker image from rameshthoomu/baseimage repository
 docker pull rameshthoomu/baseimage:latest
 docker tag rameshthoomu/baseimage:latest hyperledger/fabric-baseimage:latest
-#docker pull rameshthoomu/peer:$IMAGE
-#docker pull rameshthoomu/membersrvc:$IMAGE
-docker pull $PEER_IMAGE
-docker pull $MEMBERSRVC_IMAGE
-# use these two when build and use images directly from fabric:
-#docker pull hyperledger/fabric-peer:$IMAGE
-#docker pull hyperledger/fabric-membersrvc:$IMAGE
+docker pull $PEER_IMAGE:$COMMIT
+docker pull $MEMBERSRVC_IMAGE:$COMMIT
 
 #curl -L https://github.com/rameshthoomu/fabric/blob/master/scripts/provision/common.sh -o common.sh
 #curl -L https://raw.githubusercontent.com/rameshthoomu/fabric/master/scripts/provision/docker.sh -o docker.sh
@@ -284,7 +256,7 @@ done
 # Writing Peer data into a file for Go SDK
 
 cd $WORKDIR
-echo -e "\nWORKDIR=$WORKDIR"
+echo "creating file ../automation/networkcredentials"
 touch networkcredentials
 echo "{" > $WORKDIR/networkcredentials
 echo "   \"PeerData\" :  [" >> $WORKDIR/networkcredentials
@@ -316,7 +288,7 @@ done
         echo "   ],"  >> $WORKDIR/networkcredentials
 
 # Writing UserData into a file for go SDK
-
+if [ "$SECURITY" == "Y" ] ; then
 
 echo "   \"UserData\" :  [" >> $WORKDIR/networkcredentials
 
@@ -336,7 +308,7 @@ done
         sed  -i '$s/,[[:blank:]]*$//' $WORKDIR/networkcredentials
 
         echo "   ],"  >> $WORKDIR/networkcredentials
-
+fi
 # Writing PeerGrpc Data into a file for go SDK
         echo "   \"PeerGrpc\" :  [" >> $WORKDIR/networkcredentials
         echo " "
