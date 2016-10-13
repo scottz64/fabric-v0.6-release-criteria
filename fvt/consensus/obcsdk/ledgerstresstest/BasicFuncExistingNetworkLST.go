@@ -156,7 +156,7 @@ func main() {
 	} else {
         	myStr = fmt.Sprintf("FAILED (failed %d sub-tests)", subTestsFailures)
 	}
-	lstutil.Logger(fmt.Sprintf("\nFINAL RESULT " + lstutil.TESTNAME + " = %s ******************************\n", myStr))
+	lstutil.Logger(fmt.Sprintf("\nFINAL RESULT " + lstutil.TESTNAME + " %s", myStr))
 }
 
 func setupNetwork() {
@@ -351,7 +351,7 @@ func getBlockTxInfo(mynetwork peernetwork.PeerNetwork, blockNumber int) {
 
 func timeTrack(start time.Time, name string) {
 	elapsed := time.Since(start)
-	lstutil.Logger(fmt.Sprintf("\n*********** %s , elapsed %s\n", name, elapsed))
+	lstutil.Logger(fmt.Sprintf("%s , elapsed %s\n", name, elapsed))
 }
 
 func check(e error) {

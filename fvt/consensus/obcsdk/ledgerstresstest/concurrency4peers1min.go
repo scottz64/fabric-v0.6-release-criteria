@@ -1,6 +1,6 @@
 package main
 
-/******************** Testing Objective consensu:STATE TRANSFER ********
+/******************** Testing Objective : processing 1 minute blast of concurrency ********
 *   Setup: 4 node local docker peer network with security
 *   0. Deploy chaincode concurrency == addrecs == modified example02+add1Kpayload
 *   1. Send Invoke Requests on multiple peers using go routines.
@@ -28,15 +28,15 @@ func main() {
 
         data := RandomString(1024)
 
-	time.Sleep(30000 * time.Millisecond)
+	time.Sleep(30 * time.Second)
 
-	fmt.Println("\nPOST/Chaincode: Deploying chaincode  addrecs...")
+	fmt.Println("\nPOST/Chaincode: Deploying chaincode ", MY_CHAINCODE_NAME)
         dAPIArgs0 := []string{MY_CHAINCODE_NAME, "init", "PEER1"}
         depArgs0 := []string{"a", data, "counter", "0"}
         chaincode.DeployOnPeer(dAPIArgs0, depArgs0)
 
-        time.Sleep(240000 * time.Millisecond)
-        fmt.Println("\nPOST/Chaincode: Querying a and counter from adddrecs after deploy >>>>>>>>>>> ")
+        time.Sleep(120 * time.Second)
+        fmt.Println("\nPOST/Chaincode: Querying A and B (counter) after deploy >>>>>>>>>>> ")
         qAPIArgs0 := []string{MY_CHAINCODE_NAME, "query"} 
         qArgsa := []string{"a"}
         qArgsb := []string{"counter"}
@@ -47,33 +47,27 @@ func main() {
 
         loopCtr = 0
   	numReq = 50
-  	defer timeTrack(time.Now(), "concurrency_Z_addrecs_4Peers")
+  	defer timeTrack(time.Now(), "concurrency4peers1min")
   	now := time.Now().Unix()
-  	endTime := now + 1 * 60
+  	endTime := now + 60
         fmt.Println("Start now, End Time: ", now, endTime)
   	for now < endTime {
-            fmt.Println("loopCtr, Time Now: ", loopCtr, time.Now())
 	    InvokeLoop(numReq, data)
             loopCtr++
+            fmt.Println("loopCtr, TxCount, TimeNow: ", loopCtr, loopCtr*4*numReq, time.Now())
             now = time.Now().Unix()
   	}
-
 }
 
 func InvokeLoop(numReq int, data string) {
 
 	var wg sync.WaitGroup
-      
         iAPIArgs := []string{"a", data, "counter"}
-
 	wg.Add(4*numReq)
 
 	go func() {
-
 		k := 1
-
-	  invArgs0 := []string{MY_CHAINCODE_NAME, "invoke", "PEER0"}
-
+		invArgs0 := []string{MY_CHAINCODE_NAME, "invoke", "PEER0"}
 		for k <= numReq {
 		   go func() {
 		      chaincode.InvokeOnPeer(invArgs0, iAPIArgs)
@@ -81,27 +75,23 @@ func InvokeLoop(numReq int, data string) {
 	           }()
 		   k++
 	       }
-
-		fmt.Println("# of Req Invoked on PEER0 ", k)
+		//fmt.Println("# of Req Invoked on PEER0 ", k-1)
 	}()
 
 	go func() {
-
 		k := 1
-	  invArgs1 := []string{MY_CHAINCODE_NAME, "invoke", "PEER1"}
+		invArgs1 := []string{MY_CHAINCODE_NAME, "invoke", "PEER1"}
 		for k <= numReq {
 		   go func() {
 			chaincode.InvokeOnPeer(invArgs1, iAPIArgs)
 			wg.Done()
-	      }()
+		   }()
 		   k++
 		}
-		fmt.Println("# of Req Invoked on PEER1 ", k)
+		//fmt.Println("# of Req Invoked on PEER1 ", k-1)
 	}()
 
-
 	go func() {
-
 		k := 1
 	        invArgs2 := []string{MY_CHAINCODE_NAME, "invoke", "PEER2"}
 		for k <= numReq {
@@ -111,11 +101,10 @@ func InvokeLoop(numReq int, data string) {
 	           }()
 		   k++
 		}
-		fmt.Println("# of Req Invoked on PEER2 ", k)
+		//fmt.Println("# of Req Invoked on PEER2 ", k-1)
 	}()
 
 	go func() {
-
 		invArgs3 := []string{MY_CHAINCODE_NAME, "invoke", "PEER3"}
 		k := 1
 		for k <= numReq {
@@ -125,17 +114,17 @@ func InvokeLoop(numReq int, data string) {
 	            }()
 		    k++
 		}
-		fmt.Println("# of Req Invoked  on PEER3", k)
+		//fmt.Println("# of Req Invoked  on PEER3", k-1)
 	}()
 
 	wg.Wait()
 }
 
-func QueryHeight(expectedCtr int) (passed bool) {
+func QueryValAndHeight(expectedCtr int) (passed bool, cntr int) {
 
 	passed = false
 
-	fmt.Println("\nPOST/Chaincode: Querying counter from addrecs chaincode after invoke >>>>>>>>>>> ")
+	fmt.Println("\nPOST/Chaincode: Querying counter from chaincode ", MY_CHAINCODE_NAME)
 	qAPIArgs00 := []string{MY_CHAINCODE_NAME, "query", "PEER0"}
 	qAPIArgs01 := []string{MY_CHAINCODE_NAME, "query", "PEER1"}
 	qAPIArgs02 := []string{MY_CHAINCODE_NAME, "query", "PEER2"}
@@ -169,12 +158,16 @@ func QueryHeight(expectedCtr int) (passed bool) {
 	if resCtrI2 == expectedCtr { matches++ }
 	if resCtrI3 == expectedCtr { matches++ }
 	if matches == 4 {
-		passed = true
-		fmt.Printf("expected: %d.  ALL PEERS MATCH.\n", expectedCtr)
+		if ht0 == ht1 && ht0 == ht2 && ht0 == ht3 {
+			passed = true
+			fmt.Printf("ALL PEERS MATCH expected %d, ht=%d\n", expectedCtr, ht0)
+		} else {
+			fmt.Printf("ALL PEERS counters match expected %d, BUT HEIGHTS DO NOT ALL MATCH: ht0=%d ht1=%d ht2=%d ht3=%d\n", expectedCtr, ht0, ht1, ht2, ht3)
+		}
 	} else {
 		fmt.Printf("expected: %d\nresCtr0:  %d\nresCtr1:  %d\nresCtr2:  %d\nresCtr3:  %d\n", expectedCtr, resCtrI0, resCtrI1, resCtrI2, resCtrI3)
 	}
-	return passed
+	return passed, resCtrI0
 }
 
 
@@ -182,9 +175,15 @@ func timeTrack(start time.Time, name string) {
 	elapsed := time.Since(start)
         expectedValue := loopCtr * numReq * 4
 	result := "FAILED"
-        QueryHeight(expectedValue)
-	time.Sleep(510000 * time.Millisecond)  // 8.5 minutes
-        if QueryHeight(expectedValue) { result = "PASSED" }
+        passed, curr := QueryValAndHeight(expectedValue)
+	prev := curr-1
+	for !passed && curr != prev {
+		fmt.Println("sleep 1 minute to allow network to process queued transactions, and try again")
+		time.Sleep(60 * time.Second)
+		prev = curr
+        	passed, curr = QueryValAndHeight(expectedValue)
+	}
+        if passed { result = "PASSED" }
 	fmt.Printf("\nFINAL RESULT %s %s, elapsed %s \n", name, result, elapsed)
 }
 
@@ -192,9 +191,7 @@ func RandomString(strlen int) string {
     rand.Seed(time.Now().UTC().UnixNano())
     const chars = "abcdefghijklmnopqrstuvwxyz0123456789"
     result := make([]byte, strlen)
-    for i := 0; i < strlen; i++ {
-        result[i] = chars[rand.Intn(len(chars))]
-    }
+    for i := 0; i < strlen; i++ { result[i] = chars[rand.Intn(len(chars))] }
     return string(result)
 }
 
