@@ -82,6 +82,8 @@ func initNetwork(localNetworkType string) {
 		}
 	}
 
+	Logger("========= Register Users =========")
+	chaincode.RegisterUsers()
 	//Logger("========= Register Custom Users =========")
 	//chaincode.RegisterCustomUsers()
 }
