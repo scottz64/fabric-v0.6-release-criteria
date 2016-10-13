@@ -14,5 +14,5 @@ cd ../../fvt/consensus/obcsdk/automation/
 ./local_fabric_gerrit.sh -n 4 -s -c $COMMIT 
 
 cd ../ledgerstresstest/
-go run LongRun72hr.go
+go run concurrency4peers1min.go
 

@@ -1,3 +1,4 @@
+#!/bin/bash
 
 date; echo "Start new network, and run all LedgerStressTests in the Regression Suite:"
 echo "LST_1client1peer20K.go LST_2client1peer20K.go LST_2client2peer20K.go LST_4client1peer20K.go LST_4client4peer20K.go"
