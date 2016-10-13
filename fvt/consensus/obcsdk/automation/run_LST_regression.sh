@@ -1,17 +1,14 @@
 #!/bin/bash
 
 date; echo "Start new network, and run all LedgerStressTests in the Regression Suite:"
-echo "LST_1client1peer20K.go LST_2client1peer20K.go LST_2client2peer20K.go LST_4client1peer20K.go LST_4client4peer20K.go"
+echo "BasicFuncExistingNetworkLST.go LST_1client1peer20K.go LST_2client1peer20K.go LST_2client2peer20K.go LST_4client1peer20K.go LST_4client4peer20K.go"
 
 ##### start anew:
 
 export CORE_PBFT_GENERAL_BATCHSIZE=500
 export TEST_EXISTING_NETWORK=FALSE
-go run ../CAT/testtemplate.go
 
-### look for some of the output showing parameters used:
-### exec.Command:  /opt/gopath/src/github.com/hyperledger/fabric/vendor/obcsdk/automation/local_fabric_gerrit.sh -c 4173edd -n 4 -f 1 -l critical -m pbft -b 500 -s
-
+./local_fabric_gerrit.sh -n 4 -b $CORE_PBFT_GENERAL_BATCHSIZE -s -c $COMMIT
 
 
 ##### Run LedgerStressTest Regression Tests, using the existing network
@@ -23,6 +20,7 @@ export TEST_LST_NUM_CLIENTS=""
 export TEST_LST_NUM_PEERS=""
 export TEST_LST_THROUGHPUT_RATE=""
 
+cd ../ledgerstresstests
 date; echo "==================== Start of LST - REST API Test ===================="
 date; go run BasicFuncExistingNetworkLST.go
 date; echo "==================== Start of LST - Regression Tests ===================="

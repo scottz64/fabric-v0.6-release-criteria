@@ -324,13 +324,16 @@ then
     docker ps -a
 fi
 
+##### 
+##### For automation, skip the logs to save realtime and disk space
+##### 
 # Printing Log files
-for (( container_id=1; $container_id<="$((NUM_CONTAINERS))"; container_id++ ))
-do
-        CONTAINER_ID=$(echo $CONTAINERS | awk -v con_id=$container_id '{print $con_id}')
-        CONTAINER_NAME=$(docker inspect --format '{{.Name}}' $CONTAINER_ID |  sed 's/\///')
-        docker logs -f $CONTAINER_ID > "LOGFILE_$CONTAINER_NAME"_"$CONTAINER_ID" &
-done
+#for (( container_id=1; $container_id<="$((NUM_CONTAINERS))"; container_id++ ))
+#do
+#	CONTAINER_ID=$(echo $CONTAINERS | awk -v con_id=$container_id '{print $con_id}')
+#	CONTAINER_NAME=$(docker inspect --format '{{.Name}}' $CONTAINER_ID |  sed 's/\///')
+#	docker logs -f $CONTAINER_ID > "LOGFILE_$CONTAINER_NAME"_"$CONTAINER_ID" &
+#done
 
 # Writing Peer data into a file for Go SDK
 
