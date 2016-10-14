@@ -19,8 +19,8 @@ export COMMIT
 
 #./local_fabric_gerrit.sh -n 4 -s -c $COMMIT 
 
-#cp networkcredentials ../util/NetworkCredentials.json
-cp ../util/NetworkCredentials.json.HSBN_NISHI ../util/NetworkCredentials.json
+ech0 "make sure you copy HSBN network credentials JSON file to util folder before running the test"
+#cp ../util/NetworkCredentials.json.HSBN_NISHI ../util/NetworkCredentials.json
 
 cd ../ledgerstresstest/
 go run LongRun72hr.go

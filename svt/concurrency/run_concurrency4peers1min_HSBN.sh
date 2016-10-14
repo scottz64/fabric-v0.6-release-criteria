@@ -17,7 +17,8 @@ export TEST_NET_COMM_PROTOCOL=HTTP
 : ${COMMIT="e4a9b47"}
 export COMMIT
 
-cp ../util/NetworkCredentials.json.HSBN_NISHI ../util/NetworkCredentials.json
+echo "make sure you copy HSBN NetworkCredetials file to util folder before running the test"
+#cp ../util/NetworkCredentials.json.HSBN_NISHI ../util/NetworkCredentials.json
 
 cd ../ledgerstresstest/
 go run concurrency4peers1min.go
