@@ -22,6 +22,16 @@ var MY_CHAINCODE_NAME string = "concurrency"
 
 func main() {
 
+         defer timeTrack(time.Now(), "Testcase execution Done")
+        // 1 min            60  unit = seconds
+        // 1 hr           3600
+        // 12 hr         43200
+        // 1 day         86400
+        // 2 day        172800
+        // 3 day        259200 (72 hr)
+
+        var numSecs int64 = 60
+
 	fmt.Println("Using an existing docker network")
 	_ = chaincode.InitNetwork()
 	chaincode.InitChainCodes()
@@ -49,15 +59,14 @@ func main() {
 
         loopCtr = 0
   	numReq = 250
-  	defer timeTrack(time.Now(), "concurrency4peers1min")
-  	now := time.Now().Unix()
-  	endTime := now + 60
-        fmt.Println("Start now, End Time: ", now, endTime)
-  	for now < endTime {
+  	start := time.Now().Unix()
+        endTime := start + numSecs
+        fmt.Println("Start , End Time: ", start, endTime)
+  	for start < endTime {
 	    InvokeLoop(numReq, data)
             loopCtr++
             fmt.Println("loopCtr, TxCount, TimeNow: ", loopCtr, loopCtr*4*numReq, time.Now())
-            now = time.Now().Unix()
+            start = time.Now().Unix()
   	}
 }
 
@@ -69,7 +78,7 @@ func InvokeLoop(numReq int, data string) {
 
 	go func() {
 		k := 1
-		invArgs0 := []string{MY_CHAINCODE_NAME, "invoke", threadutil.GetPeer(0)}
+		invArgs0 := []string{"concurrency", "invoke", threadutil.GetPeer(0)}
 		for k <= numReq {
 		   go func() {
 		      chaincode.InvokeOnPeer(invArgs0, iAPIArgs)

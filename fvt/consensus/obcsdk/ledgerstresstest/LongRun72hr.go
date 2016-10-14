@@ -31,7 +31,7 @@ func main() {
 	// 2 day	172800
 	// 3 day	259200 (72 hr)
 
-	var loopSecs int64 = 60
+	var loopSecs int64 = 3600 
 
 	var myNetwork peernetwork.PeerNetwork
 
