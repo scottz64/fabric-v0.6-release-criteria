@@ -187,7 +187,7 @@ func setupNetwork() {
         peernetwork.GetNC_Local()
 
         fmt.Println("----- Connect to existing network - InitNetwork -----")
-	myNetwork = chaincode.InitNetwork()
+	myNetwork = chaincode.InitNetwork() 	// calls peerNetwork.LoadNetwork()
 
 	fmt.Println("----- InitChainCodes -----")
 	chaincode.InitChainCodes()
@@ -200,10 +200,8 @@ func setupNetwork() {
 		testPartsFailures++
 	}
 
-	//peernetwork.PrintNetworkDetails(myNetwork)
 	peernetwork.PrintNetworkDetails()
 	numPeers := peernetwork.GetNumberOfPeers(myNetwork)
-
 	myStr := fmt.Sprintf("Network running with %d peers with pbft and security+privacy enabled\n", numPeers)
 	fmt.Println(myStr)
 	fmt.Fprintln(writer, myStr)

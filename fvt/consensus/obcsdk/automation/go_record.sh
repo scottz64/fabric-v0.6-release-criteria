@@ -88,6 +88,7 @@ trailerInfo() {
 echo -e "\n=========== GROUP END, using $REPOSITORY_SOURCE COMMIT IMAGE $COMMIT"
 echo -e "${STATS_BEFORE_RUN_GROUP}"
 echo -e "${STATS_AFTER_RUN_GROUP}"
+echo -e "\n"
 }
 
 

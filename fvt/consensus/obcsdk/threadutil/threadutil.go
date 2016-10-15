@@ -28,6 +28,25 @@ func GetUser(userNumber int) string {
 	}
 }
 
+//VERSION 3 - we should put something like this function into peernetwork/peerNetworkAPI.go
+//	func PeerName(peerNumber int) string {
+//		if peerNumber >= 0 && peerNumber < len(myPeerNetwork.Peers)
+//			return myPeerNetwork.Peers[peerNumber].PeerDetails["name"]
+//		else
+//			return "NoNameForInvalidePeerNum"
+//	}
+
+//VERSION 2
+func GetPeer(peerNumber int) string {
+	if os.Getenv("TEST_NETWORK") == "Z" {
+		return "vp"+ strconv.Itoa(peerNumber)
+	} else {
+		return "PEER"+ strconv.Itoa(peerNumber)
+	}
+}
+
+/*
+//VERSION 1
 //Get the peer name based on network environment:  Z | LOCAL [default]
 func GetPeer(peerNumber int) string {
 	if os.Getenv("TEST_NETWORK") == "Z" {
@@ -37,11 +56,12 @@ func GetPeer(peerNumber int) string {
 			return "vp"+ strconv.Itoa(peerNumber)
 		}
 	} else {
-		if peerNumber < len(ZPeers) {
+		if peerNumber < len(LocalPeers) {
 			return LocalPeers[peerNumber]
 		} else {
 			return "PEER"+ strconv.Itoa(peerNumber)
 		}
 	}
 }
+*/
 

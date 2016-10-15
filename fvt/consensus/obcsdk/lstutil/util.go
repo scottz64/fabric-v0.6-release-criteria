@@ -30,7 +30,7 @@ var logFile *os.File
 // Called in teardown methods to messure and display over all execution time
 func TimeTracker(start time.Time, info string) {
 	elapsed := time.Since(start)
-	Logger(fmt.Sprintf("========= %s is %s", info, elapsed))
+	Logger(fmt.Sprintf("%s , elapsed %s", info, elapsed))
 	CloseLogger()
 }
 

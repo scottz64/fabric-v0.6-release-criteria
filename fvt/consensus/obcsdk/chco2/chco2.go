@@ -245,7 +245,7 @@ func setup_part1(testName string, started time.Time) {
 	if Security {
 		if NumberOfPeersInNetwork < 4 {
 			fmt.Println("WARNING: INVALID VALUE (" + strconv.Itoa(NumberOfPeersInNetwork) + ") provided for N when security is enabled; a secure network must contain a minimum of 4 peer nodes.")
-			//fmt.Println("WARNING: INVALID VALUE (" + strconv.Itoa(NumberOfPeersInNetwork) + ") PROVIDED FOR N !!!  When security is enabled, a network must contain a minimum of 4 peer nodes. Resetting N to 4")
+			//fmt.Println("Resetting N to 4")
 			//NumberOfPeersInNetwork = 4 // we could reset it, but then we wouldn't see how the fabric reacts...
 		}
 	}
@@ -270,7 +270,7 @@ func setup_part1(testName string, started time.Time) {
 
 	if (strings.ToUpper(ConsensusMode) == "PBFT") && (NumberOfPeersOkToFail > MaxNumberOfPeersThatCanFailWhileStillHaveConsensus) {
 		fmt.Println("WARNING: INVALID VALUE (" + strconv.Itoa(NumberOfPeersOkToFail) + ") provided for F !!!  Maximum is (N-1)/3 = " + strconv.Itoa(MaxNumberOfPeersThatCanFailWhileStillHaveConsensus))
-		//fmt.Println("WARNING: INVALID VALUE (" + strconv.Itoa(NumberOfPeersOkToFail) + ") PROVIDED FOR F !!!  CHANGING TO (N-1)/3 = " + strconv.Itoa(MaxNumberOfPeersThatCanFailWhileStillHaveConsensus))
+		//fmt.Println("CHANGING TO (N-1)/3 = " + strconv.Itoa(MaxNumberOfPeersThatCanFailWhileStillHaveConsensus))
 		//NumberOfPeersOkToFail = MaxNumberOfPeersThatCanFailWhileStillHaveConsensus // we could reset it, but then we wouldn't see how the fabric reacts...
 	}
 
@@ -344,9 +344,12 @@ func setup_part2_network() {
 
 func setup_part3_verifyNetworkAndDeployCC() {
 
-	peernetwork.PrintNetworkDetails()
-	// read in the NetworkCredentials.json file that was used in this (or prior) test to create the network
-	MyNetwork = chaincode.InitNetwork()
+	// read in the NetworkCredentials.json, the network peers, users and info that were used in this (or prior) test to create the network
+	MyNetwork = chaincode.InitNetwork() 	// calls peernetwork.LoadNetwork()
+
+	//fmt.Println("-------------------- setup_part3_verify: peerNetwork as configured (begin) --------------------")
+	//peernetwork.PrintNetworkDetails()
+	//fmt.Println("-------------------- setup_part3_verify: peerNetwork as configured (end) --------------------\n")
 
 	// if the user has set env var, then override the PeerNetwork.IsLocal boolean now that we have initialized the network
 	if LocalNetworkType != "" { chaincode.SetNetworkIsLocal(IsLocalNetwork) }
@@ -356,7 +359,10 @@ func setup_part3_verifyNetworkAndDeployCC() {
 		// peer node restarts some time after this network was created in earlier testcase
 		chaincode.UpdatePeerIp(&MyNetwork, -1)
 	}
+
+	// read in CC_Collection.json, the collection of chaincode names and info that were used in this (or prior) test to create the network
 	chaincode.InitChainCodes()
+
 	if !chaincode.RegisterUsers() {
 		panic(errors.New("setup_part3_verify: ERROR: FAILED TO REGISTER one or more users in NetworkCredentials.json file\n"))
 	}
@@ -366,8 +372,15 @@ func setup_part3_verifyNetworkAndDeployCC() {
 	url := chaincode.GetURL(aPeer.PeerDetails["ip"], aPeer.PeerDetails["port"])
 
 	// Display!
+	fmt.Println("-------------------- setup_part3_verify: get /network/peers")
 	chaincode.NetworkPeers(url)
+	fmt.Println("-------------------- setup_part3_verify: get /chainstats")
 	chaincode.ChainStats(url)
+
+	fmt.Println("-------------------- setup_part3_verify: peerNetwork as it currently exists (begin) --------------------")
+	peernetwork.PrintNetworkDetails()
+	fmt.Println("-------------------- setup_part3_verify: peerNetwork as it currently exists (end) --------------------\n")
+	fmt.Println("Chaincode Name, to deploy = ", CHCO_NAME)
 
 	//chaincode.User_Registration_Status(url, "lukas")
 	//chaincode.User_Registration_Status(url, "nishi")
@@ -1455,11 +1468,11 @@ func Check(e error) {
 
 func validChainHeights() bool {
 
-	// The expected block chain height is always the same as our currHeightCount.
+	// The expected block chain height is always the same as our current ChainHeight count (currCH).
 	// Note: We increment our currCH only when consensus and transactions are
 	// processed and bundled/batched into the network. Otherwise, we queue transactions
 	// and defer calculation/incrementation of our currCH until later.
-	// So our currHeightCount should always match whatever we get/query, even if
+	// So our currCH should always match whatever we get/query, even if
 	// some more invokes had been sent to a good peer while the network lacked enough
 	// nodes for Consensus and therefore could not process them.
 
@@ -1580,7 +1593,9 @@ func checkAllChainHeights(printResults bool) (testStatus bool, consensusCH int) 
 	if printResults {
 		myStr := fmt.Sprintf("")
 		if (!consensusPossible) {
-			myStr += fmt.Sprintf("SKIPPED CHAINHEIGHT VALIDATION: Only %d peer nodes running, but %d are required for consensus in this network of %d. Expected CH (%d). Actual CHs: ", numPeersRunning, NumberOfPeersNeededForConsensus, NumberOfPeersInNetwork, currCH)
+			myStr += fmt.Sprintf("SKIPPED CHAINHEIGHT VALIDATION: Only %d peer nodes running, but %d are required for consensus in this network of %d.", numPeersRunning, NumberOfPeersNeededForConsensus, NumberOfPeersInNetwork)
+			if CHsMustMatchExpected { myStr += fmt.Sprintf(" Expected CH (%d).", currCH) }
+			myStr += fmt.Sprintf(" Actual CHs: ")
         		for peerNum := 0; peerNum < NumberOfPeersInNetwork; peerNum++ {
         			if peerIsRunning(peerNum,MyNetwork) { myStr += fmt.Sprintf("%s(%d) ", threadutil.GetPeer(peerNum), ht[peerNum]) }
 			}
@@ -1600,7 +1615,10 @@ func checkAllChainHeights(printResults bool) (testStatus bool, consensusCH int) 
 
 		if (allMatchEachOther || (!AllRunningNodesMustMatch && consensusFound)) && (!CHsMustMatchExpected || (allMatchExpectedCH || (enoughMatchExpectedCH && !AllRunningNodesMustMatch))) {
 			// SUCCESS
-			myStr += fmt.Sprintf("PASSED CHAIN HEIGHT TEST: matches on enough/appropriate Peers. Expected CH (%d). Actual CHs: ", currCH)
+			myStr += fmt.Sprintf("PASSED CHAIN HEIGHT TEST: matches on enough Peers for consensus.")
+			if allMatchEachOther { myStr += fmt.Sprintf(" All running nodes match.") }
+			if CHsMustMatchExpected { myStr += fmt.Sprintf(" Expected CH (%d).", currCH) }
+			myStr += fmt.Sprintf(" Actual CHs: ")
         		for peerNum := 0; peerNum < NumberOfPeersInNetwork; peerNum++ {
         			if peerIsRunning(peerNum,MyNetwork) { myStr += fmt.Sprintf("%s(%d) ", threadutil.GetPeer(peerNum), ht[peerNum]) }
 			}
@@ -1608,7 +1626,9 @@ func checkAllChainHeights(printResults bool) (testStatus bool, consensusCH int) 
 		} else {
 			// FAILURE
 			testStatus = false
-               		myStr += fmt.Sprintf("FAILED CHAIN HEIGHT TEST: enough required peers do NOT match. Expected ChainHeight (%d). Actual CHs: ", currCH)
+               		myStr += fmt.Sprintf("FAILED CHAIN HEIGHT TEST: enough required peers for consensus do NOT match.")
+			if CHsMustMatchExpected { myStr += fmt.Sprintf(" Expected CH (%d).", currCH) }
+			myStr += fmt.Sprintf(" Actual CHs: ")
         		for peerNum := 0; peerNum < NumberOfPeersInNetwork; peerNum++ {
         			if peerIsRunning(peerNum,MyNetwork) { myStr += fmt.Sprintf("%s(%d) ", threadutil.GetPeer(peerNum), ht[peerNum]) }
 			}

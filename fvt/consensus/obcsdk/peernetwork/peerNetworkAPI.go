@@ -14,15 +14,14 @@ import (
 */
 func PrintNetworkDetails() {
 
-	ThisNetwork := LoadNetwork()
-	fmt.Println("\nThisNetwork.IsLocal :", ThisNetwork.IsLocal)
-	Peers := ThisNetwork.Peers
+	fmt.Println("\npeerNetwork: Name, IsLocal :", peerNetwork.Name, peerNetwork.IsLocal)
+	Peers := peerNetwork.Peers
 	i := 0
 	for i < len(Peers) {
-		msgStr := fmt.Sprintf("  ip: %s port: %s name: %s ", Peers[i].PeerDetails["ip"], Peers[i].PeerDetails["port"], Peers[i].PeerDetails["name"])
-		fmt.Println(msgStr)
-		userList := ThisNetwork.Peers[i].UserData
-		fmt.Println("  users:")
+		msgStr := fmt.Sprintf("  ip: %s port: %s name: %s state: %s", Peers[i].PeerDetails["ip"], Peers[i].PeerDetails["port"], Peers[i].PeerDetails["name"], GetPeerStateStr(Peers[i].State))
+		//fmt.Println(msgStr)
+		fmt.Println(msgStr + "  users:")
+		userList := peerNetwork.Peers[i].UserData
 		for user, secret := range userList {
 			msgStr := fmt.Sprintf("    user: %s , secret: %s", user, secret)
 			fmt.Println(msgStr)
@@ -97,12 +96,11 @@ func AddCCToLibrary(path string, name string) {
   gets any one running peer from 'thisNetwork' as set by chaincode.Init()
 */
 func APeer(thisNetwork PeerNetwork) (thisPeer *Peer, err error) {
-	//thisNetwork := LoadNetwork()
 	Peers := thisNetwork.Peers
 	var aPeer *Peer
 	var errStr string
 	//get any running peer that has at a minimum one userData and one peerDetails
-	for peerIter := range Peers {
+	for peerIter := 0 ; peerIter < len(Peers) ; peerIter++ {
 		if (len(Peers[peerIter].UserData) > 0) && (len(Peers[peerIter].PeerDetails) > 0) {
 			if Peers[peerIter].State == RUNNING {
 			//if Peers[peerIter].State == 0 || Peers[peerIter].State == 2 || Peers[peerIter].State == 4 {
@@ -221,7 +219,8 @@ func AUserFromThisPeer(thisNetwork PeerNetwork, host string) (ip string, port st
 						aPeer = &Peers[p]
 					}
 				}else { //host: "vp1"
-					if strings.Contains(Peers[p].PeerDetails["name"], host) {
+					//if strings.Contains(Peers[p].PeerDetails["name"], host) {
+					if (Peers[p].PeerDetails["name"] == host) {
 						//fmt.Println("Inside name IP resolution")
 						aPeer = &Peers[p]
 					}
@@ -280,11 +279,9 @@ func PeerOfThisUser_OLD(thisNetwork PeerNetwork, username string) (ip string, po
 func PeerOfThisUser(thisNetwork PeerNetwork, username string) (ip string, port string, user string, err error) {
 	Peers := thisNetwork.Peers
 	var aPeer *Peer
-	var errStr string
-	var err1 error
 	//fmt.Println("Inside function")
 	//get a random peer that has at a minimum one userData and one peerDetails
-	for peerIter := range Peers {
+	for peerIter := 0 ; peerIter < len(Peers) ; peerIter++ {
 		if len(Peers[peerIter].UserData) > 0 && len(Peers[peerIter].PeerDetails) > 0 && (Peers[peerIter].State == RUNNING ||  Peers[peerIter].State == STARTED){
 				if _, ok := Peers[peerIter].UserData[username]; ok {
 					//fmt.Printf("Found %s in network on peer %d\n", username, peerIter)
@@ -293,6 +290,9 @@ func PeerOfThisUser(thisNetwork PeerNetwork, username string) (ip string, port s
 		}
 	}
 	if aPeer == nil {
+		var errStr string
+		/* 
+		var err1 error
 		//TODO: we hardcoded some users on peer3. however must change this to a permanent solution. (Change these details on Z as well, below.)
 		if (username == "test_user4" || username == "test_user5" || username == "test_user6" || username == "test_user7") {
 			aPeer = &Peers[3]
@@ -305,6 +305,7 @@ func PeerOfThisUser(thisNetwork PeerNetwork, username string) (ip string, port s
 			aPeer = &Peers[3]
 			return aPeer.PeerDetails["ip"], aPeer.PeerDetails["port"], username, err1
 		}
+		*/
 		errStr = fmt.Sprintf("PeerOfThisUser   %s, Not found on network", username)
 		return "", "", "", errors.New(errStr)
 	} else {
@@ -312,18 +313,30 @@ func PeerOfThisUser(thisNetwork PeerNetwork, username string) (ip string, port s
 	}
 }
 
+func GetPeerStateStr(state int) (stateStr string) {
+	switch state {
+	case 0: stateStr = "RUNNING"
+        case 1: stateStr = "STOPPED"
+        case 2: stateStr = "STARTED"
+        case 3: stateStr = "PAUSED"
+        case 4: stateStr = "UNPAUSED"
+        case 5: stateStr = "NOTRESPONDING"
+	default: stateStr = "UNDEFINED"
+	}
+	return stateStr
+}
+
 /*Gets the peer details corresponding to a given peer-name
-state if running/stopped/unresponsive/paused:0/1/2/3
+state	is Peer.State, an integer
 err	is an error message, or nil if no error occurred.
 */
-func GetPeerState(thisNetwork PeerNetwork, peername string) (currPeer *Peer, err error) {
+func GetPeerState(thisNetwork PeerNetwork, peername string) (curstate int, err error) {
 	Peers := thisNetwork.Peers
 	var aPeer *Peer
 	var errStr string
 	fullName, _ := GetFullPeerName(thisNetwork, peername)
 	for peerIter := 0; peerIter < len(Peers); peerIter++  {
 		if (len(Peers[peerIter].UserData) > 0) && (len(Peers[peerIter].PeerDetails) > 0) {
-			//if strings.Contains(Peers[peerIter].PeerDetails["name"],fullName) {
 			if Peers[peerIter].PeerDetails["name"] == fullName {
 				aPeer = &Peers[peerIter]
 			}
@@ -331,11 +344,11 @@ func GetPeerState(thisNetwork PeerNetwork, peername string) (currPeer *Peer, err
 	}
 
 	if aPeer == nil {
-		errStr = fmt.Sprintf("%s, Not found on network", peername)
-		emptyPD := new(Peer)
-		return emptyPD, errors.New(errStr)
+		errStr = fmt.Sprintf("Peer <%s> NOT FOUND on network", peername)
+		return -1, errors.New(errStr)
 	} else {
-		return aPeer, nil
+		// fmt.Println("GetPeerState() peer, state: ", fullName, aPeer.State)   // RUNNING=0 STOPPED=1 STARTED=2 PAUSED=3 UNPAUSED=4 NOTRESPONDING=5
+		return aPeer.State, nil
 	}
 }
 
@@ -344,7 +357,7 @@ func GetPeerState(thisNetwork PeerNetwork, peername string) (currPeer *Peer, err
   state if running/stopped/unresponsive/paused:0/1/2/3
 	err	is an error message, or nil if no error occurred.
 */
-func SetPeerState(thisNetwork PeerNetwork, peername string, curstate int) (peerDetails map[string]string, err error) {
+func SetPeerState(thisNetwork PeerNetwork, peername string, newstate int) (peerDetails map[string]string, err error) {
 
 	//var aPeer *Peer
 	Peers := thisNetwork.Peers
@@ -355,7 +368,6 @@ func SetPeerState(thisNetwork PeerNetwork, peername string, curstate int) (peerD
 	fullName, _ := GetFullPeerName(thisNetwork, peername)
 	for peerIter := 0; peerIter < len(Peers); peerIter++  {
 		if (len(Peers[peerIter].UserData) > 0) && (len(Peers[peerIter].PeerDetails) > 0) {
-			//if strings.Contains(Peers[peerIter].PeerDetails["name"],fullName) {
 			if Peers[peerIter].PeerDetails["name"] == fullName {
 				aPeer = &Peers[peerIter]
 			}
@@ -367,8 +379,8 @@ func SetPeerState(thisNetwork PeerNetwork, peername string, curstate int) (peerD
 		emptyPD := make(map[string]string)
 		return emptyPD, errors.New(errStr)
 	} else {
-		aPeer.State = curstate
-		// fmt.Println("SetPeerState=", curstate)   // RUNNING=0 STOPPED=1 NOTRESPONDIN=2 PAUSED=3
+		aPeer.State = newstate
+		//fmt.Println("SetPeerState() peer, state: ", fullName, newstate)   // RUNNING=0 STOPPED=1 STARTED=2 PAUSED=3 UNPAUSED=4 NOTRESPONDING=5
 		return aPeer.PeerDetails, nil
 	}
 }
@@ -444,8 +456,9 @@ func StopPeersLocal(thisNetwork PeerNetwork, peers []string) {
 
 	for i:=0; i < len(peers); i++ {
 /*
-
-IF TEST_NETWORK=Z, then use different command instead of docker stop (or restart)!
+	    if !thisNetwork.IsLocal && TEST_NETWORK==Z, then use different command format instead of docker stop (or restart)!
+		(and also don't forget to retrieve the extra data for the msg header, and use it in every msg...)
+	    else continue with existing code, to send docker command
 
 https://<LPAR URL>/api/com.ibm.zBlockchain/peers/<PEER_ID>/<stop|restart>
 https://5a088be5-276c-42b3-b550-421f3f27b6ab_vp0-api.zone.blockchain.ibm.com:443/api/com.ibm.zBlockchain/peers/<vpN>/<stop|restart>
@@ -468,9 +481,10 @@ func genCMD( keyword<stop|restart|pause|unpause>    {
                    log.Fatal(err)
                 }
 		SetPeerState(thisNetwork, peers[i], STOPPED)
+		fmt.Println("StopPeersLocal: stop peer ", peers[i])
 	}
 	fmt.Println("After stop peers, sleep 5 secs")
-	time.Sleep(5000 * time.Millisecond)
+	time.Sleep(5 * time.Second)
 }
 
 func StartPeersLocal(thisNetwork PeerNetwork, peers []string) {
@@ -486,8 +500,8 @@ func StartPeersLocal(thisNetwork PeerNetwork, peers []string) {
 			//exec.Command(cmd)
 			SetPeerState(thisNetwork, peers[i], RUNNING)
 		}
-		fmt.Println("After start peers, sleep 5 secs")
-		time.Sleep(5000 * time.Millisecond)
+		fmt.Println("sleep 10 secs after start peer ", peers[i])
+		time.Sleep(10 * time.Second)
 	}
 }
 
@@ -501,8 +515,8 @@ func StartPeerLocal(thisNetwork PeerNetwork, peer string) {
 		log.Fatal(err)
 	} else {
 		if peer != "caserver" {
-			fmt.Println("After start peer, sleep 5 secs")
-			time.Sleep(5000 * time.Millisecond)
+			fmt.Println("sleep 10 secs after start peer ", peer)
+			time.Sleep(10 * time.Second)
 			SetPeerState(thisNetwork, peer, RUNNING)
 		}
 	}
@@ -518,8 +532,8 @@ func StopPeerLocal(thisNetwork PeerNetwork, peer string) {
            log.Fatal(err)
         } else {
 		if peer != "caserver" {
-			fmt.Println("After stop peer, sleep 5 secs")
-			time.Sleep(5000 * time.Millisecond)
+			fmt.Println("After stop peer, sleep 5 secs. peer: ", peer)
+			time.Sleep(5 * time.Second)
 			SetPeerState(thisNetwork, peer, STOPPED)
 		}
 	}
@@ -533,7 +547,13 @@ func GetFullPeerName(thisNetwork PeerNetwork, shortname string) (name string, er
 	//get a peerDetails from peername
 	for peerIter := 0; peerIter < len(Peers); peerIter++  {
 		if (len(Peers[peerIter].UserData) > 0) && (len(Peers[peerIter].PeerDetails) > 0) {
-			if strings.Contains(Peers[peerIter].PeerDetails["name"], shortname) {
+
+			// For now, this function does virtually nothing:
+			// Since we cannot tell the difference between PEER1 and PEER15; we must
+			// treat fullname to be exactly the same as shortname - until we can solve this some other way...
+			//if strings.Contains(Peers[peerIter].PeerDetails["name"], shortname) {
+
+			if (Peers[peerIter].PeerDetails["name"] == shortname) {
 				aPeer = &Peers[peerIter]
 			}
 		}
@@ -545,6 +565,14 @@ func GetFullPeerName(thisNetwork PeerNetwork, shortname string) (name string, er
 	} else {
 		return aPeer.PeerDetails["name"], nil
 
+	}
+}
+
+func PeerName(peerNumber int) string {
+	if peerNumber >= 0 && peerNumber < len(peerNetwork.Peers) {
+		return peerNetwork.Peers[peerNumber].PeerDetails["name"]
+	} else {
+		return "NoNameForInvalidPeerNum"
 	}
 }
 

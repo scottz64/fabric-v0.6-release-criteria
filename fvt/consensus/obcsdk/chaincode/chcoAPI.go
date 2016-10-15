@@ -33,6 +33,12 @@ const invokeAsUserUsage = ("iAPIArgs0 := []string{\"example02\", \"invoke\", \"<
 func InitNetwork() peernetwork.PeerNetwork {
 
 	ThisNetwork = peernetwork.LoadNetwork()
+
+	// Now we know the configured network data including IP addresses of all the peers.
+	// Get the actual IP addresses of all the peers, in case they have changed due to any
+	// peer node restarts some time after this network was created in earlier testcase
+	UpdatePeerIp(&ThisNetwork, -1)
+
 	return ThisNetwork
 }
 

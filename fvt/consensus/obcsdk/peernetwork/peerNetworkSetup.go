@@ -386,10 +386,8 @@ func callSFTP(connection *ssh.Client) {
   creates network as defined in NetworkCredentials.json, distributing users evenly among the peers of the network.
 */
 func LoadNetwork() PeerNetwork {
-
 	p, n, i := initializePeers()
-
-	peerNetwork := PeerNetwork{Peers: p, Name: n, IsLocal: i}
+	peerNetwork = PeerNetwork{Peers: p, Name: n, IsLocal: i}
 	return peerNetwork
 }
 
@@ -546,7 +544,6 @@ func GetCCDetailByName(name string, lcc LibChainCodes) (ccDetail map[string]stri
 */
 /***********************
 func APeer(thisNetwork PeerNetwork) *Peer {
-	//thisNetwork := LoadNetwork()
 	Peers := thisNetwork.Peers
 	var aPeer *Peer
 	//get any peer that has at a minimum one userData and one peerDetails

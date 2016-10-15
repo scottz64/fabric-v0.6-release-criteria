@@ -125,8 +125,10 @@ func PostChainAPI_HTTP(url string, payLoad []byte) (respBody string, respStatus 
 		fmt.Println("PostChainAPI()  AFTER  http.Client.Do(req)")
 	}
 	if err != nil {
-		fmt.Println("PostChainAPI() httpclient.Do Error, url, response: ", url, resp)
-		fmt.Println("PostChainAPI() httpclient.Do Error, err: ", err)
+		fmt.Println("PostChainAPI() httpclient.Do Error, url, response, err: ", url, resp, err)
+		fmt.Println(">>>Things to check, in order:\n - the correct Network Credentials file\n - command is sending to the correct IP Address")
+		fmt.Println(" - check if your network connection (wired or wireless?) dropped, especially if using a non-local network")
+		fmt.Println(" - check if any problem with a firewall/router or other hop in the network path from here to the specified destination")
 		return err.Error(), "httpclient.Do Error"
 	}
 	defer resp.Body.Close()

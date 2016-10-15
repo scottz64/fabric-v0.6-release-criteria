@@ -44,8 +44,7 @@ const (
 	//    v05 LOCAL Docker network: should handle 11 Tx/sec on one client thread
 	//    v05 Z or HSBN Network: only 1.5 - 2  on one client thread
 	THROUGHPUT_RATE_DEFAULT = 10
-	// THROUGHPUT_RATE_MAX = 160 	// normally should be well under 160, but this blast rate might be useful for short tests
-	THROUGHPUT_RATE_MAX = 80
+	THROUGHPUT_RATE_MAX = 160 	// normally should be well under 160, but this blast rate might be useful for short tests
 
 	BUNDLE_OF_TRANSACTIONS = 1000 	// in each client, after sending this many transactions, print a status msg and sleep for ntwk to catch up
 	MAX_CLIENTS = 50
@@ -148,10 +147,9 @@ func Init() {
 	THROUGHPUT_RATE = THROUGHPUT_RATE_DEFAULT
 	if localNetworkType == "" || localNetworkType == "LOCAL" {
 		THROUGHPUT_RATE = NUM_CLIENTS * 11
-		//THROUGHPUT_RATE = 11
 	} else if localNetworkType == "Z" {
-		THROUGHPUT_RATE = NUM_CLIENTS * 2
-		//THROUGHPUT_RATE = 2
+		// THROUGHPUT_RATE = NUM_CLIENTS * 2
+		THROUGHPUT_RATE = THROUGHPUT_RATE * NUM_CLIENTS
 	}
 	envvar = os.Getenv("TEST_LST_THROUGHPUT_RATE")
         if envvar != "" {
@@ -161,7 +159,7 @@ func Init() {
 	if THROUGHPUT_RATE > THROUGHPUT_RATE_MAX { THROUGHPUT_RATE = THROUGHPUT_RATE_MAX }
 	SLEEP_SECS = BUNDLE_OF_TRANSACTIONS / THROUGHPUT_RATE
 
-	Logger(fmt.Sprintf("TX_COUNT=%d, NUM_CLIENTS=%d, NUM_PEERS=%d, THROUGHPUT_RATE=%d/sec, SLEEP=%d secs per every %d Tx", TX_COUNT, NUM_CLIENTS, NUM_PEERS, THROUGHPUT_RATE, SLEEP_SECS, BUNDLE_OF_TRANSACTIONS))
+	Logger(fmt.Sprintf("TX_COUNT=%d, NUM_CLIENTS=%d, NUM_PEERS=%d, THROUGHPUT_RATE=%d/sec, and a bundle of %d Tx will be sent no faster than one bundle every %d secs", TX_COUNT, NUM_CLIENTS, NUM_PEERS, THROUGHPUT_RATE, BUNDLE_OF_TRANSACTIONS, SLEEP_SECS))
 
 	wg.Add(NUM_CLIENTS)
 
@@ -214,6 +212,8 @@ func InvokeAllThreadsOnAllPeers() {
 			var i int64
 			var numTxOnThisClient int64
 			numTxOnThisClient = TX_COUNT / int64(NUM_CLIENTS)
+			var logFilter int64 = 1					// a higher value will skip more logs
+			if TX_COUNT>(BUNDLE_OF_TRANSACTIONS * 20) { logFilter = 10 } // print log once every 10,000 Tx, instead of every 1,000
 			if clientThread == 0 { numTxOnThisClient = numTxOnThisClient + (TX_COUNT % int64(NUM_CLIENTS)) }
 			Logger(fmt.Sprintf("========= Started CLIENT %d thread on peer %d, to run %d Tx", clientThread, peerNum, numTxOnThisClient))
 			for i = 0; i < numTxOnThisClient; i++ {
@@ -237,7 +237,7 @@ func InvokeAllThreadsOnAllPeers() {
 
 					if nobodySleeping {
 						nobodySleeping = false
-						if currGlobalCounter % (BUNDLE_OF_TRANSACTIONS * 10) == 0 {
+						if currGlobalCounter % (BUNDLE_OF_TRANSACTIONS * logFilter) == 0 {
 							Logger(fmt.Sprintf("%d=Tx prev=%s accum=%s (client=%d myTx=%d, sleep=%d)", currGlobalCounter, elapsed, accum, clientThread, i+1, sleepSecs))
 						}
 						if sleepSecs > 0 { Sleep( sleepSecs ) }

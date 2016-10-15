@@ -191,7 +191,7 @@ func main() {
 
 
 	// send one invoke request, just to get an invokeResponse to use below
-	fmt.Println("\nSend one invoke, and retreive the transaction response...")
+	fmt.Println("\nSend one invoke, and retrieve the transaction response...")
 	peerName := chco2.MyNetwork.Peers[0].PeerDetails["name"]
 	invArgs := []string{"a", "b", "1"}
 	iAPIArgs := []string{"example02", "invoke", peerName}

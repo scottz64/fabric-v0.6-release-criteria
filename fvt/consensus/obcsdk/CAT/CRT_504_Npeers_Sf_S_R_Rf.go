@@ -4,14 +4,34 @@ package main
 // 
 // INSTRUCTIONS:
 // 
-// 1. Change chco2.CurrentTestName, to set this test name = this filename
-// 2. Edit to add your test steps at the bottom.
-// 3. go build setupTest.go
-// 4. go run setupTest.go  - or better yet, to save all results use script:  gorecord.sh setupTest.go
-// 
-// 
-// SETUP STEPS included already:
-// -----------------------------
+// 1.   Change chco2.CurrentTestName, to set this test name = this filename
+// 2.   Edit to add your test steps at the bottom.
+// 3.   Set environment variables for commit images, batchsize, and N (the desired number of network peer nodes):
+//
+//	export COMMIT=e4a9b47
+//	export CORE_PBFT_GENERAL_BATCHSIZE=2
+//
+//	// Values of N that have passed this test in v0.6 local docker env:  4, 7, 8, 10, 16  (Note: larger networks may fail due to resource limitations)
+//	export CORE_PBFT_GENERAL_N=10
+//
+//	// The rest are optional for further tuning...
+//
+//	// This would automatically be set to max value (e.g. 3, when N is 10), but may optionally be set to a lower value
+//	export CORE_PBFT_GENERAL_F=3
+// 	
+//	// Optional: source some environment vars using one or none of:
+//	.  ../automation/ENVVARS_LOCAL
+//	.  ../automation/ENVVARS_Z
+//
+// 4.A. To save all results, execute script: ../automation/go_record.sh CRT_504_Npeers_Sf_S_R_Rf.go
+// 4.B. Or, more simply execute:             go run                     CRT_504_Npeers_Sf_S_R_Rf.go
+//
+//
+//
+//
+//
+// TEST SETUP STEPS included already:
+// ----------------------------------
 // Default Setup: 4 peer node network with security CA node using local docker containers.
 // (To change network characteristics and tuning parameters, change consts in file ../chco2/chco2.go)
 // 
@@ -26,6 +46,7 @@ import (
 	"time"
 	"bufio"
 	"../chco2"
+	"../peernetwork"
 	"fmt"
 	//"strings"
 	//"errors"
@@ -42,7 +63,7 @@ func main() {
 	// SET THE TESTNAME:  set the filename/testname here, to display in output results.
 	//=======================================================================================
 
-	chco2.CurrentTestName = "CAT_115_Npeers_Sf_S_R_Rf"
+	chco2.CurrentTestName = "CRT_504_Npeers_Sf_S_R_Rf"
 
 
 	//=======================================================================================
@@ -142,7 +163,7 @@ chco2.Writer = bufio.NewWriter(osFile)
 	//=======================================================================================
 	// DEFINE MAIN TESTCASE STEPS HERE
 	// 
-	// CAT_115_Npeers_Sf_S_R_Rf
+	// CRT_504_Npeers_Sf_S_R_Rf
 	// Stop "f" peers
 	// Stop one more peer; consensus should stop
 	// Restart one peer; consensus should resume
@@ -162,55 +183,65 @@ chco2.Writer = bufio.NewWriter(osFile)
 	}
 
 	// make a slice and populate with the first "f" peer numbers, 0..(f-1)
-	var fPeers []int
-	fPeers = make([]int, chco2.NumberOfPeersOkToFail)
-	peerNum := 0
-	for peerNum = 0; peerNum < chco2.NumberOfPeersOkToFail; peerNum++ { fPeers[peerNum] = peerNum }
+	var f_peers []int
+	f_peers = make([]int, chco2.NumberOfPeersOkToFail)
+
+	// Example:  if F=5, if startNum=0, then stop 0..4, and finally stop peer 5 to halt consensus
+	// Example:  if F=5, if startNum=3, then let's stop 3..7, and finally stop peer 8 (5+3) to halt consensus
+	startNum := 0 	// must keep startNum somewhere between 0..2*maxF
+	peerNum := startNum
+	for ; peerNum < (chco2.NumberOfPeersOkToFail+startNum); peerNum++ { f_peers[peerNum-startNum] = peerNum }
 
 	numInvokes := chco2.NumberOfPeersInNetwork
 
-	chco2.StopPeers( fPeers )
+	chco2.StopPeers( f_peers )
+	fmt.Println("\n>>>>>PrintNetworkDetails"); peernetwork.PrintNetworkDetails(); fmt.Println(">>>>>PrintNetworkDetails (end)\n")
+	if (chco2.Verbose) { fmt.Println("Sleep extra 60 secs") }
+	time.Sleep(chco2.SleepTimeSeconds(60))
 	chco2.Invokes( numInvokes )
-	if (chco2.Verbose) { fmt.Println("Sleep extra 10 secs") }
-	time.Sleep(chco2.SleepTimeSeconds(10))
+	if (chco2.Verbose) { fmt.Println("Sleep extra 60 secs") }
+	time.Sleep(chco2.SleepTimeSeconds(60))
 	chco2.QueryAllPeers( "STEP 3, after stopping F=" + strconv.Itoa(chco2.NumberOfPeersOkToFail) + " / " + strconv.Itoa(chco2.NumberOfPeersInNetwork) + " peers in network" )
 
 	chco2.StopPeers( []int{ peerNum } )
 	chco2.Invokes( numInvokes )
 	if (chco2.Verbose) { fmt.Println("Sleep extra 10 secs") }
 	time.Sleep(chco2.SleepTimeSeconds(10))
-	chco2.QueryAllPeers( "STEP 6, after stopping one more peer - should HALT consensus network progress" )
+	chco2.QueryAllPeers( "STEP 6, after stopping one more peer - consensus network progress should have HALTED" )
 
-	chco2.AllRunningNodesMustMatch = true    
 	chco2.RestartPeers( []int{ peerNum } )
 	chco2.Invokes( numInvokes )
-	if (chco2.Verbose) { fmt.Println("Sleep extra 60 secs") }
-	time.Sleep(chco2.SleepTimeSeconds(60))
-	chco2.QueryAllPeers( "STEP 9, after restarting one peer - should RESUME consensus network progress" )
+	fmt.Println("Sleep extra 120 secs") 
+	time.Sleep(chco2.SleepTimeSeconds(120))
+	chco2.AllRunningNodesMustMatch = true    
+	chco2.QueryAllPeers( "STEP 9, after restarting one peer - consensus network progress should have RESUMED, with just enough nodes" )
 
 	chco2.AllRunningNodesMustMatch = false
-	chco2.RestartPeers( fPeers )
-	chco2.Invokes( numInvokes )
-	if (chco2.Verbose) { fmt.Println("Sleep extra 60 secs") }
+	chco2.RestartPeers( f_peers )
+	fmt.Println("Sleep extra 60 secs")
 	time.Sleep(chco2.SleepTimeSeconds(60))
+	fmt.Println("\n>>>>>PrintNetworkDetails"); peernetwork.PrintNetworkDetails(); fmt.Println(">>>>>PrintNetworkDetails (end)\n")
+	chco2.Invokes( 100 )
+	fmt.Println("Sleep extra 180 secs")
+	time.Sleep(chco2.SleepTimeSeconds(180))
 	chco2.QueryAllPeers( "STEP 12, after restarting all F stopped peers" )
 
 	chco2.Invokes( chco2.InvokesRequiredForCatchUp )
-	if (chco2.Verbose) { fmt.Println("Sleep extra 10 secs") }
-	time.Sleep(chco2.SleepTimeSeconds(20))
+	fmt.Println("Sleep extra 60 secs") 
+	time.Sleep(chco2.SleepTimeSeconds(60))
 	chco2.QueryAllPeers( "STEP 14, after more invokes" )
 
 	chco2.Invokes( chco2.InvokesRequiredForCatchUp )
-	if (chco2.Verbose) { fmt.Println("Sleep extra 10 secs") }
-	time.Sleep(chco2.SleepTimeSeconds(20))
+	fmt.Println("Sleep extra 60 secs") 
+	time.Sleep(chco2.SleepTimeSeconds(60))
 	chco2.QueryAllPeers( "STEP 16, after more invokes" )
 
 	chco2.Invokes( chco2.InvokesRequiredForCatchUp )
-	if (chco2.Verbose) { fmt.Println("Sleep extra 10 secs") }
-	time.Sleep(chco2.SleepTimeSeconds(20))
-	chco2.QueryAllPeers( "STEP 16, after more invokes" )
+	fmt.Println("Sleep extra 120 secs") 
+	time.Sleep(chco2.SleepTimeSeconds(120))
+	chco2.QueryAllPeers( "STEP 18, after more invokes" )
 
-	chco2.CatchUpAndConfirm()
+	//chco2.CatchUpAndConfirm()
 
 	chco2.RanToCompletion = true	// DO NOT MOVE OR CHANGE THIS. It must remain last.
 }
