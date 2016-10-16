@@ -17,6 +17,7 @@ echo -e "Default COMMIT=e4a9b47, private images built in v0.6 with more than 10 
 # USE THIS _sigs() signal catcher/forwarder to pass signal to the child process.
 trap 'echo $0 Received termination signal.; kill $! 2>/dev/null; exit' SIGHUP SIGINT SIGQUIT SIGTERM SIGABRT
 
+export CORE_LOGGING_LEVEL=CRITICAL
 export TEST_EXISTING_NETWORK=FALSE
 export CORE_PBFT_GENERAL_BATCHSIZE=500
 
@@ -46,10 +47,11 @@ echo -e "CORE_PBFT_GENERAL_N=$CORE_PBFT_GENERAL_N"| tee -a ${SUMMARY}
 echo -e "CORE_PBFT_GENERAL_F=$CORE_PBFT_GENERAL_F"| tee -a ${SUMMARY}
 ../automation/go_record.sh CRT_504_Npeers_Sf_S_R_Rf.go
 
-export CORE_PBFT_GENERAL_N=32
-export CORE_PBFT_GENERAL_F=10
-echo -e "CORE_PBFT_GENERAL_N=$CORE_PBFT_GENERAL_N"| tee -a ${SUMMARY}
-echo -e "CORE_PBFT_GENERAL_F=$CORE_PBFT_GENERAL_F"| tee -a ${SUMMARY}
-../automation/go_record.sh CAT_100*.go CRT_504_Npeers_Sf_S_R_Rf.go
+# # Networks of 25 and 32 fail when try to invoke on laptop with docker containers due to resource limitations: get socket error, timeout, or similar problem
+# export CORE_PBFT_GENERAL_N=32
+# export CORE_PBFT_GENERAL_F=10
+# echo -e "CORE_PBFT_GENERAL_N=$CORE_PBFT_GENERAL_N"| tee -a ${SUMMARY}
+# echo -e "CORE_PBFT_GENERAL_F=$CORE_PBFT_GENERAL_F"| tee -a ${SUMMARY}
+# ../automation/go_record.sh CAT_100*.go CRT_504_Npeers_Sf_S_R_Rf.go
 
 echo -e "End of $0 , time now: `date`" | tee -a ${SUMMARY}
