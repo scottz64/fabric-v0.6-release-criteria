@@ -2,6 +2,7 @@
 
 USAGE="Usage: 
       export COMMIT=<commit_level> 
+      And copy your HSBN NetworkCredentials file to ../util/NetworkCredentials.json before running the test
       ${0}"
    
 echo -e "$USAGE "
@@ -11,13 +12,16 @@ trap 'echo $0 Received termination signal.; kill $! 2>/dev/null; exit' SIGHUP SI
 
 cd ../../fvt/consensus/obcsdk/automation/
 
-
+PRE_COMMIT="$COMMIT"
 source ./ENVVARS_Z
-export TEST_NET_COMM_PROTOCOL=HTTP
-: ${COMMIT="e4a9b47"}
+if [ "$PRE_COMMIT" != "" ]
+then
+  COMMIT="$PRE_COMMIT"
+fi
+echo -e "COMMIT=$COMMIT"
 export COMMIT
+export TEST_NET_COMM_PROTOCOL=HTTP
 
-echo "make sure you copy HSBN NetworkCredetials file to util folder before running the test"
 #cp ../util/NetworkCredentials.json.HSBN_NISHI ../util/NetworkCredentials.json
 
 cd ../ledgerstresstest/

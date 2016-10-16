@@ -46,7 +46,7 @@ import (
 	"time"
 	"bufio"
 	"../chco2"
-	"../peernetwork"
+	// "../peernetwork"
 	"fmt"
 	//"strings"
 	//"errors"
@@ -195,7 +195,7 @@ chco2.Writer = bufio.NewWriter(osFile)
 	numInvokes := chco2.NumberOfPeersInNetwork
 
 	chco2.StopPeers( f_peers )
-	fmt.Println("\n>>>>>PrintNetworkDetails"); peernetwork.PrintNetworkDetails(); fmt.Println(">>>>>PrintNetworkDetails (end)\n")
+	//fmt.Println("\n>>>>>PrintNetworkDetails"); peernetwork.PrintNetworkDetails(); fmt.Println(">>>>>PrintNetworkDetails (end)\n")
 	if (chco2.Verbose) { fmt.Println("Sleep extra 60 secs") }
 	time.Sleep(chco2.SleepTimeSeconds(60))
 	chco2.Invokes( numInvokes )
@@ -220,7 +220,7 @@ chco2.Writer = bufio.NewWriter(osFile)
 	chco2.RestartPeers( f_peers )
 	fmt.Println("Sleep extra 60 secs")
 	time.Sleep(chco2.SleepTimeSeconds(60))
-	fmt.Println("\n>>>>>PrintNetworkDetails"); peernetwork.PrintNetworkDetails(); fmt.Println(">>>>>PrintNetworkDetails (end)\n")
+	//fmt.Println("\n>>>>>PrintNetworkDetails"); peernetwork.PrintNetworkDetails(); fmt.Println(">>>>>PrintNetworkDetails (end)\n")
 	chco2.Invokes( 100 )
 	fmt.Println("Sleep extra 180 secs")
 	time.Sleep(chco2.SleepTimeSeconds(180))

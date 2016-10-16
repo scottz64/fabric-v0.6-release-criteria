@@ -15,6 +15,7 @@ cd ../../fvt/consensus/obcsdk/automation/
 source ./ENVVARS_Z
 export TEST_NET_COMM_PROTOCOL=HTTP
 export COMMT=e4a9b47
+echo -e "COMMIT=$COMMIT"
 #./local_fabric_gerrit.sh -n 4 -s -c $COMMIT 
 
 cd ../ledgerstresstest/
