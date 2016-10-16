@@ -8,7 +8,7 @@ echo "BasicFuncExistingNetworkLST.go LST_1client1peer20K.go LST_2client1peer20K.
 export CORE_PBFT_GENERAL_BATCHSIZE=500
 export TEST_EXISTING_NETWORK=FALSE
 
-./local_fabric_gerrit.sh -n 4 -b $CORE_PBFT_GENERAL_BATCHSIZE -s -c $COMMIT
+../automation/local_fabric_gerrit.sh -n 4 -b $CORE_PBFT_GENERAL_BATCHSIZE -s -c $COMMIT
 
 
 ##### Run LedgerStressTest Regression Tests, using the existing network

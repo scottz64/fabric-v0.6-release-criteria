@@ -20,29 +20,29 @@ export CORE_PBFT_GENERAL_N=10
 export CORE_PBFT_GENERAL_F=3
 echo -e "CORE_PBFT_GENERAL_N=$CORE_PBFT_GENERAL_N"
 echo -e "CORE_PBFT_GENERAL_F=$CORE_PBFT_GENERAL_F"
-./go_record.sh ../CAT/CAT_100*.go ../CAT/CRT_504_Npeers_Sf_S_R_Rf.go
+../automation/go_record.sh ../CAT/CAT_100*.go ../CAT/CRT_504_Npeers_Sf_S_R_Rf.go
 
 export CORE_PBFT_GENERAL_N=10
 export CORE_PBFT_GENERAL_F=1
 echo -e "CORE_PBFT_GENERAL_N=$CORE_PBFT_GENERAL_N"
 echo -e "CORE_PBFT_GENERAL_F=$CORE_PBFT_GENERAL_F"
-./go_record.sh ../CAT/CRT_504_Npeers_Sf_S_R_Rf.go
+../automation/go_record.sh ../CAT/CRT_504_Npeers_Sf_S_R_Rf.go
 
 export CORE_PBFT_GENERAL_N=16
 export CORE_PBFT_GENERAL_F=5
 echo -e "CORE_PBFT_GENERAL_N=$CORE_PBFT_GENERAL_N"
 echo -e "CORE_PBFT_GENERAL_F=$CORE_PBFT_GENERAL_F"
-./go_record.sh ../CAT/CAT_100*.go ../CAT/CRT_504_Npeers_Sf_S_R_Rf.go
+../automation/go_record.sh ../CAT/CAT_100*.go ../CAT/CRT_504_Npeers_Sf_S_R_Rf.go
 
 export CORE_PBFT_GENERAL_N=16
 export CORE_PBFT_GENERAL_F=2
 echo -e "CORE_PBFT_GENERAL_N=$CORE_PBFT_GENERAL_N"
 echo -e "CORE_PBFT_GENERAL_F=$CORE_PBFT_GENERAL_F"
-./go_record.sh ../CAT/CRT_504_Npeers_Sf_S_R_Rf.go
+../automation/go_record.sh ../CAT/CRT_504_Npeers_Sf_S_R_Rf.go
 
 export CORE_PBFT_GENERAL_N=32
 export CORE_PBFT_GENERAL_F=10
 echo -e "CORE_PBFT_GENERAL_N=$CORE_PBFT_GENERAL_N"
 echo -e "CORE_PBFT_GENERAL_F=$CORE_PBFT_GENERAL_F"
-./go_record.sh ../CAT/CAT_100*.go ../CAT/CRT_504_Npeers_Sf_S_R_Rf.go
+../automation/go_record.sh ../CAT/CAT_100*.go ../CAT/CRT_504_Npeers_Sf_S_R_Rf.go
 
