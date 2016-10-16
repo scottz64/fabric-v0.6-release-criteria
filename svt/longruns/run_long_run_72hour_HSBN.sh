@@ -12,12 +12,15 @@ trap 'echo $0 Received termination signal.; kill $! 2>/dev/null; exit' SIGHUP SI
 cd ../../fvt/consensus/obcsdk/automation/
 
 
-source ./ENVVARS_Z
+#source ./ENVVARS_Z
 export TEST_NET_COMM_PROTOCOL=HTTP
 : ${COMMIT="e4a9b47"}
 export COMMIT
 
 #./local_fabric_gerrit.sh -n 4 -s -c $COMMIT 
+
+ech0 "make sure you copy HSBN network credentials JSON file to util folder before running the test"
+#cp ../util/NetworkCredentials.json.HSBN_NISHI ../util/NetworkCredentials.json
 
 cd ../ledgerstresstest/
 go run LongRun72hr.go

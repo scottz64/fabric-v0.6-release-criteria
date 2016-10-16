@@ -17,8 +17,9 @@ export TEST_NET_COMM_PROTOCOL=HTTP
 : ${COMMIT="e4a9b47"}
 export COMMIT
 
-#./local_fabric_gerrit.sh -n 4 -s -c $COMMIT 
+echo "make sure you copy HSBN NetworkCredetials file to util folder before running the test"
+#cp ../util/NetworkCredentials.json.HSBN_NISHI ../util/NetworkCredentials.json
 
 cd ../ledgerstresstest/
-go run LongRun72hr.go
+go run concurrency4peers1min.go
 

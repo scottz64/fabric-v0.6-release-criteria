@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"time"
 	"../chaincode"
+	"../threadutil"
 	"sync"
 	"math/rand"
         "strconv"
@@ -20,6 +21,16 @@ var loopCtr, numReq int
 var MY_CHAINCODE_NAME string = "concurrency"
 
 func main() {
+
+         defer timeTrack(time.Now(), "Testcase execution Done")
+        // 1 min            60  unit = seconds
+        // 1 hr           3600
+        // 12 hr         43200
+        // 1 day         86400
+        // 2 day        172800
+        // 3 day        259200 (72 hr)
+
+        var numSecs int64 = 60
 
 	fmt.Println("Using an existing docker network")
 	_ = chaincode.InitNetwork()
@@ -31,7 +42,8 @@ func main() {
 	time.Sleep(30 * time.Second)
 
 	fmt.Println("\nPOST/Chaincode: Deploying chaincode ", MY_CHAINCODE_NAME)
-        dAPIArgs0 := []string{MY_CHAINCODE_NAME, "init", "PEER1"}
+        //dAPIArgs0 := []string{MY_CHAINCODE_NAME, "init", "PEER1"}
+        dAPIArgs0 := []string{MY_CHAINCODE_NAME, "init", threadutil.GetPeer(1)}
         depArgs0 := []string{"a", data, "counter", "0"}
         chaincode.DeployOnPeer(dAPIArgs0, depArgs0)
 
@@ -46,16 +58,15 @@ func main() {
         fmt.Println(myStr)
 
         loopCtr = 0
-  	numReq = 50
-  	defer timeTrack(time.Now(), "concurrency4peers1min")
-  	now := time.Now().Unix()
-  	endTime := now + 60
-        fmt.Println("Start now, End Time: ", now, endTime)
-  	for now < endTime {
+  	numReq = 250
+  	start := time.Now().Unix()
+        endTime := start + numSecs
+        fmt.Println("Start , End Time: ", start, endTime)
+  	for start < endTime {
 	    InvokeLoop(numReq, data)
             loopCtr++
             fmt.Println("loopCtr, TxCount, TimeNow: ", loopCtr, loopCtr*4*numReq, time.Now())
-            now = time.Now().Unix()
+            start = time.Now().Unix()
   	}
 }
 
@@ -67,7 +78,7 @@ func InvokeLoop(numReq int, data string) {
 
 	go func() {
 		k := 1
-		invArgs0 := []string{MY_CHAINCODE_NAME, "invoke", "PEER0"}
+		invArgs0 := []string{"concurrency", "invoke", threadutil.GetPeer(0)}
 		for k <= numReq {
 		   go func() {
 		      chaincode.InvokeOnPeer(invArgs0, iAPIArgs)
@@ -80,7 +91,7 @@ func InvokeLoop(numReq int, data string) {
 
 	go func() {
 		k := 1
-		invArgs1 := []string{MY_CHAINCODE_NAME, "invoke", "PEER1"}
+		invArgs1 := []string{MY_CHAINCODE_NAME, "invoke", threadutil.GetPeer(1)}
 		for k <= numReq {
 		   go func() {
 			chaincode.InvokeOnPeer(invArgs1, iAPIArgs)
@@ -93,7 +104,7 @@ func InvokeLoop(numReq int, data string) {
 
 	go func() {
 		k := 1
-	        invArgs2 := []string{MY_CHAINCODE_NAME, "invoke", "PEER2"}
+	        invArgs2 := []string{MY_CHAINCODE_NAME, "invoke", threadutil.GetPeer(2)}
 		for k <= numReq {
 		   go func() {
 			chaincode.InvokeOnPeer(invArgs2, iAPIArgs)
@@ -105,7 +116,7 @@ func InvokeLoop(numReq int, data string) {
 	}()
 
 	go func() {
-		invArgs3 := []string{MY_CHAINCODE_NAME, "invoke", "PEER3"}
+		invArgs3 := []string{MY_CHAINCODE_NAME, "invoke", threadutil.GetPeer(3)}
 		k := 1
 		for k <= numReq {
 		    go func() {
@@ -125,10 +136,10 @@ func QueryValAndHeight(expectedCtr int) (passed bool, cntr int) {
 	passed = false
 
 	fmt.Println("\nPOST/Chaincode: Querying counter from chaincode ", MY_CHAINCODE_NAME)
-	qAPIArgs00 := []string{MY_CHAINCODE_NAME, "query", "PEER0"}
-	qAPIArgs01 := []string{MY_CHAINCODE_NAME, "query", "PEER1"}
-	qAPIArgs02 := []string{MY_CHAINCODE_NAME, "query", "PEER2"}
-	qAPIArgs03 := []string{MY_CHAINCODE_NAME, "query", "PEER3"}
+	qAPIArgs00 := []string{MY_CHAINCODE_NAME, "query", threadutil.GetPeer(0)}
+	qAPIArgs01 := []string{MY_CHAINCODE_NAME, "query", threadutil.GetPeer(1)} 
+	qAPIArgs02 := []string{MY_CHAINCODE_NAME, "query", threadutil.GetPeer(2)}
+	qAPIArgs03 := []string{MY_CHAINCODE_NAME, "query", threadutil.GetPeer(3)}
 
 	qArgsb := []string{"counter"}
 
@@ -138,10 +149,10 @@ func QueryValAndHeight(expectedCtr int) (passed bool, cntr int) {
 	resCtr3, _ := chaincode.QueryOnHost(qAPIArgs03, qArgsb)
 
 
-	ht0, _ := chaincode.GetChainHeight("PEER0")
-	ht1, _ := chaincode.GetChainHeight("PEER1")
-	ht2, _ := chaincode.GetChainHeight("PEER2")
-	ht3, _ := chaincode.GetChainHeight("PEER3")
+	ht0, _ := chaincode.GetChainHeight( threadutil.GetPeer(0))
+	ht1, _ := chaincode.GetChainHeight( threadutil.GetPeer(0))
+	ht2, _ := chaincode.GetChainHeight( threadutil.GetPeer(2))
+	ht3, _ := chaincode.GetChainHeight( threadutil.GetPeer(3))
 
 	fmt.Println("Ht in  PEER0 : ", ht0)
 	fmt.Println("Ht in  PEER1 : ", ht1)
@@ -152,7 +163,8 @@ func QueryValAndHeight(expectedCtr int) (passed bool, cntr int) {
 	resCtrI1, _ := strconv.Atoi(resCtr1) 
 	resCtrI2, _ := strconv.Atoi(resCtr2) 
 	resCtrI3, _ := strconv.Atoi(resCtr3) 
-	matches := 0
+	
+        matches := 0
 	if resCtrI0 == expectedCtr { matches++ }
 	if resCtrI1 == expectedCtr { matches++ }
 	if resCtrI2 == expectedCtr { matches++ }

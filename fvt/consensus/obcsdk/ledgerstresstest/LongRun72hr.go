@@ -13,11 +13,13 @@ import (
 	"strconv"
 	"time"
         "sync"
+        "../threadutil"
 	"../chaincode"
 	"../peernetwork"
 )
 
-var curra, currb int
+var curra, currb, numPeers, numReq int
+var MY_CHAINCODE_NAME string =  "example02"
 
 func main() {
 
@@ -29,7 +31,7 @@ func main() {
 	// 2 day	172800
 	// 3 day	259200 (72 hr)
 
-	var loopSecs int64 = 259200
+	var loopSecs int64 = 3600 
 
 	var myNetwork peernetwork.PeerNetwork
 
@@ -37,8 +39,8 @@ func main() {
 	//peernetwork.SetupLocalNetwork(4, true)
 
 	//with the InvokeLoop designed with this 8 peer 4 req setup we would have 144 requests in one round
-	numPeers := 4
-	numReq := 2500
+	numPeers = 4
+	numReq = 250
 
 	myNetwork = chaincode.InitNetwork()
 	chaincode.InitChainCodes()
@@ -88,7 +90,8 @@ func InvokeLoop(numPeers int, numReq int, numSecs int64) {
         	wg.Add(4)
 		j := 0
 		for j < numPeers {
-			currPeer := "PEER" + strconv.Itoa(j)
+			//currPeer := "PEER" + strconv.Itoa(j)
+                        currPeer := threadutil.GetPeer(j) 
 			iAPIArgsCurrPeer := []string{"example02", "invoke", currPeer}
 			go func() {
 				invokeOnOnePeer(j, numReq, iAPIArgsCurrPeer)
@@ -97,7 +100,7 @@ func InvokeLoop(numPeers int, numReq int, numSecs int64) {
 			j++
 		}
 		wg.Wait()
-		QueryMatch(curra, currb)
+		QueryValAndHeight(currb)
 		start = time.Now().Unix()
 	}
 }
@@ -115,7 +118,8 @@ func invokeOnOnePeer(j int, numReq int, iArgs []string) {
 /*
 			m := j - 1
 			for m >= 0 {
-				loopPeer := "PEER" + strconv.Itoa(m)
+				//loopPeer := "PEER" + strconv.Itoa(m)
+				loopPeer := threadutil.GetPeer(m)
 				iAPIArgsLoopPeer := []string{"example02", "invoke", loopPeer}
 				k = 1
 				for k <= numReq {
@@ -127,112 +131,72 @@ func invokeOnOnePeer(j int, numReq int, iArgs []string) {
 */
 }
 
-func QueryMatch(curra int, currb int) (passed bool) {
 
-	passed = false
-	//fmt.Println("Inside Query match ********************************* &&&&&&&&&&&&&& %%%%%%%%%%%%%%%%")
-	//fmt.Println("Sleeping for 20 seconds ")
-	//time.Sleep(20000 * time.Millisecond)
+func QueryValAndHeight(expectedCtr int) (passed bool, cntr int) {
 
-	//fmt.Println("\nPOST/Chaincode: Querying a and b after invoke >>>>>>>>>>> ")
-	qAPIArgs00 := []string{"example02", "query", "PEER0"}
-	qAPIArgs01 := []string{"example02", "query", "PEER1"}
-	qAPIArgs02 := []string{"example02", "query", "PEER2"}
-	qAPIArgs03 := []string{"example02", "query", "PEER3"}
+        passed = false
 
-	qArgsa := []string{"a"}
-	qArgsb := []string{"b"}
+        fmt.Println("\nPOST/Chaincode: Querying counter from chaincode ", MY_CHAINCODE_NAME)
+        qAPIArgs00 := []string{MY_CHAINCODE_NAME, "query", threadutil.GetPeer(0)}
+        qAPIArgs01 := []string{MY_CHAINCODE_NAME, "query", threadutil.GetPeer(1)}
+        qAPIArgs02 := []string{MY_CHAINCODE_NAME, "query", threadutil.GetPeer(2)}
+        qAPIArgs03 := []string{MY_CHAINCODE_NAME, "query", threadutil.GetPeer(3)}
 
-	res0A, _ := chaincode.QueryOnHost(qAPIArgs00, qArgsa)
-	res0B, _ := chaincode.QueryOnHost(qAPIArgs00, qArgsb)
+        qArgsb := []string{"b"}
 
-	res0AI, _ := strconv.Atoi(res0A)
-	res0BI, _ := strconv.Atoi(res0B)
-
-	res1A, _ := chaincode.QueryOnHost(qAPIArgs01, qArgsa)
-	res1B, _ := chaincode.QueryOnHost(qAPIArgs01, qArgsb)
-
-	res1AI, _ := strconv.Atoi(res1A)
-	res1BI, _ := strconv.Atoi(res1B)
-
-	res2A, _ := chaincode.QueryOnHost(qAPIArgs02, qArgsa)
-	res2B, _ := chaincode.QueryOnHost(qAPIArgs02, qArgsb)
-
-	res2AI, _ := strconv.Atoi(res2A)
-	res2BI, _ := strconv.Atoi(res2B)
-
-	res3A, _ := chaincode.QueryOnHost(qAPIArgs03, qArgsa)
-	res3B, _ := chaincode.QueryOnHost(qAPIArgs03, qArgsb)
-
-	res3AI, _ := strconv.Atoi(res3A)
-	res3BI, _ := strconv.Atoi(res3B)
-
- /*
-	valueStr0 := fmt.Sprintf(" PEER0 resa : %d , resb : %d", res0AI, res0BI)
-	valueStr1 := fmt.Sprintf(" PEER1 resa : %d , resb : %d", res1AI, res1BI)
-	valueStr2 := fmt.Sprintf(" PEER2 resa : %d , resb : %d", res2AI, res2BI)
-	valueStr3 := fmt.Sprintf(" PEER3 resa : %d , resb : %d", res3AI, res3BI)
-	fmt.Println(valueStr0)
-	fmt.Println(valueStr1)
-	fmt.Println(valueStr2)
-	fmt.Println(valueStr3)
- */
-
-	matches := 0
-	if (curra == res0AI) && (currb == res0BI) {
-		matches++
-		//fmt.Println("Results in a and b match with Invoke values on PEER0: PASS")
-		//valueStr := fmt.Sprintf(" curra : %d, currb : %d, resa : %d , resb : %d", curra, currb, res0AI, res0BI)
-		//fmt.Println(valueStr)
-	} else {
-                fmt.Println("Results in a and b DO NOT match on PEER0 a, b: ", res0AI, res0BI)
-	}
-
-	if (curra == res1AI) && (currb == res1BI) {
-		matches++
-		//fmt.Println("Results in a and b match with Invoke values on PEER1: PASS")
-		//valueStr := fmt.Sprintf(" curra : %d, currb : %d, resa : %d , resb : %d", curra, currb, res1AI, res1BI)
-		//fmt.Println(valueStr)
-	} else {
-                fmt.Println("Results in a and b DO NOT match on PEER1 a, b: ", res1AI, res1BI)
-	}
+        resCtr0, _ := chaincode.QueryOnHost(qAPIArgs00, qArgsb)
+        resCtr1, _ := chaincode.QueryOnHost(qAPIArgs01, qArgsb)
+        resCtr2, _ := chaincode.QueryOnHost(qAPIArgs02, qArgsb)
+        resCtr3, _ := chaincode.QueryOnHost(qAPIArgs03, qArgsb)
 
 
-	if (curra == res2AI) && (currb == res2BI) {
-		matches++
-                //fmt.Println("Results in a and b match with Invoke values on PEER2: PASS")
-                //valueStr := fmt.Sprintf(" curra : %d, currb : %d, resa : %d , resb : %d", curra, currb, res2AI, res2BI)
-                //fmt.Println(valueStr)
+        ht0, _ := chaincode.GetChainHeight( threadutil.GetPeer(0))
+        ht1, _ := chaincode.GetChainHeight( threadutil.GetPeer(0))
+        ht2, _ := chaincode.GetChainHeight( threadutil.GetPeer(2))
+        ht3, _ := chaincode.GetChainHeight( threadutil.GetPeer(3))
+
+        fmt.Println("Ht in  PEER0 : ", ht0)
+        fmt.Println("Ht in  PEER1 : ", ht1)
+        fmt.Println("Ht in  PEER2 : ", ht2)
+        fmt.Println("Ht in  PEER3 : ", ht3)
+
+        resCtrI0, _ := strconv.Atoi(resCtr0)
+        resCtrI1, _ := strconv.Atoi(resCtr1)
+        resCtrI2, _ := strconv.Atoi(resCtr2)
+        resCtrI3, _ := strconv.Atoi(resCtr3)
+
+        matches := 0
+        if resCtrI0 == expectedCtr { matches++ }
+        if resCtrI1 == expectedCtr { matches++ }
+        if resCtrI2 == expectedCtr { matches++ }
+        if resCtrI3 == expectedCtr { matches++ }
+        if matches == 4 {
+                if ht0 == ht1 && ht0 == ht2 && ht0 == ht3 {
+                        passed = true
+                        fmt.Printf("ALL PEERS MATCH expected %d, ht=%d\n", expectedCtr, ht0)
+                } else {
+                        fmt.Printf("ALL PEERS counters match expected %d, BUT HEIGHTS DO NOT ALL MATCH: ht0=%d ht1=%d ht2=%d ht3=%d\n", expectedCtr, ht0, ht1, ht2, ht3)
+                }
         } else {
-                fmt.Println("Results in a and b DO NOT match on PEER2 a, b: ", res2AI, res2BI)
+                fmt.Printf("expected: %d\nresCtr0:  %d\nresCtr1:  %d\nresCtr2:  %d\nresCtr3:  %d\n", expectedCtr, resCtrI0, resCtrI1, resCtrI2, resCtrI3)
         }
-
-
-	if (curra == res3AI) && (currb == res3BI) {
-		matches++
-                //fmt.Println("Results in a and b match with Invoke values on PEER3: PASS")
-                //valueStr := fmt.Sprintf(" curra : %d, currb : %d, resa : %d , resb : %d", curra, currb, res3AI, res3BI)
-                //fmt.Println(valueStr)
-        } else {
-                fmt.Println("Results in a and b DO NOT match on PEER3 a, b: ", res3AI, res3BI)
-	}
-
-	if matches == 4 {
-		passed = true
-		fmt.Println(fmt.Sprintf ("All PEERs MATCH curra: %d , currb: %d", curra, currb))
-	} else {
-		fmt.Println(fmt.Sprintf ("curra: %d, currb: %d, matches=%d", curra, currb, matches))
-	}
-	return passed
+        return passed, resCtrI0
 }
+
 
 func timeTrack(start time.Time, name string) {
-
-	//fmt.Println("Sleeping for 60 seconds ")
-	//time.Sleep(60000 * time.Millisecond)
-	result := "FAILED"
-	if QueryMatch(curra, currb) { result = "PASSED" }
-	elapsed := time.Since(start)
-	myStr := fmt.Sprintf("\nFINAL RESULT %s %s , elapsed %s\n", name, result, elapsed)
-	fmt.Println(myStr)
+        elapsed := time.Since(start)
+        expectedValue := currb 
+        result := "FAILED"
+        passed, curr := QueryValAndHeight(expectedValue)
+        prev := curr-1
+        for !passed && curr != prev {
+                fmt.Println("sleep 1 minute to allow network to process queued transactions, and try again")
+                time.Sleep(60 * time.Second)
+                prev = curr
+                passed, curr = QueryValAndHeight(expectedValue)
+        }
+        if passed { result = "PASSED" }
+        fmt.Printf("\nFINAL RESULT %s %s, elapsed %s \n", name, result, elapsed)
 }
+
