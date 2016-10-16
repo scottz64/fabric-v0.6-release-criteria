@@ -8,8 +8,9 @@ echo "BasicFuncExistingNetworkLST.go LST_1client1peer20K.go LST_2client1peer20K.
 export CORE_PBFT_GENERAL_BATCHSIZE=500
 export TEST_EXISTING_NETWORK=FALSE
 
-../automation/local_fabric_gerrit.sh -n 4 -b $CORE_PBFT_GENERAL_BATCHSIZE -s -c $COMMIT
+cd ../ledgerstresstests
 
+../automation/local_fabric_gerrit.sh -n 4 -b $CORE_PBFT_GENERAL_BATCHSIZE -s -c $COMMIT
 
 ##### Run LedgerStressTest Regression Tests, using the existing network
 ##### Ensure no envvars override the parms that each testcase uses
@@ -20,7 +21,6 @@ export TEST_LST_NUM_CLIENTS=""
 export TEST_LST_NUM_PEERS=""
 export TEST_LST_THROUGHPUT_RATE=""
 
-cd ../ledgerstresstests
 date; echo "==================== Start of LST - REST API Test ===================="
 date; go run BasicFuncExistingNetworkLST.go
 date; echo "==================== Start of LST - Regression Tests ===================="

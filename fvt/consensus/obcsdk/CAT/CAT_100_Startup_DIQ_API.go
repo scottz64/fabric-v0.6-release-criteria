@@ -219,13 +219,13 @@ func main() {
 	}
 
 	if err == nil && txList != nil && strings.Contains(txList[0].Txid, invRes) { 	// these should be equal, if the invoke transaction was successful
-		myStr = fmt.Sprintf("\nGetBlocks API TEST PASSED: Block %d contains Transaction %s as expected", blockNum, invRes)
+		myStr = fmt.Sprintf("GetBlocks API TEST PASSED: Block %d contains Transaction %s as expected", blockNum, invRes)
 		fmt.Println(myStr)
 		fmt.Fprintln(chco2.Writer, myStr)
 		chco2.Writer.Flush()
 	} else {
 		apiTestsPass = false
-                myStr = fmt.Sprintf("\nGetBlocks API TEST FAILED: Transaction NOT stored in CH_Block=%d, InvokeTransactionResult=%s", blockNum, invRes)
+                myStr = fmt.Sprintf("GetBlocks API TEST FAILED: Transaction NOT stored in CH_Block=%d, InvokeTransactionResult=%s", blockNum, invRes)
 		if txList != nil { 	// && txList[0] != nil 
 			myStr += fmt.Sprintf("\n txid = %s", txList[0].Txid)
 		} else {
@@ -240,11 +240,11 @@ func main() {
 	fmt.Println("\n===== Get Transactions API Test =====")
 	response, status, trans_err := chaincode.GetChainTransactions(url, invRes)
 	if trans_err == nil && strings.Contains(status, "200") {
-                myStr = fmt.Sprintf("\nGet Transactions API TEST PASSED")
+                myStr = fmt.Sprintf("Get Transactions API TEST PASSED")
 		if chco2.Verbose { myStr += fmt.Sprintf(" : status=<%s> response=<%s>", status, response) }
 	} else {
 		apiTestsPass = false
-                myStr = fmt.Sprintf("\nGet Transactions API TEST FAILED: url=<%s> invRes=<%s> status=<%s> response=<%s> err=<%s>", url, invRes, status, response, trans_err)
+                myStr = fmt.Sprintf("Get Transactions API TEST FAILED: url=<%s> invRes=<%s> status=<%s> response=<%s> err=<%s>", url, invRes, status, response, trans_err)
 	}
 	fmt.Println(myStr)
 	fmt.Fprintln(chco2.Writer, myStr)
@@ -254,7 +254,7 @@ func main() {
 		resultStr = "FAIL"
 		chco2.AnnexTestPassResult(false) // since our API tests failed, then make sure the final test result is FAILED(false)
 	}
-	myStr = fmt.Sprintf("\nAPI TESTS SUMMARY = %s", resultStr)
+	myStr = fmt.Sprintf("API TESTS SUMMARY = %s", resultStr)
 	fmt.Println(myStr)
 	fmt.Fprintln(chco2.Writer, myStr)
 	chco2.Writer.Flush()
