@@ -11,10 +11,13 @@ trap 'echo $0 Received termination signal.; kill $! 2>/dev/null; exit' SIGHUP SI
 
 cd ../../fvt/consensus/obcsdk/automation/
 
-
+PRE_COMMIT="$COMMIT"
 source ./ENVVARS_LOCAL
-export TEST_NET_COMM_PROTOCOL=HTTP
-: ${COMMIT="e4a9b47"}
+if [ "$PRE_COMMIT" != "" ]
+then
+  COMMIT="$PRE_COMMIT"
+fi
+echo -e "COMMIT=$COMMIT"
 export COMMIT
 
 ./local_fabric_gerrit.sh -n 4 -s -c $COMMIT 
