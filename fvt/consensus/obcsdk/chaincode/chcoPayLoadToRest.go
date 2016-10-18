@@ -273,7 +273,7 @@ func GetChainTransactions(url string, txid string) (body string, status string, 
 // Use POST /chaincode endpoint to deploy, invoke, and
 // query a target chaincode.
 func changeState(url string, path string, restCallName string,
-	args []string, user string, funcName string) string {
+	args []string, user string, funcName string) (txId string) {
 
 	//  Build a payload for the REST API call
 	depPL := make(chan []byte)
@@ -329,7 +329,7 @@ func changeState(url string, path string, restCallName string,
 	return res.Result.Message
 }
 
-func readState(url string, path string, restCallName string, args []string, user string, funcName string) string {
+func readState(url string, path string, restCallName string, args []string, user string, funcName string) (txId string) {
 	msgStr := fmt.Sprintf("entering readState: path=%s, restCallName=%s, user=%s, funcName=%s, args=%v\n", path, restCallName, user, funcName, args)
 	depPL := make(chan []byte)
 	go genPayLoadForChaincode(depPL, path, funcName, args, user, restCallName)

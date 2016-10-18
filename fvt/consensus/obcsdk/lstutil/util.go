@@ -99,17 +99,17 @@ func QueryChaincode(mynetwork peernetwork.PeerNetwork, counter int64) (aVal, cou
 	return aVal, counterIndexStr
 }
 
-func GetChaincodeValuesOnHost(mynetwork peernetwork.PeerNetwork, peerNum int) (aVal, counterIndexStr string) {
+func GetChaincodeValuesOnHost(mynetwork peernetwork.PeerNetwork, peerNum int) (aVal string, counterIndexStr string, counterQueryErr error, dataQueryErr error) {
         if peerNum >= len(mynetwork.Peers) { panic("peerNum does not exist in network") }
         peername := mynetwork.Peers[peerNum].PeerDetails["name"]
 		//Logger(fmt.Sprintf("----------GetChaincodeValuesOnHost peerNum=%d peername=%s", peerNum, peername))
 	var arg1 = []string{CHAINCODE_NAME, QUERY, peername}
-	counterIndexStr, _ = chaincode.QueryOnHostWithNetwork(mynetwork, arg1, []string{"counter"})
+	counterIndexStr, counterQueryErr = chaincode.QueryOnHostWithNetwork(mynetwork, arg1, []string{"counter"})
 		//Logger(fmt.Sprintf("----------GetChaincodeValuesOnHost retrieved counter=%s", counterIndexStr))
 	var aKey = []string{"a" + counterIndexStr}
-	aVal, _ = chaincode.QueryOnHostWithNetwork(mynetwork, arg1, aKey)
+	aVal, dataQueryErr = chaincode.QueryOnHostWithNetwork(mynetwork, arg1, aKey)
   		//Logger(fmt.Sprintf("----------GetChaincodeValuesOnHost counter=%s, query (using aKey=%s) result=%s", counterIndexStr, aKey[0], aVal))
-	return aVal, counterIndexStr
+	return aVal, counterIndexStr, counterQueryErr, dataQueryErr
 }
 
 func QueryChaincodeOnHost(mynetwork peernetwork.PeerNetwork, peerNum int, counter int64) (aVal, counterIndexStr string) {
@@ -215,11 +215,12 @@ func QueryAllHostsToGetCurrentCounter(mynetwork peernetwork.PeerNetwork, txName 
 	F := (N-1)/3
 	currPeerCounterValue := make([]int64, N)
 	for peerNumber := 0 ; peerNumber < N ; peerNumber++ {
-        	_, counterIdxStr := GetChaincodeValuesOnHost(mynetwork, peerNumber)
+        	_, counterIdxStr, counterQueryErr, dataQueryErr := GetChaincodeValuesOnHost(mynetwork, peerNumber)
+        	if counterQueryErr != nil || dataQueryErr != nil { Logger(fmt.Sprintf("QueryAllHostsToGetCurrentCounter: problems querying database; counterQueryErr <%s> dataQueryErr <%s>\n", counterQueryErr, dataQueryErr)) }
         	Logger(fmt.Sprintf("-----QueryAllHostsToGetCurrentCounter: on peer %d, counter=%s", peerNumber, counterIdxStr))
         	newCounterValue, err := strconv.ParseInt(counterIdxStr, 10, 64)
-        	if err != nil {
-			Logger(fmt.Sprintf("-----QueryAllHostsToGetCurrentCounter() Failed to convert counterIdxStr <%s> to int64\n Error: %s\n", counterIdxStr, err))
+        	if err != nil { Logger(fmt.Sprintf("-----QueryAllHostsToGetCurrentCounter() Failed to convert counterIdxStr <%s> to int64\n Error: %s\n", counterIdxStr, err)) }
+        	if err != nil || counterQueryErr != nil || dataQueryErr != nil {
 			currPeerCounterValue[peerNumber] = 0
 			failedCount++
 		} else {
@@ -258,11 +259,12 @@ func QueryAllHosts(mynetwork peernetwork.PeerNetwork, txName string, expected_co
 	N := peernetwork.GetNumberOfPeers(mynetwork)
 	for peerNumber := 0 ; peerNumber < N ; peerNumber++ {
 		result := "SUCCESS"
-        	valueStr, counterIdxStr := GetChaincodeValuesOnHost(mynetwork, peerNumber)
+        	valueStr, counterIdxStr, counterQueryErr, dataQueryErr := GetChaincodeValuesOnHost(mynetwork, peerNumber)
         	Logger(fmt.Sprintf("-----QueryAllHosts: on peer %d, counter=%s", peerNumber, counterIdxStr))
         	newVal, err := strconv.ParseInt(counterIdxStr, 10, 64)
+        	if counterQueryErr != nil || dataQueryErr != nil { Logger(fmt.Sprintf("QueryAllHosts: problems querying database; counterQueryErr <%s> dataQueryErr <%s>\n", counterQueryErr, dataQueryErr)) }
         	if err != nil { Logger(fmt.Sprintf("QueryAllHosts: Failed to convert counterIdxStr <%s> recvd from GetChaincodeValuesOnHost to int64\n Error: %s\n", counterIdxStr, err)) }
-        	if err != nil || newVal != expected_count {
+        	if err != nil || newVal != expected_count || counterQueryErr != nil || dataQueryErr != nil {
 			result = "FAILURE"
 			failedCount++
 		}

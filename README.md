@@ -1,5 +1,9 @@
 # Release-Criteria Document
 
+For a description of the testing done in this release, members may also login to
+[Quality folder in Box@IBM](https://ibm.ent.box.com/folder/11486543210)
+to read the v0.6 Release Criteria document "Hyperledger Fabric .6 V1.docx"
+
 ## The release criteria repository is organized as follows
 1.  Each release is documented in its own branch.
 2.  All the tests in each branch are executed on three platforms.

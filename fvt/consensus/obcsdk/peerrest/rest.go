@@ -110,39 +110,33 @@ func PostChainAPI(url string, payLoad []byte) (respBody string, respStatus strin
 */
 func PostChainAPI_HTTP(url string, payLoad []byte) (respBody string, respStatus string) {
 
-	veryverbose := false 	// for debugging github hyperledger fabric issue #2357
 
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(payLoad))
 	//req.Header.Set("X-Custom-Header", "myvalue")
 	req.Header.Set("Content-Type", "application/json")
 
-	if veryverbose {
-		fmt.Println("PostChainAPI() calling http.Client.Do to url=" + url) 
-	}
 	httpclient := &http.Client{ Timeout: time.Second * waitSecs }
-	resp, err := httpclient.Do(req)
-	if veryverbose {
-		fmt.Println("PostChainAPI()  AFTER  http.Client.Do(req)")
-	}
+	response, err := httpclient.Do(req)
 	if err != nil {
-		fmt.Println("PostChainAPI() httpclient.Do Error, url, response, err: ", url, resp, err)
-		fmt.Println(">>>Things to check, in order:\n - the correct Network Credentials file\n - command is sending to the correct IP Address")
+		// response is likely nil, since err is not nil. Print whatever we can to help debug.
+		fmt.Println("PostChainAPI() httpclient.Do Error: url: ", url)
+		fmt.Println("PostChainAPI() httpclient.Do Error: payLoad: ", string(payLoad))
+		fmt.Println("PostChainAPI() httpclient.Do Error: err: ", err)
+		fmt.Println(">>>Things to check, in order:\n - the response and err returned (above)\n - the correct Network Credentials file\n - command is sending to the correct IP Address")
 		fmt.Println(" - check if your network connection (wired or wireless?) dropped, especially if using a non-local network")
 		fmt.Println(" - check if any problem with a firewall/router or other hop in the network path from here to the specified destination")
 		return err.Error(), "httpclient.Do Error"
 	}
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
-	if veryverbose {
-		fmt.Println("PostChainAPI() >>> response Status:", resp.Status)
-		fmt.Println("PostChainAPI() >>> response Body:", body)
+	// Response is likely not nil, since err is nil.
+	defer response.Body.Close()
+	// use ReadAll and string() to translate the response body into a string
+	body, readall_err := ioutil.ReadAll(response.Body)
+	if readall_err != nil {
+		fmt.Println("PostChainAPI() Error from ioutil.ReadAll() translating httpclient.Do response.Body; url: ", url)
+		fmt.Println("PostChainAPI() Error from ioutil.ReadAll() err: ", readall_err)
+		return readall_err.Error(), "ERROR from ioutil.ReadAll while translating response.Body from httpclient.Do"
 	}
-	if err != nil {
-		fmt.Println("PostChainAPI() Error from ioutil.ReadAll(), url, response: ", url, body)
-		fmt.Println("PostChainAPI() Error from ioutil.ReadAll(), err: ", err)
-		return err.Error(), "ERROR from ioutil.ReadAll"
-	}
-	//return string(body), resp.Status
+	//return string(body), response.Status
 	return string(body), string("")
 }
 
@@ -155,39 +149,28 @@ func PostChainAPI_HTTP(url string, payLoad []byte) (respBody string, respStatus 
 */
 func PostChainAPI_HTTPS(url string, payLoad []byte) (respBody string, respStatus string) {
 
-	veryverbose := false 	// for debugging github hyperledger fabric issue #2357
-
-	if veryverbose {
-		fmt.Println("PostChainAPI()_HTTPS url=" + url) 
-	}
         tr := &http.Transport{
                  TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	         //TLSClientConfig:    &tls.Config{RootCAs: nil},
 	         DisableCompression: true,
         }
         httpclient := &http.Client{ Transport: tr, Timeout: time.Second * waitSecs }
-	if veryverbose {
-		fmt.Println("PostChainAPI()_HTTPS calling http.Client.Post=" + url) 
-	}
 	response, err := httpclient.Post(url, "json", bytes.NewBuffer(payLoad))
-	if veryverbose {
-		fmt.Println("PostChainAPI()  AFTER  http.Client.Post")
-	}
-
 	if err != nil {
-		fmt.Println("PostChainAPI_HTTPS() httpclient.Post Error, url, response: ", url, response)
-		fmt.Println("PostChainAPI_HTTPS() httpclient.Post Error, err: ", err)
+		// response is likely nil, since err is not nil. Print whatever we can to help debug.
+		fmt.Println("PostChainAPI_HTTPS() httpclient.Post Error: url: ", url)
+		fmt.Println("PostChainAPI_HTTPS() httpclient.Post Error: payLoad: ", string(payLoad))
+		fmt.Println("PostChainAPI_HTTPS() httpclient.Post Error: err: ", err)
 		return err.Error(), "httpclient.Post Error"
 	}
+	// response is likely not nil, since err is nil.
 	defer response.Body.Close()
-	body, err := ioutil.ReadAll(response.Body)
-	if err != nil {
-		fmt.Println("PostChainAPI_HTTPS Error from ioutil.ReadAll, url, response: ", url, body)
-		fmt.Println("PostChainAPI_HTTPS Error from ioutil.ReadAll, err: ", err)
-	}
-	if veryverbose {
-		fmt.Println("PostChainAPI_HTTPS() secure postchain >>> response Status:", response.Status)
-		fmt.Println("PostChainAPI_HTTPS() secure postchain >>> response Body:", body)
+	// use ReadAll and string() to translate the response body into a string
+	body, readall_err := ioutil.ReadAll(response.Body)
+	if readall_err != nil {
+		fmt.Println("PostChainAPI_HTTPS Error from ioutil.ReadAll while translating response.Body; url: ", url)
+		fmt.Println("PostChainAPI_HTTPS Error from ioutil.ReadAll, readall_err: ", readall_err)
+		return readall_err.Error(), "ERROR from ioutil.ReadAll while translating response.Body from httpclient.Post"
 	}
 	//return string(body), response.Status
 	return string(body), string("")
