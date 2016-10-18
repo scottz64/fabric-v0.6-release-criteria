@@ -1,16 +1,25 @@
 {
-    "transType": "Query",
+    "transMode": "Burst",
+    "transType": "Invoke",
     "nPeers": "4",
     "nThread": "4",
-    "nRequest": "1000",
+    "nRequest": "100",
     "runDur": "60",
-    "nFreq": "3000",
+    "Burst": {
+        "burstFreq0":  "500",
+        "burstDur0":  "3000",
+        "burstFreq1": "2000",
+        "burstDur1": "10000"
+    },
+    "Mix": {
+        "mixFreq": "2000"
+    },
     "TCertBatchSize": "200",
     "ccType": "general",
     "deploy": {
         "chaincodePath": "chaincode_example02",
         "fcn": "init",
-        "args": "a,100,b,200"
+        "args": ["a","100","b","200"]
     },
     "query": {
         "fcn": "query",
@@ -20,7 +29,10 @@
         "fcn": "invoke",
         "args": ["a","b","1"]
     },
-	"SCFile": [
+    "SCFile": [
+		{"ServiceCredentials":"SCFiles/hsbn-ssc-perf3.json"},
+		{"ServiceCredentials":"SCFiles/config.json"},
+		{"ServiceCredentials":"SCFiles/hsbn-139.json"},
 		{"ServiceCredentials":"SCFiles/ServiceCredentials0000.json"},
 		{"ServiceCredentials":"SCFiles/ServiceCredentials0001.json"},
 		{"ServiceCredentials":"SCFiles/ServiceCredentials0002.json"}
