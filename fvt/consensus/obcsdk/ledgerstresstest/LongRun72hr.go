@@ -31,7 +31,7 @@ func main() {
 	// 2 day	172800
 	// 3 day	259200 (72 hr)
 
-	var loopSecs int64 = 3600 
+	var loopSecs int64 = 259200 
 
 	var myNetwork peernetwork.PeerNetwork
 
@@ -110,6 +110,7 @@ func invokeOnOnePeer(j int, numReq int, iArgs []string) {
 			k := 1
 			for k <= numReq {
 				chaincode.InvokeOnPeer(iArgs, invArgs0)
+	                        time.Sleep(10 * time.Second)
 				k++
 			}
 			curra = curra - numReq
