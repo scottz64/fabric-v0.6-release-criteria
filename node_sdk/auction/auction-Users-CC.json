@@ -1,0 +1,8 @@
+{
+        "Chaincode_Path":"auction",
+			 "Admin_Name": "WebAppAdmin",
+			 "Admin_Secret": "DJY27pEnl16d",
+       "User1_Name": "alice",
+			 "User1_Secret": "CMS10pEQlB16"
+
+ }
