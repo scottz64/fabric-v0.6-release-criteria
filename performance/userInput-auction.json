@@ -1,15 +1,26 @@
 {
-    "transType": "Invoke",
+    "transMode": "Simple",
+    "transType": "Query",
     "nPeers": "4",
     "nThread": "4",
-    "nRequest": "100",
-    "runDur": "60",
+    "nRequest": "1000",
+    "runDur": "600",
+    "Burst": {
+        "burstFreq0":  "500",
+        "burstDur0":  "3000",
+        "burstFreq1": "1000",
+        "burstDur1": "10000"
+    },
+    "Mix": {
+        "mixFreq": "2000"
+    },
     "TCertBatchSize": "200",
     "ccType": "auction",
+    "auctionKey": "5000",
     "deploy": {
-        "chaincodePath": "github.com/auction",
+        "chaincodePath": "auction",
         "fcn": "init",
-        "args": "INITIALIZE"
+        "args": ["INITIALIZE"]
     },
     "query": {
         "fcn": "GetUser",
@@ -18,8 +29,8 @@
     "invoke": {
         "fcn": "PostUser",
         "args": ["100", "USER", "Ashley Hart", "TRD",  "ARG 4", "9198063535", "ashley@itpeople.com", "SUNTRUST", "0001732345", "0234678"]
-    },   
-	"SCFile": [
+    },
+    "SCFile": [
 	    {"ServiceCredentials":"SCFiles/ServiceCredentials0000.json"},
 	    {"ServiceCredentials":"SCFiles/ServiceCredentials0001.json"},
 	    {"ServiceCredentials":"SCFiles/ServiceCredentials0002.json"}
