@@ -1,0 +1,8 @@
+{
+"dependencies": {
+    "hfc" : "*",
+    "async": "*",
+    "sleep": "*",
+    "debug": "*"
+  }
+}
