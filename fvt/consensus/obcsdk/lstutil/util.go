@@ -5,6 +5,7 @@ import (
 	"log"
 	"math/rand"
 	"os"
+	"bufio"
 	"strconv"
 	"time"
 	"../chaincode"
@@ -14,6 +15,7 @@ import (
 // A Utility program, contains several utility methods that can be used across
 // test programs
 const (
+	OutputSummaryFileName = "GO_TESTS_SUMMARY.log"
 	// CHAINCODE_NAME = "example02"
 	// CHAINCODE_NAME = "example02_addrecs"
 	CHAINCODE_NAME = "addrecs"
@@ -24,13 +26,23 @@ const (
 )
 
 var TESTNAME string
+var FinalResultStr string
 var logEnabled bool
 var logFile *os.File
+var Writer *bufio.Writer
+var SummaryFile *os.File
 
-// Called in teardown methods to messure and display over all execution time
-func TimeTracker(start time.Time, info string) {
+// Called in TearDown methods to measure and display overall execution time
+func TimeTracker(start time.Time) {
 	elapsed := time.Since(start)
-	Logger(fmt.Sprintf("%s , elapsed %s", info, elapsed))
+	FinalResultStr += fmt.Sprintf(", elapsed %s", elapsed)
+
+	// write final results to the output summary file, which is used for all tests, and then write to our Logger
+
+        fmt.Fprintln(Writer, FinalResultStr)
+        Writer.Flush()
+
+	Logger(FinalResultStr)
 	CloseLogger()
 }
 
@@ -78,7 +90,7 @@ func DeployChaincode(mynetwork peernetwork.PeerNetwork) (cntr int64) {		// ledge
 	var chaincodeDeployArgs = []string{"a0", myStr, "counter", "0"}
 	deployID, err := chaincode.DeployWithNetwork(mynetwork, funcArgs, chaincodeDeployArgs)
 	if err != nil {
-		Logger(fmt.Sprintf("lstutil.DeployChaincode(): Time to PANIC! chaincode.DeployWithNetwork returned (deployID=%s) and (Non-nil error=%s)\n", deployID, err))
+		Logger(fmt.Sprintf("lstutil.DeployChaincode(): Time to PANIC! chaincode.DeployWithNetwork returned (deployID=%s) and (Non-nil error=%s)", deployID, err))
 		panic(err)
 	}
 	var sleepTime int64
@@ -130,6 +142,8 @@ func Sleep(secs int64) {
 }
 
 func InitLogger(fileName string) {
+	FinalResultStr = "FINAL RESULT "
+
 	layout := "Jan_02_2006"
 	// Format Now with the layout const.
 	t := time.Now()
@@ -167,7 +181,7 @@ func TearDown(mynetwork peernetwork.PeerNetwork) {
 	testPassed := false
 	_, cntrStr := QueryChaincode(mynetwork, lstCounter)
 	cntrVal, err := strconv.ParseInt(cntrStr, 10, 64)
-	if err != nil { Logger(fmt.Sprintf("TearDown() Failed to convert cntr <%s> to int64\n Error: %s\n", cntrStr, err)) }
+	if err != nil { Logger(fmt.Sprintf("TearDown() Failed to convert cntr <%s> to int64\n Error: %s", cntrStr, err)) }
 
 	if err == nil && cntrVal == lstCounter {
 		testPassed = true
@@ -182,10 +196,10 @@ func TearDown(mynetwork peernetwork.PeerNetwork) {
 		Sleep(sleepSecs)
 		prevCntr = cntrVal
 		_, cntrStr = QueryChaincode(mynetwork, lstCounter)
-		//Logger(fmt.Sprintf("After Query values: expected=%d, ledger cntrIndex = <%s>\n", lstCounter, cntrStr))
+		//Logger(fmt.Sprintf("After Query values: expected=%d, ledger cntrIndex = <%s>", lstCounter, cntrStr))
 		cntrVal, err = strconv.ParseInt(cntrStr, 10, 64)
 		if err != nil {
-			Logger(fmt.Sprintf("TearDown() Failed to convert cntrStr <%s> to int64\n ERROR: %s\n", cntrStr, err))
+			Logger(fmt.Sprintf("TearDown() Failed to convert cntrStr <%s> to int64\n ERROR: %s", cntrStr, err))
 		} else if cntrVal == lstCounter {
 			testPassed = true
 		} else {
@@ -193,17 +207,18 @@ func TearDown(mynetwork peernetwork.PeerNetwork) {
 		}
 	}
 	if testPassed {
-		Logger(fmt.Sprintf("\nFINAL RESULT PASSED %s , ledger counter = %d.\n", TESTNAME, lstCounter))
+		FinalResultStr += fmt.Sprintf("PASSED %s : ledger counter = %d", TESTNAME, lstCounter)
 	} else {
-		Logger(fmt.Sprintf("\nWARNING: ledger counter = %d does NOT match expected = %d.\n", cntrVal, lstCounter))
+		Logger(fmt.Sprintf("WARNING: ledger counter = %d does NOT match expected = %d", cntrVal, lstCounter))
 
 		queryCounterSuccess := QueryAllHostsToGetCurrentCounter(mynetwork, TESTNAME, &cntrVal)
 		if !queryCounterSuccess {
-			Logger(fmt.Sprintf("\nFINAL RESULT FAILED %s : no consensus for ledger counter\n", TESTNAME))
+			FinalResultStr += fmt.Sprintf("FAILED %s : no consensus for ledger counter", TESTNAME)
 		} else {
-			Logger(fmt.Sprintf("\nFINAL RESULT PASSED %s : after QueryAllHosts, consensus reached for ledger counter = %d (but expected = %d)\n", TESTNAME, cntrVal, lstCounter))
+			FinalResultStr += fmt.Sprintf("PASSED %s : after QueryAllHosts, consensus reached for ledger counter = %d (but expected = %d)", TESTNAME, cntrVal, lstCounter)
 		}
 	}
+	// FinalResultStr will be printed by TimeTracker, along with the elapsed time
 }
 
 func QueryAllHostsToGetCurrentCounter(mynetwork peernetwork.PeerNetwork, txName string, counter *int64) (querySuccess bool) {	// using ratnakar myCC - a modified example02
@@ -216,10 +231,10 @@ func QueryAllHostsToGetCurrentCounter(mynetwork peernetwork.PeerNetwork, txName 
 	currPeerCounterValue := make([]int64, N)
 	for peerNumber := 0 ; peerNumber < N ; peerNumber++ {
         	_, counterIdxStr, counterQueryErr, dataQueryErr := GetChaincodeValuesOnHost(mynetwork, peerNumber)
-        	if counterQueryErr != nil || dataQueryErr != nil { Logger(fmt.Sprintf("QueryAllHostsToGetCurrentCounter: problems querying database; counterQueryErr <%s> dataQueryErr <%s>\n", counterQueryErr, dataQueryErr)) }
+        	if counterQueryErr != nil || dataQueryErr != nil { Logger(fmt.Sprintf("QueryAllHostsToGetCurrentCounter: problems querying database; counterQueryErr <%s> dataQueryErr <%s>", counterQueryErr, dataQueryErr)) }
         	Logger(fmt.Sprintf("-----QueryAllHostsToGetCurrentCounter: on peer %d, counter=%s", peerNumber, counterIdxStr))
         	newCounterValue, err := strconv.ParseInt(counterIdxStr, 10, 64)
-        	if err != nil { Logger(fmt.Sprintf("-----QueryAllHostsToGetCurrentCounter() Failed to convert counterIdxStr <%s> to int64\n Error: %s\n", counterIdxStr, err)) }
+        	if err != nil { Logger(fmt.Sprintf("-----QueryAllHostsToGetCurrentCounter() Failed to convert counterIdxStr <%s> to int64\n Error: %s", counterIdxStr, err)) }
         	if err != nil || counterQueryErr != nil || dataQueryErr != nil {
 			currPeerCounterValue[peerNumber] = 0
 			failedCount++
@@ -242,10 +257,10 @@ func QueryAllHostsToGetCurrentCounter(mynetwork peernetwork.PeerNetwork, txName 
 		}
 		if found_consensus {
 			*counter = consensus_counter
-			Logger(fmt.Sprintf("%s TEST PASS : %d/%d peers reached consensus: current count = %d", txName, N-failedCount, N, consensus_counter))
+			Logger(fmt.Sprintf("%s Query PASS : %d/%d peers reached consensus: current count = %d", txName, N-failedCount, N, consensus_counter))
 		} else {
 			querySuccess = false
-			Logger(fmt.Sprintf("%s TEST FAIL : peers cannot reach consensus on current counter value!!!", txName))
+			Logger(fmt.Sprintf("%s Query FAIL : peers cannot reach consensus on current counter value!!!", txName))
 		}
 	}
 	return querySuccess
@@ -262,8 +277,8 @@ func QueryAllHosts(mynetwork peernetwork.PeerNetwork, txName string, expected_co
         	valueStr, counterIdxStr, counterQueryErr, dataQueryErr := GetChaincodeValuesOnHost(mynetwork, peerNumber)
         	Logger(fmt.Sprintf("-----QueryAllHosts: on peer %d, counter=%s", peerNumber, counterIdxStr))
         	newVal, err := strconv.ParseInt(counterIdxStr, 10, 64)
-        	if counterQueryErr != nil || dataQueryErr != nil { Logger(fmt.Sprintf("QueryAllHosts: problems querying database; counterQueryErr <%s> dataQueryErr <%s>\n", counterQueryErr, dataQueryErr)) }
-        	if err != nil { Logger(fmt.Sprintf("QueryAllHosts: Failed to convert counterIdxStr <%s> recvd from GetChaincodeValuesOnHost to int64\n Error: %s\n", counterIdxStr, err)) }
+        	if counterQueryErr != nil || dataQueryErr != nil { Logger(fmt.Sprintf("QueryAllHosts: problems querying database; counterQueryErr <%s> dataQueryErr <%s>", counterQueryErr, dataQueryErr)) }
+        	if err != nil { Logger(fmt.Sprintf("QueryAllHosts: Failed to convert counterIdxStr <%s> recvd from GetChaincodeValuesOnHost to int64\n Error: %s", counterIdxStr, err)) }
         	if err != nil || newVal != expected_count || counterQueryErr != nil || dataQueryErr != nil {
 			result = "FAILURE"
 			failedCount++
@@ -272,9 +287,9 @@ func QueryAllHosts(mynetwork peernetwork.PeerNetwork, txName string, expected_co
 	}
 	if failedCount > (N-1)/3 {
 		querySuccess = false
-		Logger(fmt.Sprintf("%s TEST FAIL!!!  TOO MANY PEERS (%d) FAILED to obtain the correct expected count (%d), so network consensus failed!!!\n(If fewer than %d/%d peers are running, then the network does not have enough running nodes to reach consensus.)", txName, failedCount, expected_count, ((N-1)/3)*2+1, N ))
+		Logger(fmt.Sprintf("%s Query FAIL!!!  TOO MANY PEERS (%d) FAILED to obtain the correct expected count (%d), so network consensus failed!!!\n(If fewer than %d/%d peers are running, then the network does not have enough running nodes to reach consensus.)", txName, failedCount, expected_count, ((N-1)/3)*2+1, N ))
 	} else {
-		Logger(fmt.Sprintf("%s TEST PASS.  %d/%d peers reached consensus on the correct count", txName, N-failedCount, N))
+		Logger(fmt.Sprintf("%s Query PASS.  %d/%d peers reached consensus on the correct count", txName, N-failedCount, N))
 	}
 	return querySuccess
 }

@@ -3,6 +3,7 @@ package lstutil 	// Ledger Stress Testing functions
 import (
 	"fmt"
 	"os"
+	"bufio"
 	"strconv"
 	"sync"
 	"time"
@@ -268,12 +269,24 @@ func RunLedgerStressTest(testname string, numClients int, numPeers int, numTx in
 	NUM_CLIENTS = numClients
 	NUM_PEERS = numPeers
 	TX_COUNT = numTx
-	Logger(fmt.Sprintf("\n========= START TESTCASE %s =========", TESTNAME))
+
+	var openFileErr error
+	SummaryFile, openFileErr = os.OpenFile(OutputSummaryFileName, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	if openFileErr != nil {
+		Logger(fmt.Sprintf("error opening OutputSummaryFileName=<%s> openFileErr: %s", OutputSummaryFileName, openFileErr))
+		panic(fmt.Sprintf("error opening OutputSummaryFileName=<%s> openFileErr: %s", OutputSummaryFileName, openFileErr))
+	}
+	defer SummaryFile.Close()
+	Writer = bufio.NewWriter(SummaryFile)
+
+	Logger(fmt.Sprintf("START %s =========", TESTNAME))
+	fmt.Fprintln(Writer, fmt.Sprintf("START %s =========", TESTNAME))
+	Writer.Flush()
 
 	if NUM_CLIENTS > MAX_CLIENTS { Logger(fmt.Sprintf("Test not supported yet for more than %d clients", MAX_CLIENTS)); return }
 
 	// time to measure overall execution of the testcase
-	defer TimeTracker(time.Now(), "Total execution time for " + TESTNAME)
+	defer TimeTracker(time.Now())
 	Init()
 	Logger("========= Transactions execution started =========")
 	InvokeAllThreadsOnAllPeers()

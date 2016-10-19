@@ -5,6 +5,7 @@ import (
 	"../chaincode"
 	"../peernetwork"
 	"os"
+	"bufio"
 	//"strconv"
 	"strings"
 	"time"
@@ -61,9 +62,21 @@ func main() {
 	subTestsFailures = 0
 	lstutil.TESTNAME = "BasicFuncExistingNetworkLST"
 	lstutil.InitLogger(lstutil.TESTNAME)
-	lstutil.Logger("\nSTART " + lstutil.TESTNAME + "******************************") 
 
-	defer timeTrack(time.Now(), "Total execution time for " + lstutil.TESTNAME)
+	var openFileErr error
+        lstutil.SummaryFile, openFileErr = os.OpenFile(lstutil.OutputSummaryFileName, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+        if openFileErr != nil {
+                lstutil.Logger(fmt.Sprintf("error opening OutputSummaryFileName=<%s> openFileErr: %s", lstutil.OutputSummaryFileName, openFileErr))
+                panic(fmt.Sprintf("error opening OutputSummaryFileName=<%s> openFileErr: %s", lstutil.OutputSummaryFileName, openFileErr))
+        }
+        defer lstutil.SummaryFile.Close()
+        lstutil.Writer = bufio.NewWriter(lstutil.SummaryFile)
+
+        fmt.Fprintln(lstutil.Writer, fmt.Sprintf("START %s =========", lstutil.TESTNAME))
+        lstutil.Writer.Flush()
+	lstutil.Logger("\nSTART " + lstutil.TESTNAME + " =========")
+
+	defer lstutil.TimeTracker(time.Now())
 
 	setupNetwork()  // establish chco2.MyNetwork, using networkcredentials
 
@@ -156,7 +169,8 @@ func main() {
 	} else {
         	myStr = fmt.Sprintf("FAILED (failed %d sub-tests)", subTestsFailures)
 	}
-	lstutil.Logger(fmt.Sprintf("\nFINAL RESULT " + lstutil.TESTNAME + " %s", myStr))
+	lstutil.FinalResultStr = fmt.Sprintf("FINAL RESULT %s %s", myStr, lstutil.TESTNAME)
+	//FinalResultStr will be printed by TimeTracker along with the elapsed time
 }
 
 func setupNetwork() {
