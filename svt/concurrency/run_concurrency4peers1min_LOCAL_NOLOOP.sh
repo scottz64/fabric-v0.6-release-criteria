@@ -2,9 +2,10 @@
 
 USAGE="Usage: 
       export COMMIT=<commit_level> 
-      ${0}"
+      ${0}
+"
    
-echo -e "$USAGE "
+echo -e "$USAGE"
 
 # USE THIS _sigs() signal catcher/forwarder to pass signal to the child process.
 trap 'echo $0 Received termination signal.; kill $! 2>/dev/null; exit' SIGHUP SIGINT SIGQUIT SIGTERM SIGABRT
@@ -20,11 +21,10 @@ fi
 echo -e "COMMIT=$COMMIT"
 export COMMIT
 
-#./local_fabric_gerrit.sh -n 4 -s -c $COMMIT 
+./local_fabric_gerrit.sh -n 4 -s -c $COMMIT 
 
-./spinup_peer_network.sh -n 4 -s -c $COMMIT -l error  -m pbft -b 1000
 cp networkcredentials ../util/NetworkCredentials.json
 
 cd ../ledgerstresstest/
-go run LongRun72hr.go
+go run concurrency4peers1min_noloop.go
 
