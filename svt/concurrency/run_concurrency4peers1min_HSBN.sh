@@ -25,5 +25,6 @@ export TEST_NET_COMM_PROTOCOL=HTTP
 #cp ../util/NetworkCredentials.json.HSBN_NISHI ../util/NetworkCredentials.json
 
 cd ../ledgerstresstest/
-go run concurrency4peers1min.go
+GOTESTNAME=concurrency4peers1min
+go run ${GOTESTNAME}.go | tee -a "GO_TEST__${GOTESTNAME}__$(date | cut -c 4-80 | tr -d ' ')"
 

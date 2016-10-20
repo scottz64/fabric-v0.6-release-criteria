@@ -21,6 +21,7 @@ export TEST_LST_NUM_CLIENTS=""
 export TEST_LST_NUM_PEERS=""
 export TEST_LST_THROUGHPUT_RATE=""
 
+# these LST tests generate their own log files, so we can simply use "go run" instead of using go_record.sh or tee the output to a file.
 date; echo "==================== Start of LST - REST API Test ===================="
 date; go run BasicFuncExistingNetworkLST.go
 date; echo "==================== Start of LST - Regression Tests ===================="
