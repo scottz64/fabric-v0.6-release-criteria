@@ -3,9 +3,10 @@
 USAGE="Usage: 
       export COMMIT=<commit_level> 
       And copy your HSBN NetworkCredentials file to ../util/NetworkCredentials.json before running the test
-      ${0}"
+      ${0}
+"
    
-echo -e "$USAGE "
+echo -e "$USAGE"
 
 # USE THIS _sigs() signal catcher/forwarder to pass signal to the child process.
 trap 'echo $0 Received termination signal.; kill $! 2>/dev/null; exit' SIGHUP SIGINT SIGQUIT SIGTERM SIGABRT
@@ -22,9 +23,9 @@ echo -e "COMMIT=$COMMIT"
 export COMMIT
 export TEST_NET_COMM_PROTOCOL=HTTP
 
-#cp ../util/NetworkCredentials.json.HSBN_NISHI ../util/NetworkCredentials.json
+#cp networkcredentials ../util/NetworkCredentials.json
 
 cd ../ledgerstresstest/
-GOTESTNAME=concurrency4peers1min
+GOTESTNAME=conc4p1min400Thrd
 go run ${GOTESTNAME}.go | tee -a "GO_TEST__${GOTESTNAME}__$(date | cut -c 4-80 | tr -d ' ').log"
 

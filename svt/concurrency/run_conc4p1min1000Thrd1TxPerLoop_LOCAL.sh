@@ -26,6 +26,6 @@ export COMMIT
 cp networkcredentials ../util/NetworkCredentials.json
 
 cd ../ledgerstresstest/
-GOTESTNAME=concurrency4peers1min_noloop
+GOTESTNAME=conc4p1min1000Thrd1TxPerLoop
 go run ${GOTESTNAME}.go | tee -a "GO_TEST__${GOTESTNAME}__$(date | cut -c 4-80 | tr -d ' ').log"
 
