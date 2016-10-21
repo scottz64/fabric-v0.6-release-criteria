@@ -198,8 +198,8 @@ STATS_BEFORE_RUN_GROUP=$(echo -e "=========== STARTTIME ${STARTDATE}")
 
 touch ${SUMMARY}
 BEFORE_BEGIN=`grep -c ^BEGIN ${SUMMARY} 2>/dev/null`
-BEFORE_PASSED=`grep -c ^PASSED ${SUMMARY} 2>/dev/null`
-BEFORE_FAILED=`grep -c ^FAILED ${SUMMARY} 2>/dev/null`
+BEFORE_PASSED=`grep -c "^FINAL RESULT PASSED" ${SUMMARY} 2>/dev/null`
+BEFORE_FAILED=`grep -c "^FINAL RESULT FAILED" ${SUMMARY} 2>/dev/null`
 BEFORE_ABORT=`grep -c ABORT ${SUMMARY} 2>/dev/null`
 
 
@@ -270,8 +270,8 @@ headerInfo   | tee -a ${OUT}
 runTests     | tee -a ${OUT}
 
 AFTER_BEGIN=`grep -c ^BEGIN ${SUMMARY} 2>/dev/null`
-AFTER_PASSED=`grep -c ^PASSED ${SUMMARY} 2>/dev/null`
-AFTER_FAILED=`grep -c ^FAILED ${SUMMARY} 2>/dev/null`
+AFTER_PASSED=`grep -c "^FINAL RESULT PASSED" ${SUMMARY} 2>/dev/null`
+AFTER_FAILED=`grep -c "^FINAL RESULT FAILED" ${SUMMARY} 2>/dev/null`
 AFTER_ABORT=`grep -c ABORT ${SUMMARY} 2>/dev/null`
 
 DIFF_BEGIN=$(($AFTER_BEGIN-$BEFORE_BEGIN))

@@ -26,6 +26,6 @@ export COMMIT
 cp networkcredentials ../util/NetworkCredentials.json
 
 cd ../ledgerstresstest/
-GOTESTNAME=LongRun72hr
+GOTESTNAME=LongRun72hrAuto
 go run ${GOTESTNAME}.go | tee -a "GO_TEST__${GOTESTNAME}__$(date | cut -c 4-80 | tr -d ' ').log"
 

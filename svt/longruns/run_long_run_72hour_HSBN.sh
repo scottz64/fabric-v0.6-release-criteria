@@ -28,6 +28,6 @@ export TEST_NET_COMM_PROTOCOL=HTTP
 echo -e "Make sure you copied HSBN network credentials JSON file to util folder ../util/NetworkCredentials.json before running this test"
 
 cd ../ledgerstresstest/
-GOTESTNAME=LongRun72hr
+GOTESTNAME=LongRun72hrAuto
 go run ${GOTESTNAME}.go | tee -a "GO_TEST__${GOTESTNAME}__$(date | cut -c 4-80 | tr -d ' ').log"
 

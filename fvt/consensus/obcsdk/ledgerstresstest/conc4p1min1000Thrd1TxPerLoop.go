@@ -19,12 +19,9 @@ import (
         "os"
 	"sync/atomic"
 )
-var numThreadsPerPeer int
-var numPeers int
-var numSecs int64
+
+var loopCtr, numReq, numPeers int
 var failedToSend int64
-var requestedTx int64
-var loopCtr int64
 var MY_CHAINCODE_NAME string = "concurrency"
 
 func main() {
@@ -32,7 +29,7 @@ func main() {
 	////////////////////////////////////////////////////////////////////////////////////////////////
 	// Configuration
 
-	lstutil.TESTNAME = "conc4p1min400Thrd"
+	lstutil.TESTNAME = "conc4p1min1000Thrd1TxPerLoop"
 	lstutil.FinalResultStr = ("FINAL RESULT ")
 
 	numPeers = 4
@@ -45,33 +42,24 @@ func main() {
         // 2 day        172800
         // 3 day        259200 (72 hr)
 
-        numSecs = 60
+        var numSecs int64 = 60
 
-	// Each of 4 peers starts "numThreadsPerPeer" number of GO threads in parallel. A value of 25
-	// implies that 100 concurrent processes are sending Invoke requests in parallel. Using larger
-	// numThreadsPerPeer would create more threads in parallel - but that would simply worsen the
-	// resource contention on a local docker network where this test program
-	// uses most of the CPU cycles to send Invokes, leaving less for the peers to actually
-	// start processing them. (It would work better on an external/remote network, where
-	// the peers would not be competing for processor cycles on the same CPU as this GO program,
-	// and so the remote peers could start processing the requests right away.)
+	// Each of 4 peers starts "numReq" number of GO threads in parallel. A value of 25
+	// implies that 100 Tx are sent concurrently - once per InvokeLoop, break, InvokeLoop, etc.
+	// Using larger numbers would allow more to be sent in parallel - but it would also
+	// cause extreme resource contention where this test program uses most of the processor
+	// to send Invokes, leaving less for the peers to actually start processing them.
 	// In other words, for example, using 250 (which sends 1000 concurrent Tx) would cause
 	// a vast majority of the Tx to simply be queued up during the time (minute) we send them,
-	// and then we poll and wait until all those queued Tx are processed in batches.
-	// Thus, this may be more of a test of the queues sizes and parallel processing in the API code
-	// (currently REST - but could exercise Node.js if we ever provide that option in the future).
-	// 
-	// Using 25 on each peer, to create 100 total GO threads each sending Tx concurrently for a minute,
-	// with docker containers on the local environment, sends over 9,000 total transactions.
-	// 
-	// 250 will use 1000 threads sending Tx concurrently, sends about between 11,000 - 14,000
-	// total transactions in a minute.
-	// Note, with 250, they each send only 14 (on average) in one minute (total 14,000 transactions).
-	// 
-	// Note: in all tests with all values of numThreadsPerPeer, virtually all of transactions are
-	// processed only AFTER we are done sending transactions after a minute.
+	// and then we poll and wait until all those queued Tx are processed.
 
-  	numThreadsPerPeer = 100		// results in sending more than 12,000 Tx in a minute
+	// Using 25 (create 100 go threads to each send one Tx concurrently, then close the threads, and
+	// then do it again repeatedly for a minute), it sends about 2000+ total transactions in a minute.
+	// 
+	// Using 250 (sending 1000 Tx concurrently), it sends about 6000+ total transactions in a minute.
+	// However, virtually all of them are processed AFTER we are done sending transactions after a minute.
+
+  	numReq = 250
 
 
 	////////////////////////////////////////////////////////////////////////////////////////////////
@@ -86,14 +74,14 @@ func main() {
         defer lstutil.SummaryFile.Close()
         lstutil.Writer = bufio.NewWriter(lstutil.SummaryFile)
 
-	starterString := fmt.Sprintf("START %s : Using %d threads on each of %d peers, send concurrent transactions for %d secs =========", lstutil.TESTNAME, numThreadsPerPeer, numPeers, numSecs)
+	starterString := fmt.Sprintf("START %s : Using %d threads on each of %d peers, send concurrent transactions for %d secs =========", lstutil.TESTNAME, numReq, numPeers, numSecs)
         fmt.Fprintln(lstutil.Writer,starterString)
         lstutil.Writer.Flush()
         lstutil.Logger(starterString)
 
         defer lstutil.TimeTracker(time.Now())
 
-	fmt.Println("Using an existing network...")
+	fmt.Println("Using an existing docker network")
 	_ = chaincode.InitNetwork()
 	chaincode.InitChainCodes()
 	chaincode.RegisterUsers()
@@ -127,15 +115,26 @@ func main() {
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////
-	// Send all the transactions concurrently from go funcs, for the duration numSecs
+	// Loop to send all the transactions concurrently 
 
-        requestedTx = 0
 	failedToSend = 0
-	InvokeConcurrently(numThreadsPerPeer, data)
-        fmt.Println("AFTER Invokes: Total successfully requestedTx, failedSendingTx: ", requestedTx, failedToSend)
+        loopCtr = 0
+        start := time.Now().Unix()
+	timer := start
+        endTime := start + numSecs
+        fmt.Println("Start, End, time.Now: ", start, endTime, time.Now())
+	fmt.Println("loopCtr, TxCount, TimeNow")
+	fmt.Println("-------  -------  -------")
+        for timer < endTime {
+	    InvokeLoop(numReq, data)
+            loopCtr++
+            timer = time.Now().Unix()
+            fmt.Println(loopCtr, loopCtr*numPeers*numReq, timer)
+  	}
+        requestedTx := int64(loopCtr * numReq * numPeers)
         if failedToSend > 0 { fmt.Println(fmt.Sprintf("ERROR: chaincode could not get valid TxID for all Invokes requested; FailedToSend = %d", failedToSend)) }
         expectedTx := requestedTx + startCounter - failedToSend
-        fmt.Println(fmt.Sprintf("Done with loop sending transactions.\n  Tx requested = %d\n  FailedToSend = %d\n  startTxCounter = %d\n  expectedTxCountFinal = %d\nQuerying peers for counter and CH.", requestedTx, failedToSend, startCounter, expectedTx))
+        fmt.Println(fmt.Sprintf("Done with loop sending transactions, elapsed = %d secs. Querying peers.\n  Tx requested = %d\n  FailedToSend = %d\n  startTxCounter = %d\n  expectedTxCountFinal = %d", (timer-start), requestedTx, failedToSend, startCounter, expectedTx))
 
 
 	////////////////////////////////////////////////////////////////////////////////////////////////
@@ -152,48 +151,30 @@ func main() {
         	passed, curr = QueryValAndHeight(expectedTx)
 	}
         if passed { result = "PASSED" }
-	postStr := fmt.Sprintf("counter = %d (expected=%d), numSecs=%d, concurrentThreads=%d", curr, expectedTx, numSecs, numThreadsPerPeer * numPeers)
+	postStr := fmt.Sprintf("counter = %d (expected=%d), numSecs=%d, concurrentThreads=%d", curr, expectedTx, numSecs, numReq * numPeers)
 	fmt.Println("Recovery secs to catch up processing transactions, after stopped sending them: ", time.Now().Unix() - recoverStart)
 
 	lstutil.FinalResultStr += fmt.Sprintf("%s %s, %s", result, lstutil.TESTNAME, postStr)
 }
 
-func InvokeConcurrently(numThreadsPerPeer int, data string) {
+func InvokeLoop(numReq int, data string) {
 	var wg sync.WaitGroup
 	iAPIArgs := []string{"a", data, "counter"}
-	wg.Add(numPeers*numThreadsPerPeer)
-	timer := time.Now().Unix()
-        endTime := timer + numSecs
-        fmt.Println("Start, End, time.Now: ", timer, endTime, time.Now())
-	fmt.Println("---- ---- ------ ------")
-	fmt.Println("Peer Thrd TxSent Failed")
-	fmt.Println("---- ---- ------ ------")
+	wg.Add(numPeers*numReq)
+
 	for p := 0 ; p < numPeers ; p++ {
-		// use a go_func for each peer, so we can hopefully create all the threads 4 times as fast
 		go func(p int) {
 			invArgs0 := []string{"concurrency", "invoke", threadutil.GetPeer(p)}
 			k := 1
-			for k <= numThreadsPerPeer {
-				go func(p int, k int) {
-					var failedSend int64 = 0
-					var successSend int64 = 0
-        				mytimer := timer
-					for mytimer < endTime {
-						_, err := chaincode.InvokeOnPeer(invArgs0, iAPIArgs)
-						if err != nil {
-							failedSend++
-						} else {
-							successSend++
-						}
-            					mytimer = time.Now().Unix()
-					}
-					if failedSend > 0 { atomic.AddInt64(&failedToSend, failedSend) }
-					atomic.AddInt64(&requestedTx, successSend)
-					fmt.Println(fmt.Sprintf("%4d%5d%7d%7d", p, k, successSend, failedSend))
+			for k <= numReq {
+				go func() {
+					_, err := chaincode.InvokeOnPeer(invArgs0, iAPIArgs)
+					if err != nil { atomic.AddInt64(&failedToSend, 1) }
 					wg.Done()
-				}(p,k)
+				}()
 				k++
 			}
+			//fmt.Println("# of Req Invoked on PEER ", p, k-1)
 		}(p)
 	}
 	wg.Wait()
@@ -204,7 +185,7 @@ func QueryValAndHeight(expectedCtr int64) (passed bool, cntr int64) {
 
 	passed = false
 
-	fmt.Println("\nPOST/Chaincode: Querying height and counter from chaincode", MY_CHAINCODE_NAME)
+	fmt.Println("\nPOST/Chaincode: Querying counter from chaincode ", MY_CHAINCODE_NAME)
 	qAPIArgs00 := []string{MY_CHAINCODE_NAME, "query", threadutil.GetPeer(0)}
 	qAPIArgs01 := []string{MY_CHAINCODE_NAME, "query", threadutil.GetPeer(1)} 
 	qAPIArgs02 := []string{MY_CHAINCODE_NAME, "query", threadutil.GetPeer(2)}
@@ -241,20 +222,20 @@ func QueryValAndHeight(expectedCtr int64) (passed bool, cntr int64) {
 	if matches >= 3 {
 		if ht0 == ht1 && ht0 == ht2 && ht0 == ht3 {
 			passed = true
-			fmt.Printf("Pass: %d PEERS MATCH expectedCounter(%d) and ALL Heights match(%d)\n", matches, expectedCtr, ht0)
+			fmt.Printf("Pass: %d PEERS MATCH expectedCounter=%d and ALL Heights match=%d\n", matches, expectedCtr, ht0)
 		} else {
 			if ( ht0 == ht1 && ht0 == ht2 ) ||
 			   ( ht0 == ht1 && ht0 == ht3 ) ||
 			   ( ht0 == ht2 && ht0 == ht3 ) ||
 			   ( ht1 == ht2 && ht1 == ht3 ) {
 				passed = true
-				fmt.Printf("Pass: %d PEERS MATCH expectedCounter(%d), and 3 HEIGHTS MATCH: ht0=%d ht1=%d ht2=%d ht3=%d\n", matches, expectedCtr, ht0, ht1, ht2, ht3)
+				fmt.Printf("Pass: %d PEERS MATCH expectedCounter=%d, and 3 HEIGHTS MATCH: ht0=%d ht1=%d ht2=%d ht3=%d\n", matches, expectedCtr, ht0, ht1, ht2, ht3)
 			} else {
-				fmt.Printf("Fail: %d PEERS MATCH expectedCounter(%d), BUT HEIGHTS NOT MATCHING: ht0=%d ht1=%d ht2=%d ht3=%d\n", matches, expectedCtr, ht0, ht1, ht2, ht3)
+				fmt.Printf("Fail: %d PEERS MATCH expectedCounter=%d, BUT HEIGHTS NOT MATCHING: ht0=%d ht1=%d ht2=%d ht3=%d\n", matches, expectedCtr, ht0, ht1, ht2, ht3)
 			}
 		}
 	} else {
-		fmt.Printf("Fail: expectedCounter(%d) is matched on only %d peers. Query counter results:\nresCtr0:  %d\nresCtr1:  %d\nresCtr2:  %d\nresCtr3:  %d\n", expectedCtr, matches, resCtrI0, resCtrI1, resCtrI2, resCtrI3)
+		fmt.Printf("Fail: expectedCounter=%d is matched on only %d peers\nresCtr0:  %d\nresCtr1:  %d\nresCtr2:  %d\nresCtr3:  %d\n", expectedCtr, matches, resCtrI0, resCtrI1, resCtrI2, resCtrI3)
 	}
 	return passed, int64(resCtrI0)
 }
