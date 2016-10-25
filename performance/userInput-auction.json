@@ -1,6 +1,6 @@
 {
     "transMode": "Simple",
-    "transType": "Query",
+    "transType": "Invoke",
     "nPeers": "4",
     "nThread": "4",
     "nRequest": "1000",
@@ -31,6 +31,7 @@
         "args": ["100", "USER", "Ashley Hart", "TRD",  "ARG 4", "9198063535", "ashley@itpeople.com", "SUNTRUST", "0001732345", "0234678"]
     },
     "SCFile": [
+	    {"ServiceCredentials":"SCFiles/config-local.json"},
 	    {"ServiceCredentials":"SCFiles/ServiceCredentials0000.json"},
 	    {"ServiceCredentials":"SCFiles/ServiceCredentials0001.json"},
 	    {"ServiceCredentials":"SCFiles/ServiceCredentials0002.json"}

@@ -3,7 +3,7 @@
     "transType": "Invoke",
     "nPeers": "4",
     "nThread": "4",
-    "nRequest": "100",
+    "nRequest": "1000",
     "runDur": "60",
     "Burst": {
         "burstFreq0":  "500",
@@ -30,6 +30,7 @@
         "args": ["a","b","1"]
     },
     "SCFile": [
+		{"ServiceCredentials":"SCFiles/config-local.json"},
 		{"ServiceCredentials":"SCFiles/ServiceCredentials0000.json"},
 		{"ServiceCredentials":"SCFiles/ServiceCredentials0001.json"},
 		{"ServiceCredentials":"SCFiles/ServiceCredentials0002.json"}

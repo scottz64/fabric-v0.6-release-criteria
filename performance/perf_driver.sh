@@ -24,7 +24,7 @@ else
     mkdir $ccPath/vendor/github.com
     mkdir $ccPath/vendor/github.com/hyperledger
     cd $ccPath/vendor/github.com/hyperledger
-    git clone -v0.6 https://github.com/hyperledger/fabric.git
+    git clone -b v0.6 https://github.com/hyperledger/fabric.git
     cd $CWD
 fi
 
