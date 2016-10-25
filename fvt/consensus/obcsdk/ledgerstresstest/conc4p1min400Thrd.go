@@ -203,6 +203,7 @@ func QueryValAndHeight(expectedCtr int64) (passed bool, cntr int64) {
 	// Note: this function is optimized for 4 peers. For more, try using chco2 or lstutil functions.
 
 	passed = false
+	cntr = 0
 
 	fmt.Println("\nPOST/Chaincode: Querying height and counter from chaincode", MY_CHAINCODE_NAME)
 	qAPIArgs00 := []string{MY_CHAINCODE_NAME, "query", threadutil.GetPeer(0)}
@@ -239,6 +240,7 @@ func QueryValAndHeight(expectedCtr int64) (passed bool, cntr int64) {
 	if int64(resCtrI2) == expectedCtr { matches++ }
 	if int64(resCtrI3) == expectedCtr { matches++ }
 	if matches >= 3 {
+		if resCtrI0 == resCtrI1 { cntr = int64(resCtrI0) } else { cntr = int64(resCtrI2) }
 		if ht0 == ht1 && ht0 == ht2 && ht0 == ht3 {
 			passed = true
 			fmt.Printf("Pass: %d PEERS MATCH expectedCounter(%d) and ALL Heights match(%d)\n", matches, expectedCtr, ht0)
@@ -256,6 +258,6 @@ func QueryValAndHeight(expectedCtr int64) (passed bool, cntr int64) {
 	} else {
 		fmt.Printf("Fail: expectedCounter(%d) is matched on only %d peers. Query counter results:\nresCtr0:  %d\nresCtr1:  %d\nresCtr2:  %d\nresCtr3:  %d\n", expectedCtr, matches, resCtrI0, resCtrI1, resCtrI2, resCtrI3)
 	}
-	return passed, int64(resCtrI0)
+	return passed, cntr
 }
 
