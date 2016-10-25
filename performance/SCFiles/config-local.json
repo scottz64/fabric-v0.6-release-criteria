@@ -28,20 +28,17 @@
       {
         "username": "admin",
         "secret": "Xurw3yU9zI0l",
-        "enrollId": "admin",
-        "enrollSecret": "Xurw3yU9zI0l"
+        "affiliation": "banks_group1"
       },
       {
         "username": "lukas",
         "secret": "NPKYL39uKbkj",
-        "enrollId": "lukas",
-        "enrollSecret": "NPKYL39uKbkj"
+        "affiliation": "banks_group1"
       },
       {
         "username": "WebAppAdmin",
         "secret": "1d5266a126",
-        "enrollId": "WebAppAdmin",
-        "enrollSecret": "1d5266a126"
+        "affiliation": "banks_group1"
       }
     ]
   }

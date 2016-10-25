@@ -1,9 +1,9 @@
 {
-    "transMode": "Burst",
+    "transMode": "Simple",
     "transType": "Invoke",
     "nPeers": "4",
     "nThread": "4",
-    "nRequest": "100",
+    "nRequest": "1000",
     "runDur": "60",
     "Burst": {
         "burstFreq0":  "500",
@@ -30,9 +30,7 @@
         "args": ["a","b","1"]
     },
     "SCFile": [
-		{"ServiceCredentials":"SCFiles/hsbn-ssc-perf3.json"},
-		{"ServiceCredentials":"SCFiles/config.json"},
-		{"ServiceCredentials":"SCFiles/hsbn-139.json"},
+		{"ServiceCredentials":"SCFiles/config-local.json"},
 		{"ServiceCredentials":"SCFiles/ServiceCredentials0000.json"},
 		{"ServiceCredentials":"SCFiles/ServiceCredentials0001.json"},
 		{"ServiceCredentials":"SCFiles/ServiceCredentials0002.json"}
