@@ -17,6 +17,7 @@ import (
         "bufio"
         "os"
 	"sync/atomic"
+	"../peernetwork"
 )
 var numThreadsPerPeer int
 var numPeers int

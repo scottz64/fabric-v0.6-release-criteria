@@ -32,6 +32,7 @@ import (
 	//"os/signal"
 	//"syscall"
 	"math/rand"
+	"../peernetwork"
 )
 
 var osFile *os.File

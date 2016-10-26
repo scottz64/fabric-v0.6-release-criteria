@@ -30,6 +30,7 @@ import (
 	"strconv"
 	// "bufio"
 	// "log"
+	"../peernetwork"
 )
 
 var osFile *os.File

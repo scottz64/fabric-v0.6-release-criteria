@@ -31,6 +31,7 @@ import (
 	// "log"
 	//"os/signal"
 	//"syscall"
+	"../peernetwork"
 )
 
 var osFile *os.File
