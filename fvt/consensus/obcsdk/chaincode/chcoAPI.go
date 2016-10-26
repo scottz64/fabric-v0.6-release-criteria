@@ -10,7 +10,7 @@ import (
 	"os"
 	"os/exec"
 	"bytes"
-	"../threadutil"
+	//"../threadutil"
 )
 
 var verbose = bool(false)
@@ -208,7 +208,9 @@ func RegisterUsers() bool {
 	return passResult
 }
 
-
+/* *****  Deprecated:
+   *****  Instead, just read all the users in from networkcredentials file (after including them in the images),
+   *****  and can use peernetwork.PeerName() to retrieve them.
 func RegisterCustomUsers() bool {
 
 	if verbose { fmt.Println("\nRegisterCustomUsers: register all users in all peers in network, plus custom users") }
@@ -267,6 +269,7 @@ func RegisterCustomUsers() bool {
 	}
 	return passResult
 }
+ ***** */
 
 func RegisterUsers2() {
 	if verbose { fmt.Println("\nCalling RegisterUsers2 ") }

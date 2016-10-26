@@ -14,7 +14,6 @@ import (
 	"time"
         "sync"
         "bufio"
-        "../threadutil"
 	"../lstutil"
 	"../chaincode"
 	"../peernetwork"
@@ -133,7 +132,7 @@ func InvokeLoop(numPeers int, numReq int, numSecs int64) (finished bool) {
         	wg.Add(4)
 		j := 0
 		for j < numPeers {
-                        currPeer := threadutil.GetPeer(j) 
+                        currPeer := peernetwork.PeerName(j) 
 			iAPIArgsCurrPeer := []string{"example02", "invoke", currPeer}
 			go func() {
 				invokeOnOnePeer(j, numReq, iAPIArgsCurrPeer)

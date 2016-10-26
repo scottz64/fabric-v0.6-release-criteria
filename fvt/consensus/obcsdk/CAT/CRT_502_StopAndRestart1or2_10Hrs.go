@@ -27,7 +27,6 @@ import (
 	"../chco2"
 	"fmt"
 	"strconv"
-	"../threadutil"
 	// "bufio"
 	// "log"
 	//"os/signal"
@@ -198,10 +197,10 @@ func main() {
                         } else {
                                 chco2.StopPeers([]int{ j })
 				chco2.InvokeOnEachPeer(chco2.DefaultInvokesPerPeer)
-                                chco2.QueryAllPeers("STEP 6, cycle=" + strconv.Itoa(cycle+1) + "/" + strconv.Itoa(numCycles) + ", after STOP Peer " + threadutil.GetPeer(j))
+                                chco2.QueryAllPeers("STEP 6, cycle=" + strconv.Itoa(cycle+1) + "/" + strconv.Itoa(numCycles) + ", after STOP Peer " + peernetwork.PeerName(j))
                                 chco2.RestartPeers([]int{ j })
 				chco2.Invokes( chco2.InvokesRequiredForCatchUp )
-                                chco2.QueryAllPeers("STEP 9, cycle=" + strconv.Itoa(cycle+1) + "/" + strconv.Itoa(numCycles) + ", after RESTART Peer " + threadutil.GetPeer(j))
+                                chco2.QueryAllPeers("STEP 9, cycle=" + strconv.Itoa(cycle+1) + "/" + strconv.Itoa(numCycles) + ", after RESTART Peer " + peernetwork.PeerName(j))
                         }
                         j++
                 }

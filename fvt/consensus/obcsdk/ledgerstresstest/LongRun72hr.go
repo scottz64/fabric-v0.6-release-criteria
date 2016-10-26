@@ -13,7 +13,6 @@ import (
 	"strconv"
 	"time"
         "sync"
-        "../threadutil"
 	"../chaincode"
 	"../peernetwork"
 )
@@ -91,7 +90,7 @@ func InvokeLoop(numPeers int, numReq int, numSecs int64) {
 		j := 0
 		for j < numPeers {
 			//currPeer := "PEER" + strconv.Itoa(j)
-                        currPeer := threadutil.GetPeer(j) 
+                        currPeer := peernetwork.PeerName(j) 
 			iAPIArgsCurrPeer := []string{"example02", "invoke", currPeer}
 			go func() {
 				invokeOnOnePeer(j, numReq, iAPIArgsCurrPeer)
@@ -120,7 +119,7 @@ func invokeOnOnePeer(j int, numReq int, iArgs []string) {
 			m := j - 1
 			for m >= 0 {
 				//loopPeer := "PEER" + strconv.Itoa(m)
-				loopPeer := threadutil.GetPeer(m)
+				loopPeer := peernetwork.PeerName(m)
 				iAPIArgsLoopPeer := []string{"example02", "invoke", loopPeer}
 				k = 1
 				for k <= numReq {
@@ -138,10 +137,10 @@ func QueryValAndHeight(expectedCtr int) (passed bool, cntr int) {
         passed = false
 
         fmt.Println("\nPOST/Chaincode: Querying counter from chaincode ", MY_CHAINCODE_NAME)
-        qAPIArgs00 := []string{MY_CHAINCODE_NAME, "query", threadutil.GetPeer(0)}
-        qAPIArgs01 := []string{MY_CHAINCODE_NAME, "query", threadutil.GetPeer(1)}
-        qAPIArgs02 := []string{MY_CHAINCODE_NAME, "query", threadutil.GetPeer(2)}
-        qAPIArgs03 := []string{MY_CHAINCODE_NAME, "query", threadutil.GetPeer(3)}
+        qAPIArgs00 := []string{MY_CHAINCODE_NAME, "query", peernetwork.PeerName(0)}
+        qAPIArgs01 := []string{MY_CHAINCODE_NAME, "query", peernetwork.PeerName(1)}
+        qAPIArgs02 := []string{MY_CHAINCODE_NAME, "query", peernetwork.PeerName(2)}
+        qAPIArgs03 := []string{MY_CHAINCODE_NAME, "query", peernetwork.PeerName(3)}
 
         qArgsb := []string{"b"}
 
@@ -151,10 +150,10 @@ func QueryValAndHeight(expectedCtr int) (passed bool, cntr int) {
         resCtr3, _ := chaincode.QueryOnHost(qAPIArgs03, qArgsb)
 
 
-        ht0, _ := chaincode.GetChainHeight( threadutil.GetPeer(0))
-        ht1, _ := chaincode.GetChainHeight( threadutil.GetPeer(0))
-        ht2, _ := chaincode.GetChainHeight( threadutil.GetPeer(2))
-        ht3, _ := chaincode.GetChainHeight( threadutil.GetPeer(3))
+        ht0, _ := chaincode.GetChainHeight( peernetwork.PeerName(0))
+        ht1, _ := chaincode.GetChainHeight( peernetwork.PeerName(0))
+        ht2, _ := chaincode.GetChainHeight( peernetwork.PeerName(2))
+        ht3, _ := chaincode.GetChainHeight( peernetwork.PeerName(3))
 
         fmt.Println("Ht in  PEER0 : ", ht0)
         fmt.Println("Ht in  PEER1 : ", ht1)

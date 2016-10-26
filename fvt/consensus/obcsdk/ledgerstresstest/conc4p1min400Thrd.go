@@ -11,7 +11,6 @@ import (
 	"fmt"
 	"time"
 	"../chaincode"
-	"../threadutil"
 	"sync"
         "strconv"
         "../lstutil"
@@ -105,7 +104,7 @@ func main() {
 
 	fmt.Println("\nPOST/Chaincode: Deploying chaincode ", MY_CHAINCODE_NAME)
         //dAPIArgs0 := []string{MY_CHAINCODE_NAME, "init", "PEER1"}
-        dAPIArgs0 := []string{MY_CHAINCODE_NAME, "init", threadutil.GetPeer(1)}
+        dAPIArgs0 := []string{MY_CHAINCODE_NAME, "init", peernetwork.PeerName(1)}
         depArgs0 := []string{"a", data, "counter", "0"}
         chaincode.DeployOnPeer(dAPIArgs0, depArgs0)
         time.Sleep(120 * time.Second)
@@ -171,7 +170,7 @@ func InvokeConcurrently(numThreadsPerPeer int, data string) {
 	for p := 0 ; p < numPeers ; p++ {
 		// use a go_func for each peer, so we can hopefully create all the threads 4 times as fast
 		go func(p int) {
-			invArgs0 := []string{"concurrency", "invoke", threadutil.GetPeer(p)}
+			invArgs0 := []string{"concurrency", "invoke", peernetwork.PeerName(p)}
 			k := 1
 			for k <= numThreadsPerPeer {
 				go func(p int, k int) {
@@ -206,10 +205,10 @@ func QueryValAndHeight(expectedCtr int64) (passed bool, cntr int64) {
 	cntr = 0
 
 	fmt.Println("\nPOST/Chaincode: Querying height and counter from chaincode", MY_CHAINCODE_NAME)
-	qAPIArgs00 := []string{MY_CHAINCODE_NAME, "query", threadutil.GetPeer(0)}
-	qAPIArgs01 := []string{MY_CHAINCODE_NAME, "query", threadutil.GetPeer(1)} 
-	qAPIArgs02 := []string{MY_CHAINCODE_NAME, "query", threadutil.GetPeer(2)}
-	qAPIArgs03 := []string{MY_CHAINCODE_NAME, "query", threadutil.GetPeer(3)}
+	qAPIArgs00 := []string{MY_CHAINCODE_NAME, "query", peernetwork.PeerName(0)}
+	qAPIArgs01 := []string{MY_CHAINCODE_NAME, "query", peernetwork.PeerName(1)} 
+	qAPIArgs02 := []string{MY_CHAINCODE_NAME, "query", peernetwork.PeerName(2)}
+	qAPIArgs03 := []string{MY_CHAINCODE_NAME, "query", peernetwork.PeerName(3)}
 
 	qArgsb := []string{"counter"}
 
@@ -219,10 +218,10 @@ func QueryValAndHeight(expectedCtr int64) (passed bool, cntr int64) {
 	resCtr3, _ := chaincode.QueryOnHost(qAPIArgs03, qArgsb)
 
 
-	ht0, _ := chaincode.GetChainHeight( threadutil.GetPeer(0))
-	ht1, _ := chaincode.GetChainHeight( threadutil.GetPeer(0))
-	ht2, _ := chaincode.GetChainHeight( threadutil.GetPeer(2))
-	ht3, _ := chaincode.GetChainHeight( threadutil.GetPeer(3))
+	ht0, _ := chaincode.GetChainHeight( peernetwork.PeerName(0))
+	ht1, _ := chaincode.GetChainHeight( peernetwork.PeerName(0))
+	ht2, _ := chaincode.GetChainHeight( peernetwork.PeerName(2))
+	ht3, _ := chaincode.GetChainHeight( peernetwork.PeerName(3))
 
 	fmt.Println("Ht in  PEER0 : ", ht0)
 	fmt.Println("Ht in  PEER1 : ", ht1)

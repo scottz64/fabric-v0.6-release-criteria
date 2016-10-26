@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"../chaincode"
 	"../peernetwork"
-	"../threadutil"
 	"os"
 	"strconv"
 	"strings"
@@ -143,7 +142,7 @@ func main() {
 
 	fmt.Println("\n===== GetBlockStats API Test =====")
 	//chaincode.BlockStats(url, height)
-	txList, _ := chaincode.GetBlockTrxInfoByHost(threadutil.GetPeer(0), height-1)
+	txList, _ := chaincode.GetBlockTrxInfoByHost(peernetwork.PeerName(0), height-1)
 
 	if txList != nil && strings.Contains(txList[0].Txid, invRes) {  // these should be equal, if the invoke transaction was successful
 		myStr = fmt.Sprintf("\nGetBlocks API TEST PASS: Transaction Successfully stored in Block")
@@ -281,10 +280,10 @@ func invoke() string {						// using example02
 
 func query(txName string, expectedA int, expectedB int) {
 
-	qAPIArgs00 := []string{"example02", "query", threadutil.GetPeer(0)}
-	qAPIArgs01 := []string{"example02", "query", threadutil.GetPeer(1)}
-	qAPIArgs02 := []string{"example02", "query", threadutil.GetPeer(2)}
-	qAPIArgs03 := []string{"example02", "query", threadutil.GetPeer(3)}
+	qAPIArgs00 := []string{"example02", "query", peernetwork.PeerName(0)}
+	qAPIArgs01 := []string{"example02", "query", peernetwork.PeerName(1)}
+	qAPIArgs02 := []string{"example02", "query", peernetwork.PeerName(2)}
+	qAPIArgs03 := []string{"example02", "query", peernetwork.PeerName(3)}
 	qArgsa := []string{"a"}
 	qArgsb := []string{"b"}
 
@@ -344,10 +343,10 @@ func query(txName string, expectedA int, expectedB int) {
 
 /*
 // func getHeight_deprecated(expected int) {
-	ht0, _ := chaincode.GetChainHeight(threadutil.GetPeer(0))
-	ht1, _ := chaincode.GetChainHeight(threadutil.GetPeer(1))
-	ht2, _ := chaincode.GetChainHeight(threadutil.GetPeer(2))
-	ht3, _ := chaincode.GetChainHeight(threadutil.GetPeer(3))
+	ht0, _ := chaincode.GetChainHeight(peernetwork.PeerName(0))
+	ht1, _ := chaincode.GetChainHeight(peernetwork.PeerName(1))
+	ht2, _ := chaincode.GetChainHeight(peernetwork.PeerName(2))
+	ht3, _ := chaincode.GetChainHeight(peernetwork.PeerName(3))
 
 	if (ht0 == expected) && (ht1 == expected) && (ht2 == expected) && (ht3 == expected) {
 		myStr := fmt.Sprintf("CHAIN HEIGHT TEST PASS : Results in A value match on all Peers after deploy and single invoke:\n")
@@ -368,10 +367,10 @@ func query(txName string, expectedA int, expectedB int) {
 
 func getHeight(expectedToMatch int) {
 
-	ht0, _ := chaincode.GetChainHeight(threadutil.GetPeer(0))
-	ht1, _ := chaincode.GetChainHeight(threadutil.GetPeer(1))
-	ht2, _ := chaincode.GetChainHeight(threadutil.GetPeer(2))
-	ht3, _ := chaincode.GetChainHeight(threadutil.GetPeer(3))
+	ht0, _ := chaincode.GetChainHeight(peernetwork.PeerName(0))
+	ht1, _ := chaincode.GetChainHeight(peernetwork.PeerName(1))
+	ht2, _ := chaincode.GetChainHeight(peernetwork.PeerName(2))
+	ht3, _ := chaincode.GetChainHeight(peernetwork.PeerName(3))
 
 	numPeers := peernetwork.GetNumberOfPeers(myNetwork)
 	if numPeers != 4 { fmt.Println(fmt.Sprintf("TEST FAILURE: TODO: Must fix code %d peers, rather than default=4 peers in network!!!", numPeers)) }
@@ -410,14 +409,14 @@ func getHeight(expectedToMatch int) {
 
 func getBlockTxInfo(blockNumber int) {
 	errTransactions := 0
-	height, _ := chaincode.GetChainHeight(threadutil.GetPeer(0))
+	height, _ := chaincode.GetChainHeight(peernetwork.PeerName(0))
 	myStr := fmt.Sprintf("++++++++++ getBlockTxInfo() Total Blocks # %d\n", height)
 	fmt.Printf(myStr)
 	fmt.Fprintf(writer, myStr)
 
 	for i := 1; i < height; i++ {
                 fmt.Printf("+++++ Current BLOCK %d +++++\n", i)
-		txList, _ := chaincode.GetBlockTrxInfoByHost(threadutil.GetPeer(0), i)
+		txList, _ := chaincode.GetBlockTrxInfoByHost(peernetwork.PeerName(0), i)
 		length := len(txList)
 		for j := 0; j < length; j++ {
 				myStr1 := fmt.Sprintln("\nBlock[%d] TX [%d] Txid [%d]", i, j, txList[j].Txid)

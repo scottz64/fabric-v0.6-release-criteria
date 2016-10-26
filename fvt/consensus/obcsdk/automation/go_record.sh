@@ -184,13 +184,19 @@ then
 	exit
 fi
 
+# Create names for STDOUT and SUMMARY file logs. Convert any blanks and special characters to underscores.
+OUTPUT_PREFIX="GO_TEST"
 set ${TESTNAMES}
 if [ ${#} -eq 1 ]
 then
-	OUT="GO_TEST__$(echo ${*} | tr -d ' ')__$(date | cut -c 4-80 | tr -d ' ')"
+	# Eliminate any blanks and special characters from go script filename.
+	OUTPUT_NAME="$(echo ${*} | sed 's/[ .:]/_/g')"
 else
-	OUT="GO_TEST__MULTI__$(date | cut -c 4-80 | tr -d ' ')"
+	OUTPUT_NAME="MULTI"
 fi
+# Include the date. Eliminate blanks and colons from date string.
+OUTPUT_DATE="$(date | cut -d' ' -f2-9 | sed 's/[ :]/_/g')"
+OUT="${OUTPUT_PREFIX}__${OUTPUT_NAME}__${OUTPUT_DATE}.log"
 
 SUMMARY="GO_TESTS_SUMMARY.log"
 STARTDATE="`date`"

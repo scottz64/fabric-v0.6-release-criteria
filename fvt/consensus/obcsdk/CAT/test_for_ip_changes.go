@@ -26,7 +26,6 @@ import (
 	"time"
 	"bufio"
 	"../chco2"
-	"../threadutil"
 	"fmt"
 	"strconv"
 	// "bufio"
@@ -193,9 +192,9 @@ chco2.Writer = bufio.NewWriter(osFile)
 func displayPeerIp(selectPeer int) {
 	for peerNum := 0; peerNum < chco2.NumberOfPeersInNetwork; peerNum++ {
 	    if selectPeer < 0 || selectPeer == peerNum {
-                cmd_str := "docker inspect --format '{{.NetworkSettings.IPAddress}}' " + threadutil.GetPeer(peerNum)
+                cmd_str := "docker inspect --format '{{.NetworkSettings.IPAddress}}' " + peernetwork.PeerName(peerNum)
                 //fmt.Println("--------------- displayPeerIp: To display IP Address of peer, executing command:  ", cmd_str)
-                fmt.Printf(fmt.Sprintf("--------------- displayPeerIp: docker inspect IP Address of peer %s = ", threadutil.GetPeer(peerNum)))
+                fmt.Printf(fmt.Sprintf("--------------- displayPeerIp: docker inspect IP Address of peer %s = ", peernetwork.PeerName(peerNum)))
                 var shellCmd *exec.Cmd
                 shellCmd = exec.Command("/bin/sh", "-c", cmd_str)
                 shellCmd.Stdout = os.Stdout

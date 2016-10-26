@@ -60,19 +60,6 @@ func queryChaincode(counter int64) (res1, res2 string) {
 	return val, counterArg
 }
 
-//TODO: This function doesn't work outside vagrant, need to relook
-/*func displayChainHeight(nodes int){
-	startValue := 3
-	height := 0
-	var urlStr string
-	for i:=0;i<nodes;i++ {
-//		urlStr = "http://172.17.0."+strconv.Itoa(startValue+i)+":5000"
-		urlStr = threadutil.GetURL("172.17.0."+strconv.Itoa(startValue+i), "5000")
-		height = chaincode.Monitor_ChainHeight(urlStr)
-		fmt.Println("################ Chaincode Height on "+urlStr+" is : ", height)
-	}
-}*/
-
 func sleep(secs int64) {
 	time.Sleep(time.Second * time.Duration(secs))
 }

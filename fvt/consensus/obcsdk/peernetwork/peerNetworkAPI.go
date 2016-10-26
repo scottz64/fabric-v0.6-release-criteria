@@ -5,6 +5,7 @@ import (
 	"errors"
 	"log"
 	"strings"
+	"strconv"
 	"time"
 	"os/exec"
 )
@@ -568,12 +569,13 @@ func GetFullPeerName(thisNetwork PeerNetwork, shortname string) (name string, er
 	}
 }
 
-func PeerName(peerNumber int) string {
+func PeerName(peerNumber int) (name string) {
 	if peerNumber >= 0 && peerNumber < len(peerNetwork.Peers) {
-		return peerNetwork.Peers[peerNumber].PeerDetails["name"]
+		name = peerNetwork.Peers[peerNumber].PeerDetails["name"]
 	} else {
-		return "NoNameForInvalidPeerNum"
+		name = "NoPeerNameForInvalidPeerNumber_" + strconv.Itoa(peerNumber)
 	}
+	return name
 }
 
 func AddAPeerNetwork() {

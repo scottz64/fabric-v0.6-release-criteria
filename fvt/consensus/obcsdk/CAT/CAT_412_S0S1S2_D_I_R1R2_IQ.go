@@ -159,15 +159,15 @@ chco2.Writer = bufio.NewWriter(osFile)
 	chco2.Invokes( 100 ) 			// to VP3
 	time.Sleep(chco2.SleepTimeSeconds(30))
 	chco2.RestartPeers( []int{ 1, 2 } )
-	fmt.Println("Sleep extra 180 secs") ; time.Sleep(chco2.SleepTimeSeconds(180))
+	fmt.Println("Sleep extra 120 secs") ; time.Sleep(chco2.SleepTimeSeconds(120))
 	chco2.InvokesUniqueOnEveryPeer()	// to VP1 VP2 VP3
-	fmt.Println("Sleep extra 240 secs") ; time.Sleep(chco2.SleepTimeSeconds(240))
+	fmt.Println("Sleep extra 120 secs - and look to see if these 14 Tx were processed or were lost") ; time.Sleep(chco2.SleepTimeSeconds(120))
 	chco2.QueryAllPeers( "STEP 8, after stopped 3 peers (including vp0), deploy, and restarted peers 1 & 2 (but not 0), and more Invokes " )
 
 	chco2.AllRunningNodesMustMatch = true    	// Only 3 nodes are running, and sending plenty of Invokes to catch up.
 	chco2.Invokes( 100 )
 	fmt.Println("Sleep extra 30 secs") ; time.Sleep(chco2.SleepTimeSeconds(30))
-	chco2.QueryAllPeers( "STEP 10, after many more invokes")
+	chco2.QueryAllPeers( "STEP 10, after many more invokes; confirm consensus AND confirm if match expected value (and did not lose any transactions)")
 
 	chco2.CatchUpAndConfirm()			// OPTIONAL, depending on testcase details and objectives.
 

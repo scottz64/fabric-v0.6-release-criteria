@@ -27,7 +27,6 @@ import (
 	"../chco2"
 	"fmt"
 	"strconv"
-	"../threadutil"
 	// "bufio"
 	// "log"
 	//"os/signal"
@@ -175,7 +174,7 @@ func main() {
 			// 								// our expectations; so send more and all are procssed and test passes.
 			chco2.Invokes( chco2.InvokesRequiredForCatchUp )
 			// if (chco2.Verbose) { fmt.Println("Sleep extra 30 secs") }; time.Sleep(chco2.SleepTimeSeconds(30))
-			chco2.QueryAllPeers( "STEP 3, cycle " + strconv.Itoa(i) + "/" + strconv.Itoa(numCycles) + " after STOP " + threadutil.GetPeer(peerNum) + " and Invokes" )
+			chco2.QueryAllPeers( "STEP 3, cycle " + strconv.Itoa(i) + "/" + strconv.Itoa(numCycles) + " after STOP " + peernetwork.PeerName(peerNum) + " and Invokes" )
 			chco2.RestartPeers( []int{ peerNum } )
 			chco2.InvokesUniqueOnEveryPeer()
 			chco2.QueryAllPeers( "STEP 6, cycle " + strconv.Itoa(i) + "/" + strconv.Itoa(numCycles) + " after RESTART and Invokes " )
@@ -187,7 +186,7 @@ func main() {
 	chco2.CatchUpAndConfirm()			// OPTIONAL. Depends on testcase details and objectives.
 
 	fmt.Println("\nTOTAL # times each peer was stopped during this test " + chco2.CurrentTestName)
-	for c := 0; c < chco2.NumberOfPeersInNetwork ; c++ { fmt.Println(threadutil.GetPeer(c) + "   " + strconv.Itoa(cntr[c])) }
+	for c := 0; c < chco2.NumberOfPeersInNetwork ; c++ { fmt.Println(peernetwork.PeerName(c) + "   " + strconv.Itoa(cntr[c])) }
 
 	chco2.RanToCompletion = true	// DO NOT MOVE OR CHANGE THIS. It must remain last.
 }
