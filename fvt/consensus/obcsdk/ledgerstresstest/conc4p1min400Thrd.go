@@ -26,6 +26,7 @@ var failedToSend int64
 var requestedTx int64
 var loopCtr int64
 var MY_CHAINCODE_NAME string = "concurrency"
+var verbose bool = false
 
 func main() {
 
@@ -165,9 +166,11 @@ func InvokeConcurrently(numThreadsPerPeer int, data string) {
 	timer := time.Now().Unix()
         endTime := timer + numSecs
         fmt.Println("Start, End, time.Now: ", timer, endTime, time.Now())
-	fmt.Println("---- ---- ------ ------")
-	fmt.Println("Peer Thrd TxSent Failed")
-	fmt.Println("---- ---- ------ ------")
+	if verbose {
+		fmt.Println("---- ---- ------ ------")
+		fmt.Println("Peer Thrd TxSent Failed")
+		fmt.Println("---- ---- ------ ------")
+	}
 	for p := 0 ; p < numPeers ; p++ {
 		// use a go_func for each peer, so we can hopefully create all the threads 4 times as fast
 		go func(p int) {
@@ -189,7 +192,9 @@ func InvokeConcurrently(numThreadsPerPeer int, data string) {
 					}
 					if failedSend > 0 { atomic.AddInt64(&failedToSend, failedSend) }
 					atomic.AddInt64(&requestedTx, successSend)
-					fmt.Println(fmt.Sprintf("%4d%5d%7d%7d", p, k, successSend, failedSend))
+					if verbose {
+						fmt.Println(fmt.Sprintf("%4d%5d%7d%7d", p, k, successSend, failedSend))
+					}
 					wg.Done()
 				}(p,k)
 				k++
@@ -213,11 +218,13 @@ func QueryValAndHeight(expectedCtr int64) (passed bool, cntr int64) {
 
 	qArgsb := []string{"counter"}
 
-	resCtr0, _ := chaincode.QueryOnHost(qAPIArgs00, qArgsb)
-	resCtr1, _ := chaincode.QueryOnHost(qAPIArgs01, qArgsb)
-	resCtr2, _ := chaincode.QueryOnHost(qAPIArgs02, qArgsb)
-	resCtr3, _ := chaincode.QueryOnHost(qAPIArgs03, qArgsb)
-
+	resCtr0, qe0 := chaincode.QueryOnHost(qAPIArgs00, qArgsb)
+	resCtr1, qe1 := chaincode.QueryOnHost(qAPIArgs01, qArgsb)
+	resCtr2, qe2 := chaincode.QueryOnHost(qAPIArgs02, qArgsb)
+	resCtr3, qe3 := chaincode.QueryOnHost(qAPIArgs03, qArgsb)
+	if qe0 != nil || qe1 != nil || qe2 != nil || qe3 != nil {
+		fmt.Printf("WARNING: error(s): could not query and convert all B values from all peers: qe0 qe1 qe2 qe3", qe0, qe1, qe2, qe3)
+	}
 
 	ht0, _ := chaincode.GetChainHeight( peernetwork.PeerName(0))
 	ht1, _ := chaincode.GetChainHeight( peernetwork.PeerName(0))
@@ -229,18 +236,23 @@ func QueryValAndHeight(expectedCtr int64) (passed bool, cntr int64) {
 	fmt.Println("Ht in  PEER2 : ", ht2)
 	fmt.Println("Ht in  PEER3 : ", ht3)
 
-	resCtrI0, _ := strconv.Atoi(resCtr0) 
-	resCtrI1, _ := strconv.Atoi(resCtr1) 
-	resCtrI2, _ := strconv.Atoi(resCtr2) 
-	resCtrI3, _ := strconv.Atoi(resCtr3) 
+	resCtrI0, e0 := strconv.Atoi(resCtr0) 
+	resCtrI1, e1 := strconv.Atoi(resCtr1) 
+	resCtrI2, e2 := strconv.Atoi(resCtr2) 
+	resCtrI3, e3 := strconv.Atoi(resCtr3) 
+	if e0 != nil || e1 != nil || e2 != nil || e3 != nil {
+		fmt.Printf("WARNING: error(s): could not query and convert all B values from all peers: e0 e1 e2 e3", e0, e1, e2, e3)
+	}
 	
+	cntr = int64(resCtrI0)	// pick peer0 counter to return
+
         matches := 0
 	if int64(resCtrI0) == expectedCtr { matches++ }
 	if int64(resCtrI1) == expectedCtr { matches++ }
 	if int64(resCtrI2) == expectedCtr { matches++ }
 	if int64(resCtrI3) == expectedCtr { matches++ }
 	if matches >= 3 {
-		if resCtrI0 == resCtrI1 { cntr = int64(resCtrI0) } else { cntr = int64(resCtrI2) }
+		if resCtrI0 != resCtrI1 { cntr = int64(resCtrI2) } // set cntr = the consensus value matched by at least 3 peers
 		if ht0 == ht1 && ht0 == ht2 && ht0 == ht3 {
 			passed = true
 			fmt.Printf("Pass: %d PEERS MATCH expectedCounter(%d) and ALL Heights match(%d)\n", matches, expectedCtr, ht0)

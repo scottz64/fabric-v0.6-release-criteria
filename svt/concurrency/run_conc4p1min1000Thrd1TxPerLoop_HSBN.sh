@@ -26,5 +26,5 @@ export TEST_NET_COMM_PROTOCOL=HTTP
 
 cd ../ledgerstresstest/
 GOTESTNAME=conc4p1min1000Thrd1TxPerLoop
-go run ${GOTESTNAME}.go | tee -a "GO_TEST__${GOTESTNAME}__$(date | cut -c 4-80 | tr -d ' ').log"
+go run ${GOTESTNAME}.go | tee -a "GO_TEST__${GOTESTNAME}__$(date | cut -d' ' -f2-9 | sed 's/[ :]/_/g').log"
 

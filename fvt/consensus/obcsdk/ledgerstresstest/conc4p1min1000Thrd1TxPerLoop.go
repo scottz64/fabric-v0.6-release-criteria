@@ -214,14 +214,16 @@ func QueryValAndHeight(expectedCtr int64) (passed bool, cntr int64) {
 	resCtrI1, _ := strconv.Atoi(resCtr1) 
 	resCtrI2, _ := strconv.Atoi(resCtr2) 
 	resCtrI3, _ := strconv.Atoi(resCtr3) 
-	
+
+	cntr = int64(resCtrI0)	// pick peer0 counter to return
+
         matches := 0
 	if int64(resCtrI0) == expectedCtr { matches++ }
 	if int64(resCtrI1) == expectedCtr { matches++ }
 	if int64(resCtrI2) == expectedCtr { matches++ }
 	if int64(resCtrI3) == expectedCtr { matches++ }
 	if matches >= 3 {
-		if resCtrI0 == resCtrI1 { cntr = int64(resCtrI0) } else { cntr = int64(resCtrI2) }
+		if resCtrI0 != resCtrI1 { cntr = int64(resCtrI2) } // set cntr = the consensus value matched by at least 3 peers
 		if ht0 == ht1 && ht0 == ht2 && ht0 == ht3 {
 			passed = true
 			fmt.Printf("Pass: %d PEERS MATCH expectedCounter=%d and ALL Heights match=%d\n", matches, expectedCtr, ht0)
