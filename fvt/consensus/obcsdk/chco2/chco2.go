@@ -63,6 +63,7 @@ type peerQData struct {
 var qData []peerQData		// latest queried values for A and B for each peer
 var qtransPerPeerForCH []int 	// counts of transactions queued per peer, for calculating blockchainheight
 var qtrans int			// counts of transactions queued, for calculating expected values of A & B
+var qtransDeploy int		// number of queued deploy transactions
 
 // bools to control when to stop/abort test (and to print additional error msgs when that happens)
 
@@ -310,6 +311,7 @@ func setup_part1(testName string, started time.Time) {
 	qData = make([]peerQData, NumberOfPeersInNetwork)
 	qtransPerPeerForCH = make([]int, NumberOfPeersInNetwork)
 	qtrans = 0
+	qtransDeploy = 0
 	for i:= 0; i < NumberOfPeersInNetwork; i++ {
 		qtransPerPeerForCH[i] = 0
 		qData[i].resA = 0
@@ -624,7 +626,7 @@ func DeployInit(peerNum int) {
 	fmt.Println("Sleep extra secs, deployed txId: ", sleepsecs, txId)
 	time.Sleep(time.Duration(sleepsecs) * time.Second)
 	incrHeightCount(1, peerNum)
-	setQueuedTransactionCounter(1)
+	setQueuedTransactionCounterForDeploy()
 
 	// Query the network and Update the counters A, B, and CH.
 	if ExistingNetwork {
@@ -801,6 +803,11 @@ func countChainBlocks(numInvokesOnThisPeer int) {
         currCH += newBlocks + queuedBlocks
 }
 
+func setQueuedTransactionCounterForDeploy() {
+	qtransDeploy++
+	setQueuedTransactionCounter(1) {
+}
+
 func setQueuedTransactionCounter(numTrans int) {
 	// Our current A and B counters do not always exactly correspond to the actual A & B chaincode values.
 	// Our currA and currB could be higher than the actual ones, because we count those that
@@ -813,9 +820,14 @@ func setQueuedTransactionCounter(numTrans int) {
 			if (Verbose) { fmt.Println("Sleep extra to allow processing queued transactions...") }
 			time.Sleep(sleepTimeForTrans(qtrans))
 		}
+		if qtransDeploy > 0 {
+			if (Verbose) { fmt.Println("Sleep extra 2 mins for queued DEPLOY transactions...") }
+			time.Sleep( SleepTimeSeconds(120*qtransDeploy) )
+		}
         	// Since we have enough nodes running to provide consensus, then reset qtrans to 0 because
 		// our transactions will be processed immediately by the peer and network.
 		qtrans = 0
+		qtransDeploy = 0
 	} else {
 		// Otherwise increase qtrans by the new number of transactions
 		qtrans += numTrans
