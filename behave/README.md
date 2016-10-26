@@ -59,6 +59,9 @@ $ behave
 ## Smoke Tests
 There are a handful of behave test scenarios that can be used as smoke tests to verify the very basic functionality of the network. 
 
+### Setup
+The setup for the smoke test suite is the same as the default local run. Be sure that the hyperledger-fabric repository is present in your environment and that you have a symlink to the correct location such that the behave tests can execute the tests correctly.
+
 ### Execution
 These sanity tests are tagged as "smoke" and can be executed as follows:
 ```sh
