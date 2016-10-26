@@ -8,7 +8,7 @@ The tests executed in this suite cover the following general areas. Most of the 
 	* query (chaincode)
 	* block height (chain)
 	* number of peers in a network (network/peers)
-        * committing of transactions to a peer's ledger (transactions)
+	* committing of transactions to a peer's ledger (transactions)
 * "large" network configuration (16 peers)
 * consensus (stopping and starting peers)
 	* stopping chaincode and ensuring it is restarted with a query/invoke
