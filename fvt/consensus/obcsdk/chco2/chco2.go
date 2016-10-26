@@ -805,7 +805,7 @@ func countChainBlocks(numInvokesOnThisPeer int) {
 
 func setQueuedTransactionCounterForDeploy() {
 	qtransDeploy++
-	setQueuedTransactionCounter(1) {
+	setQueuedTransactionCounter(1)
 }
 
 func setQueuedTransactionCounter(numTrans int) {
