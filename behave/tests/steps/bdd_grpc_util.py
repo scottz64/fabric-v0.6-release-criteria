@@ -22,6 +22,7 @@ import fabric_pb2
 import chaincode_pb2
 
 import bdd_test_util
+from bdd_test_util import bdd_log
 
 from grpc.beta import implementations
 
@@ -35,7 +36,7 @@ def getTxResult(context, enrollId):
 
     (channel, userRegistration) = getGRPCChannelAndUser(context, enrollId)
     stub = devops_pb2.beta_create_Devops_stub(channel)
-    
+
     txRequest = devops_pb2.TransactionRequest(transactionUuid = context.transactionID)
     response = stub.GetTransactionResult(txRequest, 2)
     assert response.status == fabric_pb2.Response.SUCCESS, 'Failure getting Transaction Result from {0}, for user "{1}":  {2}'.format(userRegistration.composeService,enrollId, response.msg)
@@ -45,8 +46,8 @@ def getTxResult(context, enrollId):
     return txResult
 
 def getGRPCChannel(ipAddress):
-    channel = implementations.insecure_channel(ipAddress, 30303)
-    print("Returning GRPC for address: {0}".format(ipAddress))
+    channel = implementations.insecure_channel(ipAddress, 7051)
+    bdd_log("Returning GRPC for address: {0}".format(ipAddress))
     return channel
 
 def getGRPCChannelAndUser(context, enrollId):
@@ -54,11 +55,11 @@ def getGRPCChannelAndUser(context, enrollId):
     userRegistration = bdd_test_util.getUserRegistration(context, enrollId)
 
     # Get the IP address of the server that the user registered on
-    ipAddress = bdd_test_util.ipFromContainerNamePart(userRegistration.composeService, context.compose_containers)
+    ipAddress = context.containerAliasMap[userRegistration.composeService].ipAddress
 
     channel = getGRPCChannel(ipAddress)
 
-    return (channel, userRegistration) 
+    return (channel, userRegistration)
 
 
 def getDeployment(context, ccAlias):
@@ -69,9 +70,9 @@ def getDeployment(context, ccAlias):
     else:
         context.deployments = {}
     if ccAlias in context.deployments:
-        deployment = context.deployments[ccAlias] 
+        deployment = context.deployments[ccAlias]
     # else:
-    #     raise Exception("Deployment alias not found: '{0}'.  Are you sure you have deployed a chaincode with this alias?".format(ccAlias)) 
+    #     raise Exception("Deployment alias not found: '{0}'.  Are you sure you have deployed a chaincode with this alias?".format(ccAlias))
     return deployment
 
 def deployChaincode(context, enrollId, chaincodePath, ccAlias, ctor):
@@ -106,17 +107,17 @@ def invokeChaincode(context, enrollId, ccAlias, functionName):
     # Create a new ChaincodeSpec by copying the deployed one
     newChaincodeSpec = chaincode_pb2.ChaincodeSpec()
     newChaincodeSpec.CopyFrom(deployedCcSpec)
-    
+
     # Update hte chaincodeSpec ctorMsg for invoke
     args = getArgsFromContextForUser(context, enrollId)
-    
-    chaincodeInput = chaincode_pb2.ChaincodeInput(function = functionName, args = args ) 
+
+    chaincodeInput = chaincode_pb2.ChaincodeInput(function = functionName, args = args )
     newChaincodeSpec.ctorMsg.CopyFrom(chaincodeInput)
 
     ccInvocationSpec = chaincode_pb2.ChaincodeInvocationSpec(chaincodeSpec = newChaincodeSpec)
 
     (channel, userRegistration) = getGRPCChannelAndUser(context, enrollId)
-    
+
     stub = devops_pb2.beta_create_Devops_stub(channel)
     response = stub.Invoke(ccInvocationSpec,2)
     return response
