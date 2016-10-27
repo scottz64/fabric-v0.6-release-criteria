@@ -44,7 +44,7 @@ var bcHost = process.argv[6];
 console.log('LPAR=%d, svcFile:%s, ccPath:%s, bcHost:%s', LPARid, svcFile, ccPath, bcHost);
 
 process.env['GOPATH'] = __dirname;
-var chaincodeIDPath = __dirname + "/" + ccPath + "/chaincodeID";
+var chaincodeIDPath = __dirname + "/" + ccPath + "/chaincodeID" + LPARid;
 console.log('chaincodeIDPath ' , chaincodeIDPath);
 
 // Create a client blockchin.
@@ -73,6 +73,12 @@ if (transMode.toUpperCase() != 'MIX') {
     console.log('LPAR=%d, executing test mode: %s', LPARid, transMode);
 }
 
+if (transMode.toUpperCase() == 'CONSTANT') {
+    if (uiContent.Constant.recHist.toUpperCase() == 'HIST') {
+        var ConstantFile = fs.createWriteStream('ConstantResults.txt');
+        console.log('LPAR=%d, create ConstantResults.txt', LPARid);
+    }
+}
 // input: nThread
 if (uiContent.nThread) {
     nThread = parseInt(uiContent.nThread);

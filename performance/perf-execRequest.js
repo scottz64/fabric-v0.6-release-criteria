@@ -216,7 +216,7 @@ function enrollAndRegisterUsers() {
             if (err) throw Error("Failed to register and enroll " + users[0].username + ": " + err);
 
             user = member;
-            execTransaction(user);
+            execTransMode(user);
         });
     } else {
         // Enroll a 'admin' who is already registered because it is
@@ -239,7 +239,7 @@ function enrollAndRegisterUsers() {
 
 		//console.log('LPAR:pid=%d:%d, Enrolled and registered %s successfully', LPARid, pid, enrollName);
                 //begin transactions
-		execTransaction(user);
+		execTransMode(user);
             });
         });
     }
@@ -271,20 +271,20 @@ for (i=0; i<uiContent.invoke.args.length; i++) {
 }
 
 
-function execTransaction(user) {
+function execTransMode(user) {
 
 	tCurr = new Date().getTime();
-	console.log('LPAR:id=%d:%d, execTransaction: tCurr= %d, tStart= %d, time to wait=%d', LPARid, pid, tCurr, tStart, tStart-tCurr);
+	console.log('LPAR:id=%d:%d, execTransMode: tCurr= %d, tStart= %d, time to wait=%d', LPARid, pid, tCurr, tStart, tStart-tCurr);
 	
 	setTimeout(function() {
-            if (transMode.toUpperCase() == 'BURST') {
-                execBurst(user);
+            if (transMode.toUpperCase() == 'SIMPLE') {
+                execModeSimple(user);
+            } else if (transMode.toUpperCase() == 'CONSTANT') {
+                execModeConstant(user);
             } else if (transMode.toUpperCase() == 'MIX') {
-                execMix(user);
-            } else if (transType.toUpperCase() == 'QUERY') {
-                execQuery(user);
-            } else if (transType.toUpperCase() == 'INVOKE') {
-                execInvoke(user);
+                execModeMix(user);
+            } else if (transMode.toUpperCase() == 'BURST') {
+                execModeBurst(user);
             } else {
                 // invalid transaction request
                 console.log(util.format("LPAR:id=%d:%d, Transaction %j and/or mode %s invalid", LPARid, pid, transType, transMode));
@@ -320,92 +320,52 @@ function execTransaction(user) {
             //args: ["a"]
         };
 
-// send query transaction
-function SendQuery(pid, user, request, callback) {
+function isExecDone(trType) {
 
-    tridq++;
-    if ( ccType == 'auction' ) {
-        request.args[0] = tridq.toString();
-    }
-	//console.log('request: ', request);
-    var queryTx = user.query(request);
-    tr_sq++;
-
-    // loop the query requests
-    queryTx.on('complete', function (results) {
-        // Query completed successfully
-        tr_rsq++;
-
-        tCurr = new Date().getTime();
+    tCurr = new Date().getTime();
+    if ( trType.toUpperCase() == 'INVOKE' ) {
         if ( nRequest > 0 ) {
-            if ( ((tr_rsq+tr_req) % (nRequest/5)) == 0) {
-                console.log(util.format("LPAR:id=%d:%d, Successfully queried chaincode: value=%s, number=%d, time= %d, elapsed= %d",
-                                         LPARid, pid, results.result.toString(), tr_rsq, tCurr, tCurr-tLocal));
-            }
+//            if ( (tr_s % (nRequest/5)) == 0) {
+//                console.log(util.format("LPAR:id=%d:%d, invokes sent: number=%d, elapsed time= %d",
+//                                         LPARid, pid, tr_s, tCurr-tLocal));
+//            }
 
-            if ( (tr_rsq+tr_req) >= nRequest ) {
+            if ( tr_s >= nRequest ) {
+                IDone = 1;
+            }
+        } else {
+//            if ( (tr_s % 1000 ) == 0) {
+//                console.log(util.format("LPAR:id=%d:%d, invokes sent: number=%d, elapsed time= %d",
+//                                         LPARid, pid, tr_s, tCurr-tLocal));
+//            }
+
+            if ( tCurr >= tEnd ) {
+                IDone = 1;
+            }
+        }
+    } else if ( trType.toUpperCase() == 'QUERY' ) {
+        if ( nRequest > 0 ) {
+//            if ( (tr_sq % (nRequest/5)) == 0) {
+//                console.log(util.format("LPAR:id=%d:%d, queries sent: number=%d, elapsed time= %d",
+//                                         LPARid, pid, tr_sq, tCurr-tLocal));
+//            }
+
+            if ( tr_sq >= nRequest ) {
                 QDone = 1;
             }
         } else {
-            if ( ((tr_rsq+tr_req) % 1000 ) == 0) {
-                console.log(util.format("LPAR:id=%d:%d, Successfully queried chaincode: value=%s, number=%d, time= %d, elapsed= %d",
-                                         LPARid, pid, results.result.toString(), tr_rsq, tCurr, tCurr-tLocal));
-            }
+//            if ( (tr_sq % 1000 ) == 0) {
+//                console.log(util.format("LPAR:id=%d:%d, queries sent: number=%d, elapsed time= %d",
+//                                         LPARid, pid, tr_sq, tCurr-tLocal));
+//            }
 
             if ( tCurr >= tEnd ) {
                 QDone = 1;
             }
         }
-
-        if ( QDone == 1 ) {
-            console.log(util.format("SendQuery:LPAR:id=%d:%d, Query: total= %d completed= %d failed= %d time(ms): starting= %d ending= %d elapsed= %d",
-                                     LPARid, pid, tr_sq, tr_rsq, tr_req, tLocal, tCurr, tCurr-tLocal));
-        } else {
-            SendQuery(pid, user, request, null) 
-        };
-
-    });
-    queryTx.on('error', function (err) {
-            // Query failed
-            tr_req++;
-            tCurr = new Date().getTime();
-            console.log(util.format("LPAR:id=%d:%d, Failed to query chaincode: f/s= %d/%d, elapsed time= %d error=%j",
-                                     LPARid, pid, tr_req, tr_rsq, tCurr-tLocal, err));
-            if ( nRequest > 0 ) {
-                if ( (tr_rsq+tr_req) >= nRequest ) {
-                    QDone = 1;
-                }
-            } else if ( tCurr >= tEnd ) {
-                QDone = 1;
-            }
-
-            if ( QDone == 1 ) {
-                console.log(util.format("SendQuery:LPAR:id=%d:%d, Query: total= %d completed= %d failed= %d time(ms): starting= %d ending= %d elapsed= %d",
-                                         LPARid, pid, tr_sq, tr_rsq, tr_req, tLocal, tCurr, tCurr-tLocal));
-            } else {
-                SendQuery(pid, user, request, null) 
-            };
-    });
+    }
 }
 
-function execQuery(user) {
-
-        // init TcertBatchSize
-        user.setTCertBatchSize(TCertBatchSize);
-
-        // get time
-        tLocal = new Date().getTime();
-
-        if ( nRequest == 0 ) {
-            tEnd = tLocal + runDur * 1000;
-            console.log('LPAR:id=%d:%d, transactions start= %d, ending= %d', LPARid, pid, tLocal, tEnd);
-            SendQuery(pid, user, queryRequest, null);
-        } else {
-            console.log('LPAR:id=%d:%d, local time(ms) starting= %d', LPARid, pid, tLocal);
-            SendQuery(pid, user, queryRequest, null);
-        }
-
-}
 
 
 //
@@ -413,105 +373,117 @@ function execQuery(user) {
 //
 var buf;
 var i = 0;
-function SendInvoke(pid, user, request, callback) {
+function SendSimple(pid, user, trType, callback) {
 
-    // Trigger the invoke transaction
-    var requestLoc = invokeRequest;
-    trid++;
+    if ( trType == 'INVOKE' ) {
+        // Trigger the invoke transaction
+        var requestLoc = invokeRequest;
+        trid++;
 
-    if (ccType == 'auction') {
-        request.args[0] = trid.toString();
-	
-	// random payload: 1kb - 2kb
-	min = 512;
-	max = 1024;
-	r = Math.floor(Math.random() * (max - min)) + min;
-	//r = 512;
-		
-	buf = crypto.randomBytes(r);
-	request.args[4] = buf.toString('hex');
-    }
-	
-	//console.log('request: ', request);
-    var invokeTx = user.invoke(request);
-	tr_s++;
+        if (ccType == 'auction') {
+            requestLoc.args[0] = trid.toString();
 
-    // Print the invoke results
-    invokeTx.on('submitted', function (results) {
+            // random payload: 1kb - 2kb
+	    min = 512;
+	    max = 1024;
+	    r = Math.floor(Math.random() * (max - min)) + min;
+
+	    buf = crypto.randomBytes(r);
+	    requestLoc.args[4] = buf.toString('hex');
+        }
+
+        //console.log('request: ', request);
+        var invokeTx = user.invoke(requestLoc);
+        tr_s++;
+        isExecDone('INVOKE');
+//         console.log('LPAR:id=%d:%d, invoke: tCurr= %d', LPARid, pid, tCurr);
+
+        // Print the invoke results
+        invokeTx.on('submitted', function (results) {
 
             tr_rs++;
-            tCurr = new Date().getTime();
-            if ( nRequest > 0 ) {
-                if ( (tr_rs % (nRequest/5)) == 0) {
-                    console.log("LPAR:id=%d:%d, Successfully submitted chaincode invoke transaction: number=%d, time= %d, elapsed= %d",
-			             LPARid, pid, tr_rs, tCurr, tCurr-tLocal);
-                }
-
-                if ( (tr_rs+tr_re) >= nRequest ) {
-                    IDone = 1;
-                }
-            } else {
-                if ( (tr_rs % 1000 ) == 0) {
-                    console.log("LPAR:id=%d:%d, Successfully completed chaincode invoke transaction: number=%d, time= %d, elapsed= %d",
-                                             LPARid, pid, tr_rs, tCurr, tCurr-tLocal);
-                }
-
-                if ( tCurr >= tEnd ) {
-                    IDone = 1;
-                }
-            }
 
             if (IDone == 1) {
                 console.log(util.format("SendInvoke:LPAR:id=%d:%d, Invoke test completed: total= %d submitted= %d failed= %d time(ms): starting= %d ending= %d elapsed= %d", 
                                      LPARid, pid, tr_s, tr_rs, tr_re, tLocal, tCurr, tCurr-tLocal));
             } else {
-                SendInvoke(pid, user, request, null) 
+                SendSimple(pid, user, trType, null);
             };
 
-    });
-    invokeTx.on('error', function (err) {
+        });
+        invokeTx.on('error', function (err) {
             // invoke failed
             tr_re++;
-            tCurr = new Date().getTime();
             console.log(util.format("LPAR:id=%d:%d, Failed to submit chaincode invoke transaction: number=%d, time= %d, elapsed= %d, error=%j",
                                              LPARid, pid, tr_re, tCurr, tCurr-tLocal, err));
-            if ( nRequest > 0 ) {
-                if ( (tr_rs+tr_re) >= nRequest ) {
-                    IDone = 1;
-                }
-            } else if ( tCurr >= tEnd ) {
-                    IDone = 1;
-            }
 
             if (IDone == 1) {
                 console.log(util.format("SendInvoke:LPAR:id=%d:%d, Invoke test completed: total= %d submitted= %d failed= %d time(ms): starting= %d ending= %d elapsed= %d", 
                                          LPARid, pid, tr_s, tr_rs, tr_re, tLocal, tCurr, tCurr-tLocal));
             } else {
-                SendInvoke(pid, user, request, null) 
+                SendSimple(pid, user, trType, null);
             };
-    });
+        });
+    } else if ( trType == 'QUERY' ) {
+        tridq++;
+        var requestLoc = queryRequest;
+        if ( ccType == 'auction' ) {
+            requestLoc.args[0] = tridq.toString();
+        }
+	//console.log('request: ', request);
+        var queryTx = user.query(requestLoc);
+        tr_sq++;
+        isExecDone('QUERY');
+
+        // loop the query requests
+        queryTx.on('complete', function (results) {
+            // Query completed successfully
+            tr_rsq++;
+
+            if ( QDone == 1 ) {
+//                console.log(util.format("LPAR:id=%d:%d, Successfully queried chaincode: value=%s, number=%d, time= %d, elapsed= %d",
+//                                     LPARid, pid, results.result.toString(), tr_rsq, tCurr, tCurr-tLocal));
+                console.log(util.format("SendQuery:LPAR:id=%d:%d, Query: total= %d completed= %d failed= %d time(ms): starting= %d ending= %d elapsed= %d",
+                                     LPARid, pid, tr_sq, tr_rsq, tr_req, tLocal, tCurr, tCurr-tLocal));
+            } else {
+                SendSimple(pid, user, trType, null);
+            };
+
+        });
+        queryTx.on('error', function (err) {
+            // Query failed
+            tr_req++;
+            console.log(util.format("LPAR:id=%d:%d, Failed to query chaincode: f/s= %d/%d, elapsed time= %d error=%j",
+                                     LPARid, pid, tr_req, tr_rsq, tCurr-tLocal, err));
+
+            if ( QDone == 1 ) {
+                console.log(util.format("SendQuery:LPAR:id=%d:%d, Query: total= %d completed= %d failed= %d time(ms): starting= %d ending= %d elapsed= %d",
+                                         LPARid, pid, tr_sq, tr_rsq, tr_req, tLocal, tCurr, tCurr-tLocal));
+            } else {
+                SendSimple(pid, user, trType, null);
+            };
+        });
+    }
 };
 
 
-function execInvoke(user) {
+function execModeSimple(user) {
 
         // init TcertBatchSize
         user.setTCertBatchSize(TCertBatchSize);
-		
-	console.log('invoke:',invokeRequest);
 
+        console.log('LPAR:id=%d:%d, execModeSimple: %s', LPARid, pid, transType);
         // get time
         tLocal = new Date().getTime();
 
-        // Start the invoke transactions
+        // Start the transactions
        	    if ( nRequest == 0 ) {
                 tEnd = tLocal + runDur * 1000;
                 console.log('LPAR:id=%d:%d, transactions start= %d, ending= %d', LPARid, pid, tLocal, tEnd);
-                SendInvoke(pid, user, invokeRequest, null);
             } else {
                 console.log('LPAR:id=%d:%d, local time(ms) starting= %d', LPARid, pid, tLocal);
-                SendInvoke(pid, user, invokeRequest, null);
             }
+            SendSimple(pid, user, transType.toUpperCase(), null);
 
 }
 
@@ -545,37 +517,18 @@ function SendMix(pid, user, mix, callback) {
         }
 
         var invokeTx = user.invoke(requestLoc);
-	tr_s++;
+        tr_s++;
+        isExecDone(mix.toUpperCase());
 
         // Print the invoke results
         invokeTx.on('submitted', function (results) {
             // Invoke completed successfully
             tr_rs++;
-	    tCurr = new Date().getTime();
-            if ( nRequest > 0 ) {
-                if ( (tr_rs % (nRequest/5)) == 0) {
-                    console.log("LPAR:id=%d:%d, Successfully completed chaincode invoke transaction: number=%d, time= %d, elapsed= %d",
-			                     LPARid, pid, tr_rs, tCurr, tCurr-tLocal);
-                }
-
-                if ( (tr_rs+tr_re) >= nRequest ) {
-                    IDone = 1;
-                }
-            } else {
-                if ( (tr_rs % 1000 ) == 0) {
-                    console.log("LPAR:id=%d:%d, Successfully completed chaincode invoke transaction: number=%d, time= %d, elapsed= %d",
-			                     LPARid, pid, tr_rs, tCurr, tCurr-tLocal);
-                }
-
-                if ( tCurr >= tEnd ) {
-                    IDone = 1;
-                }
-            }
 
             if ( (IDone == 1) && (QDone == 1) ) {
                 console.log(util.format("SendMix:LPAR:id=%d:%d, Invoke: total= %d submitted= %d failed= %d Query: total= %d completed= %d failed= %d time(ms): starting= %d ending= %d elapsed= %d",
                                          LPARid, pid, tr_s, tr_rs, tr_re, tr_sq, tr_rsq, tr_req, tLocal, tCurr, tCurr-tLocal));
-            } else { 
+            } else {
                 setTimeout(function(){
                     SendMix(pid, user, 'query', null);
                 },mixFreq);
@@ -584,21 +537,13 @@ function SendMix(pid, user, mix, callback) {
         invokeTx.on('error', function (err) {
             // invoke failed
             tr_re++;
-            tCurr = new Date().getTime();
             console.log(util.format("LPAR:id=%d:%d, Failed to submit chaincode invoke transaction: number=%d, time= %d, elapsed= %d, error=%j",
-		                             LPARid, pid, tr_re, tCurr, tCurr-tLocal, err));
-            if ( nRequest > 0 ) {
-                if ( (tr_rs+tr_re) >= nRequest ) {
-                    IDone = 1;
-                }
-            } else if ( tCurr >= tEnd ) {
-                    IDone = 1;
-            }
+                                     LPARid, pid, tr_re, tCurr, tCurr-tLocal, err));
 
             if ( (IDone == 1) && (QDone == 1) ) {
                 console.log(util.format("SendMix:LPAR:id=%d:%d, Invoke: total= %d submitted= %d failed= %d Query: total= %d completed= %d failed= %d time(ms): starting= %d ending= %d elapsed= %d",
                                          LPARid, pid, tr_s, tr_rs, tr_re, tr_sq, tr_rsq, tr_req, tLocal, tCurr, tCurr-tLocal));
-            } else { 
+            } else {
                 setTimeout(function(){
                     SendMix(pid, user, 'query', null);
                 },mixFreq);
@@ -614,25 +559,12 @@ function SendMix(pid, user, mix, callback) {
 
         var queryTx = user.query(requestLoc);
         tr_sq++;
+        isExecDone(mix.toUpperCase());
 
         // loop the query requests
         queryTx.on('complete', function (results) {
             // Query completed successfully
             tr_rsq++;
-
-            if ( nRequest > 0 ) {
-                if ( ((tr_rsq+tr_req) % (nRequest/5)) == 0) {
-                    tCurr = new Date().getTime();
-                    console.log(util.format("LPAR:id=%d:%d, Successfully queried chaincode: value=%s, tridq=%d, number=%d, time= %d, elapsed= %d",
-                                         LPARid, pid, results.result.toString(), tridq, tr_rsq, tCurr, tCurr-tLocal));
-                }
-
-                if ( (tr_rs+tr_re) >= nRequest ) {
-                    QDone = 1;
-                }
-            } else if ( tCurr >= tEnd ) {
-                QDone = 1;
-            }
 
             if ( (IDone == 1) && (QDone == 1) ) {
                 console.log(util.format("SendMix:LPAR:id=%d:%d, Invoke: total= %d submitted= %d failed= %d Query: total= %d completed= %d failed= %d time(ms): starting= %d ending= %d elapsed= %d",
@@ -644,16 +576,8 @@ function SendMix(pid, user, mix, callback) {
         queryTx.on('error', function (err) {
             // Query failed
             tr_req++;
-            tCurr = new Date().getTime();
-		    console.log(util.format("LPAR:id=%d:%d, Failed to query chaincode: f/s= %d/%d, elapsed time= %d error=%j",
-		                             LPARid, pid, tr_req, tr_rsq, tCurr-tLocal, err));
-            if ( nRequest > 0 ) {
-                if ( (tr_rs+tr_re) >= nRequest ) { 
-                    QDone = 1;
-                }
-            } else if ( tCurr >= tEnd ) {
-                QDone = 1;
-            }
+            console.log(util.format("LPAR:id=%d:%d, Failed to query chaincode: f/s= %d/%d, elapsed time= %d error=%j",
+                                     LPARid, pid, tr_req, tr_rsq, tCurr-tLocal, err));
 
             if ( (IDone == 1) && (QDone == 1) ) {
                 console.log(util.format("SendMix:LPAR:id=%d:%d, Invoke: total= %d submitted= %d failed= %d Query: total= %d completed= %d failed= %d time(ms): starting= %d ending= %d elapsed= %d",
@@ -666,7 +590,7 @@ function SendMix(pid, user, mix, callback) {
 };
 
 var mixFreq = 3000;
-function execMix(user) {
+function execModeMix(user) {
 
         // init TcertBatchSize
         user.setTCertBatchSize(TCertBatchSize);
@@ -676,8 +600,7 @@ function execMix(user) {
             mixFreq = 3000;
         }
 
-	console.log('Mix mixFreq:',mixFreq);
-	console.log('invoke:',invokeRequest);
+	console.log('LPAR:id=%d:%d, Mix mixFreq: %s ms', LPARid, pid, mixFreq);
 
         // get time
         tLocal = new Date().getTime();
@@ -686,11 +609,10 @@ function execMix(user) {
   	if ( nRequest == 0 ) {
             tEnd = tLocal + runDur * 1000;
             console.log('LPAR:id=%d:%d, transactions start= %d, ending= %d', LPARid, pid, tLocal, tEnd);
-            SendMix(pid, user, 'invoke', null);
         } else {
             console.log('LPAR:id=%d:%d, local time(ms) starting= %d', LPARid, pid, tLocal);
-            SendMix(pid, user, 'invoke', null);
         }
+        SendMix(pid, user, 'invoke', null);
 }
 
 // Burst traffic
@@ -719,7 +641,7 @@ function SendBurst(pid, user, trType, callback) {
         tUpd1 = tUpd0 + tDur[1];
         Freq = tFreq[0];
     }
-    console.log ('LPAR:id=%d:%d trType=%s, tCurr=%d tUpd0=%d, tUpd1=%d, Freq=%d', LPARid, pid, trType, tCurr, tUpd0, tUpd1, Freq);
+//    console.log ('LPAR:id=%d:%d trType=%s, tCurr=%d tUpd0=%d, tUpd1=%d, Freq=%d', LPARid, pid, trType, tCurr, tUpd0, tUpd1, Freq);
 
     // start transaction
     if ( trType == 'INVOKE' ) {
@@ -731,10 +653,10 @@ function SendBurst(pid, user, trType, callback) {
             requestLoc.args[0] = trid.toString();
 
 	    // random payload: 1kb - 2kb
-	    //min = 512;
-	    //max = 1024;
-	    min = 5120;
-	    max = 256000;
+	    min = 512;
+	    max = 1024;
+	    //min = 5120;
+	    //max = 256000;
 	    r = Math.floor(Math.random() * (max - min)) + min;
 	    //r = 512;
 
@@ -743,16 +665,10 @@ function SendBurst(pid, user, trType, callback) {
         }
 
         var invokeTx = user.invoke(requestLoc);
-	tr_s++;
+        tr_s++;
+        isExecDone(trType);
 
         // schedule invoke
-        if ( nRequest > 0 ) {
-           if ( tr_s >= nRequest ) {
-              IDone = 1;
-           }
-        } else if ( tCurr >= tEnd ) {
-              IDone = 1;
-        }
         if ( IDone != 1 ) {
             setTimeout(function() {
                 SendBurst(pid, user, trType, null);
@@ -763,26 +679,6 @@ function SendBurst(pid, user, trType, callback) {
         invokeTx.on('submitted', function (results) {
             // Invoke completed successfully
             tr_rs++;
-	    tCurr = new Date().getTime();
-            if ( nRequest > 0 ) {
-                if ( (tr_rs % (nRequest/5)) == 0) {
-                    console.log("LPAR:id=%d:%d, Successfully completed chaincode invoke transaction: number=%d, time= %d, elapsed= %d",
-			                     LPARid, pid, tr_rs, tCurr, tCurr-tLocal);
-                }
-
-                if ( (tr_rs+tr_re) >= nRequest ) {
-                    IDone = 1;
-                }
-            } else {
-                if ( (tr_rs % 1000 ) == 0) {
-                    console.log("LPAR:id=%d:%d, Successfully completed chaincode invoke transaction: number=%d, time= %d, elapsed= %d",
-			                     LPARid, pid, tr_rs, tCurr, tCurr-tLocal);
-                }
-
-                if ( tCurr >= tEnd ) {
-                    IDone = 1;
-                }
-            }
 
             if ( IDone == 1 ) {
                 console.log(util.format("SendBurst:LPAR:id=%d:%d, Invoke: total= %d submitted= %d failed= %d time(ms): starting= %d ending= %d elapsed= %d",
@@ -792,16 +688,8 @@ function SendBurst(pid, user, trType, callback) {
         invokeTx.on('error', function (err) {
             // invoke failed
             tr_re++;
-            tCurr = new Date().getTime();
             console.log(util.format("LPAR:id=%d:%d, Failed to submit chaincode invoke transaction: number=%d, time= %d, elapsed= %d, error=%j",
-		                             LPARid, pid, tr_re, tCurr, tCurr-tLocal, err));
-            if ( nRequest > 0 ) {
-                if ( (tr_rs+tr_re) >= nRequest ) {
-                    IDone = 1;
-                }
-            } else if ( tCurr >= tEnd ) {
-                    IDone = 1;
-            }
+                                     LPARid, pid, tr_re, tCurr, tCurr-tLocal, err));
 
             if ( IDone == 1 ) {
                 console.log(util.format("SendBurst:LPAR:id=%d:%d, Invoke: total= %d submitted= %d failed= %d time(ms): starting= %d ending= %d elapsed= %d",
@@ -818,16 +706,9 @@ function SendBurst(pid, user, trType, callback) {
         //console.log('request: ', request);
         var queryTx = user.query(requestLoc);
         tr_sq++;
+        isExecDone(trType);
 
         // schedule query
-        if ( nRequest > 0 ) {
-           if ( tr_sq >= nRequest ) {
-              QDone = 1;
-           }
-        } else if ( tCurr >= tEnd ) {
-              QDone = 1;
-        }
-
         if ( QDone != 1 ) {
             setTimeout(function() {
                 SendBurst(pid, user, trType, null);
@@ -839,22 +720,6 @@ function SendBurst(pid, user, trType, callback) {
             // Query completed successfully
             tr_rsq++;
 
-            if ( nRequest > 0 ) {
-                if ( ((tr_rsq+tr_req) % (nRequest/5)) == 0) {
-                    tCurr = new Date().getTime();
-                    console.log(util.format("LPAR:id=%d:%d, Successfully queried chaincode: value=%s, tridq=%d, number=%d, time= %d, elapsed= %d",
-                                         LPARid, pid, results.result.toString(), tridq, tr_rsq, tCurr, tCurr-tLocal));
-                }
-
-                if ( (tr_rsq+tr_req) >= nRequest ) {
-                    QDone = 1;
-                }
-            } else if ( tCurr >= tEnd ) {
-                console.log(util.format("LPAR:id=%d:%d, Successfully queried chaincode: value=%s, tridq=%d, number=%d, time= %d, elapsed= %d",
-                                         LPARid, pid, results.result.toString(), tridq, tr_rsq, tCurr, tCurr-tLocal));
-                QDone = 1;
-            }
-
             if ( QDone == 1 ) {
                 console.log(util.format("SendBurst:LPAR:id=%d:%d, Query: total= %d completed= %d failed= %d time(ms): starting= %d ending= %d elapsed= %d",
                                          LPARid, pid, tr_sq, tr_rsq, tr_req, tLocal, tCurr, tCurr-tLocal));
@@ -863,16 +728,8 @@ function SendBurst(pid, user, trType, callback) {
         queryTx.on('error', function (err) {
             // Query failed
             tr_req++;
-            tCurr = new Date().getTime();
-		    console.log(util.format("LPAR:id=%d:%d, Failed to query chaincode: f/s= %d/%d, elapsed time= %d error=%j",
-		                             LPARid, pid, tr_req, tr_rsq, tCurr-tLocal, err));
-            if ( nRequest > 0 ) {
-                if ( (tr_rsq+tr_req) >= nRequest ) {
-                    QDone = 1;
-                }
-            } else if ( tCurr >= tEnd ) {
-                QDone = 1;
-            }
+            console.log(util.format("LPAR:id=%d:%d, Failed to query chaincode: f/s= %d/%d, elapsed time= %d error=%j",
+                                     LPARid, pid, tr_req, tr_rsq, tCurr-tLocal, err));
 
             if ( QDone == 1 ) {
                 console.log(util.format("SendBurst:LPAR:id=%d:%d, Query: total= %d completed= %d failed= %d time(ms): starting= %d ending= %d elapsed= %d",
@@ -883,36 +740,185 @@ function SendBurst(pid, user, trType, callback) {
 };
 
 
-function execBurst(user) {
+function execModeBurst(user) {
+
+    // init TcertBatchSize
+    user.setTCertBatchSize(TCertBatchSize);
+    burstFreq0 = parseInt(uiContent.Burst.burstFreq0);
+    burstDur0 = parseInt(uiContent.Burst.burstDur0);
+    burstFreq1 = parseInt(uiContent.Burst.burstFreq1);
+    burstDur1 = parseInt(uiContent.Burst.burstDur1);
+    tFreq = [burstFreq0, burstFreq1];
+    tDur  = [burstDur0, burstDur1];
+
+    console.log('LPAR:id=%d:%d, Burst setting: tDur =',LPARid, pid, tDur);
+    console.log('LPAR:id=%d:%d, Burst setting: tFreq=',LPARid, pid, tFreq);
+
+    // get time
+    tLocal = new Date().getTime();
+
+    tUpd0 = tLocal+tDur[0];
+    tUpd1 = tLocal+tDur[1];
+    Freq = tFreq[0];
+
+    // Start transactions
+    if ( nRequest == 0 ) {
+        tEnd = tLocal + runDur * 1000;
+        console.log('LPAR:id=%d:%d, transactions start= %d, ending= %d', LPARid, pid, tLocal, tEnd);
+    } else {
+        tEnd = tLocal + runDur * 1000;
+        console.log('LPAR:id=%d:%d, transactions start= %d, ending= %d', LPARid, pid, tLocal, tEnd);
+    }
+    SendBurst(pid, user, transType.toUpperCase(), null);
+}
+
+
+// fix rate
+var recHist;
+var constFreq;
+function SendConstant(pid, user, trType, callback) {
+
+//    tCurr = new Date().getTime();
+//    console.log('tCurr=%d mix=%s', tCurr, mix);
+
+    tCurr = new Date().getTime();
+    //console.log('LPAR:id=%d:%d, SendConstant: trType=%s, timestamp=%d', LPARid, pid, trType, tCurr);
+
+    if ( trType == 'INVOKE' ) {
+        // Trigger the invoke transaction
+        var requestLoc = invokeRequest;
+	trid++;
+
+        if (ccType == 'auction') {
+            requestLoc.args[0] = trid.toString();
+
+	    // random payload: 1kb - 2kb
+	    min = 512;
+	    max = 1024;
+	    //min = 5120;
+	    //max = 256000;
+	    r = Math.floor(Math.random() * (max - min)) + min;
+	    //r = 512;
+
+	    buf = crypto.randomBytes(r);
+	    requestLoc.args[4] = buf.toString('hex');
+        }
+
+        var invokeTx = user.invoke(requestLoc);
+	tr_s++;
+
+        // output
+        if ( recHist == 'HIST' ) {
+            buff = LPARid +':'+ pid + ' ' + trType[0] + ':' + tr_s + ' Failed:' + tr_re + ' time:'+ tCurr + '\n';
+            fs.appendFile('ConstantResults.txt', buff, function(err) {
+                if (err) {
+                   return console.log(err);
+                }
+            })
+        }
+
+            isExecDone(trType);
+
+            if ( IDone != 1 ) {
+                setTimeout(function(){
+                    SendConstant(pid, user, trType, null);
+                },constFreq);
+            };
+
+        // Print the invoke results
+        invokeTx.on('submitted', function (results) {
+            // Invoke completed successfully
+            tr_rs++;
+            if ( IDone == 1 ) {
+                console.log(util.format("SendConstant:LPAR:id=%d:%d, Invoke: total= %d submitted= %d failed= %d time(ms): starting= %d ending= %d elapsed= %d",
+                                         LPARid, pid, tr_s, tr_rs, tr_re, tLocal, tCurr, tCurr-tLocal));
+            }
+        });
+        invokeTx.on('error', function (err) {
+            // invoke failed
+            tr_re++;
+            console.log(util.format("LPAR:id=%d:%d, Failed to submit chaincode invoke transaction: number=%d, time= %d, elapsed= %d, error=%j",
+                                     LPARid, pid, tr_re, tCurr, tCurr-tLocal, err));
+            if ( IDone == 1 ) {
+                console.log(util.format("SendConstant:LPAR:id=%d:%d, Invoke: total= %d submitted= %d failed= %d time(ms): starting= %d ending= %d elapsed= %d",
+                                         LPARid, pid, tr_s, tr_rs, tr_re, tLocal, tCurr, tCurr-tLocal));
+            }
+        });
+    } else if ( trType == 'QUERY' ) {
+        tridq++;
+        var requestLoc = queryRequest;
+        if (ccType == 'auction') {
+            var t0 = pid*1000000+1;
+            requestLoc.args[0] = t0.toString();
+        }
+
+        var queryTx = user.query(requestLoc);
+        tr_sq++;
+
+        // output
+        if ( recHist == 'HIST' ) {
+            buff = LPARid +':'+ pid + ' ' + trType[0] + ':' + tr_sq + ' Failed:' + tr_req + ' time:'+ tCurr + '\n';
+            fs.appendFile('ConstantResults.txt', buff, function(err) {
+                if (err) {
+                   return console.log(err);
+                }
+            })
+        }
+
+            isExecDone(trType);
+
+            if ( QDone != 1 ) {
+                setTimeout(function(){
+                    SendConstant(pid, user, trType, null);
+                },constFreq);
+            };
+        // loop the query requests
+        queryTx.on('complete', function (results) {
+            // Query completed successfully
+            tr_rsq++;
+            if ( QDone == 1 ) {
+                console.log(util.format("SendConstant:LPAR:id=%d:%d, Query: total= %d completed= %d failed= %d time(ms): starting= %d ending= %d elapsed= %d",
+                                         LPARid, pid, tr_sq, tr_rsq, tr_req, tLocal, tCurr, tCurr-tLocal));
+            }
+        });
+        queryTx.on('error', function (err) {
+            // Query failed
+            tr_req++;
+            if ( QDone == 1 ) {
+                console.log(util.format("SendConstant:LPAR:id=%d:%d, Query: total= %d completed= %d failed= %d time(ms): starting= %d ending= %d elapsed= %d",
+                                         LPARid, pid, tr_sq, tr_rsq, tr_req, tLocal, tCurr, tCurr-tLocal));
+            }
+        });
+    }
+};
+
+function execModeConstant(user) {
 
         // init TcertBatchSize
         user.setTCertBatchSize(TCertBatchSize);
-        burstFreq0 = parseInt(uiContent.Burst.burstFreq0);
-        burstDur0 = parseInt(uiContent.Burst.burstDur0);
-        burstFreq1 = parseInt(uiContent.Burst.burstFreq1);
-        burstDur1 = parseInt(uiContent.Burst.burstDur1);
-        tFreq = [burstFreq0, burstFreq1];
-        tDur  = [burstDur0, burstDur1];
 
-	console.log('Burst setting: tDur =',tDur);
-	console.log('Burst setting: tFreq=',tFreq);
-	console.log('invoke:',invokeRequest);
+        if (uiContent.Constant.recHist) {
+            recHist = uiContent.Constant.recHist.toUpperCase();
+        }
+
+        if (uiContent.Constant.constFreq) {
+            constFreq = parseInt(uiContent.Constant.constFreq);
+        } else {
+            constFreq = 1000;
+        }
+
+        //var ConstantFile = fs.createWriteStream('ConstantResults.txt');
+        console.log('LPAR:id=%d:%d, Constant Freq: %d ms', LPARid, pid, constFreq);
 
         // get time
         tLocal = new Date().getTime();
-
-        tUpd0 = tLocal+tDur[0];
-        tUpd1 = tLocal+tDur[1];
-        Freq = tFreq[0];
 
         // Start transactions
         if ( nRequest == 0 ) {
             tEnd = tLocal + runDur * 1000;
             console.log('LPAR:id=%d:%d, transactions start= %d, ending= %d', LPARid, pid, tLocal, tEnd);
-            SendBurst(pid, user, transType.toUpperCase(), null);
         } else {
-            tEnd = tLocal + runDur * 1000;
-            console.log('LPAR:id=%d:%d, transactions start= %d, ending= %d', LPARid, pid, tLocal, tEnd);
-            SendBurst(pid, user, transType.toUpperCase(), null);
+            console.log('LPAR:id=%d:%d, local time(ms) starting= %d', LPARid, pid, tLocal);
         }
+        SendConstant(pid, user, transType.toUpperCase(), null);
 }
