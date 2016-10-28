@@ -162,23 +162,21 @@ func main() {
 	for i:=1; i <= numCycles; i++ {
 
 		// decreasing order. Interesting case: stop and restart peer 1, then stop 0. see if all recovers!
-		for peerNum := chco2.NumberOfPeersInNetwork-2; peerNum >= 0; peerNum-- {
+		for peerNum := chco2.NumberOfPeersInNetwork-1; peerNum >= 0; peerNum-- {
 			chco2.StopPeers( []int{ peerNum } )
 			// chco2.InvokeOnEachPeer( chco2.DefaultInvokesPerPeer ) 	// too quick/few for other peers to process and change view, to match
 			// 								// our expectations; so send more Invokes and all can be processed and
 			// 								// test passes (also with added sleep delays between repeated starts/stops).
-			chco2.Invokes( chco2.InvokesRequiredForCatchUp )
-			// chco2.Invokes( chco2.InvokesRequiredForCatchUp )
+			chco2.Invokes( chco2.InvokesRequiredForCatchUp * 2 )
 			fmt.Println("Sleep extra 30 secs"); time.Sleep(chco2.SleepTimeSeconds(30))
-			chco2.QueryAllPeers( "STEP 3, cycle " + strconv.Itoa(i) + "/" + strconv.Itoa(numCycles) + " after STOP PEER " + strconv.Itoa(peerNum) + " and Invokes" )
+			chco2.QueryAllPeers( "STEP 3." + strconv.Itoa(chco2.NumberOfPeersInNetwork-1-peerNum) + ", cycle " + strconv.Itoa(i) + "/" + strconv.Itoa(numCycles) + " after STOP PEER " + strconv.Itoa(peerNum) + " and Invokes" )
 			chco2.RestartPeers( []int{ peerNum } )
-			chco2.Invokes( chco2.InvokesRequiredForCatchUp )
-			// chco2.Invokes( chco2.InvokesRequiredForCatchUp )
+			chco2.Invokes( chco2.InvokesRequiredForCatchUp * 2 )
 			// no extra sleep here.
-			chco2.QueryAllPeers( "STEP 6, cycle " + strconv.Itoa(i) + "/" + strconv.Itoa(numCycles) + " after RESTART and Invokes " )
+			chco2.QueryAllPeers( "STEP 6." + strconv.Itoa(chco2.NumberOfPeersInNetwork-1-peerNum) + ", cycle " + strconv.Itoa(i) + "/" + strconv.Itoa(numCycles) + " after RESTART and Invokes " )
 		}
 
-		chco2.Invokes(1000)// OPTIONAL
+		chco2.Invokes(1000)	// OPTIONAL
 		// fmt.Println("Sleep extra 30 secs"); time.Sleep(chco2.SleepTimeSeconds(30))
 		chco2.QueryAllPeers( "STEP 8, end cycle " + strconv.Itoa(i) + "/" + strconv.Itoa(numCycles) + " after many Invokes " )
 	}
@@ -188,14 +186,6 @@ func main() {
 	// chco2.AllRunningNodesMustMatch = true    	// OPTIONAL. Depends on testcase details and objectives.
 	// chco2.QueryAllPeers( "STEP FINAL, after 1000 invokes")
 
-	chco2.CatchUpAndConfirm()			// OPTIONAL. Depends on testcase details and objectives.
-	chco2.CatchUpAndConfirm()			// OPTIONAL. Depends on testcase details and objectives.
-	chco2.CatchUpAndConfirm()			// OPTIONAL. Depends on testcase details and objectives.
-	chco2.CatchUpAndConfirm()			// OPTIONAL. Depends on testcase details and objectives.
-	chco2.CatchUpAndConfirm()			// OPTIONAL. Depends on testcase details and objectives.
-	chco2.CatchUpAndConfirm()			// OPTIONAL. Depends on testcase details and objectives.
-	chco2.CatchUpAndConfirm()			// OPTIONAL. Depends on testcase details and objectives.
-	chco2.CatchUpAndConfirm()			// OPTIONAL. Depends on testcase details and objectives.
 	chco2.CatchUpAndConfirm()			// OPTIONAL. Depends on testcase details and objectives.
 	chco2.CatchUpAndConfirm()			// OPTIONAL. Depends on testcase details and objectives.
 

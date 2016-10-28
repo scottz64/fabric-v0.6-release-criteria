@@ -170,33 +170,13 @@ func main() {
 			chco2.Invokes( chco2.InvokesRequiredForCatchUp )
 			if (chco2.Verbose) { fmt.Println("Sleep extra 30 secs") }
 			time.Sleep(chco2.SleepTimeSeconds(30))
-			chco2.QueryAllPeers( "STEP 3, cycle " + strconv.Itoa(i) + "/" + strconv.Itoa(numCycles) + " after STOP PEER " + strconv.Itoa(peerNum) + " and Invokes" )
+			chco2.QueryAllPeers( "STEP 3." + strconv.Itoa(peerNum) + ", cycle " + strconv.Itoa(i) + "/" + strconv.Itoa(numCycles) + " after STOP PEER " + strconv.Itoa(peerNum) + " and Invokes" )
 			chco2.RestartPeers( []int{ peerNum } )
 			chco2.Invokes( chco2.InvokesRequiredForCatchUp )
 			if (chco2.Verbose) { fmt.Println("Sleep extra 30 secs") }
-			chco2.QueryAllPeers( "STEP 6, cycle " + strconv.Itoa(i) + "/" + strconv.Itoa(numCycles) + " after RESTART and Invokes " )
+			chco2.QueryAllPeers( "STEP 6." + strconv.Itoa(peerNum) + ", cycle " + strconv.Itoa(i) + "/" + strconv.Itoa(numCycles) + " after RESTART and Invokes " )
 		}
-		chco2.Invokes(1000)// OPTIONAL
-		chco2.QueryAllPeers( "STEP 6, end cycle " + strconv.Itoa(i) + "/" + strconv.Itoa(numCycles) + " after many Invokes " )
-
-		// decreasing order. Interesting case: stop and restart peer 1, then stop 0. see if all recovers!
-		for peerNum := chco2.NumberOfPeersInNetwork-1; peerNum >= 0; peerNum-- {
-			chco2.StopPeers( []int{ peerNum } )
-			// chco2.InvokeOnEachPeer( chco2.DefaultInvokesPerPeer ) 	// too quick/few for other peers to process and change view, to match
-			// 								// our expectations; so send more Invokes and all can be processed and
-			// 								// test passes (also with added sleep delays between repeated starts/stops).
-			chco2.Invokes( chco2.InvokesRequiredForCatchUp )
-			chco2.Invokes( chco2.InvokesRequiredForCatchUp )
-			if (chco2.Verbose) { fmt.Println("Sleep extra 30 secs") }
-			time.Sleep(chco2.SleepTimeSeconds(30))
-			chco2.QueryAllPeers( "STEP 9, cycle " + strconv.Itoa(i) + "/" + strconv.Itoa(numCycles) + " after STOP PEER " + strconv.Itoa(peerNum) + " and Invokes" )
-			chco2.RestartPeers( []int{ peerNum } )
-			chco2.Invokes( chco2.InvokesRequiredForCatchUp )
-			chco2.Invokes( chco2.InvokesRequiredForCatchUp )
-
-			chco2.QueryAllPeers( "STEP 12, cycle " + strconv.Itoa(i) + "/" + strconv.Itoa(numCycles) + " after RESTART and Invokes " )
-		}
-		chco2.Invokes(1000)// OPTIONAL
+		chco2.Invokes(1000)	// OPTIONAL
 		chco2.QueryAllPeers( "STEP 6, end cycle " + strconv.Itoa(i) + "/" + strconv.Itoa(numCycles) + " after many Invokes " )
 	}
 	
