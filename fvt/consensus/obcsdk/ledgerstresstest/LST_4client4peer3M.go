@@ -4,7 +4,7 @@ import (
 	"../lstutil"
 )
 
-/*************** Test Objective : Ledger Stress with 4 Clients and 4 Peers, Long Run ************
+/*************** Test Objective : Ledger Stress with 4 Clients and 4 Peers, Long Run, approx 3 days ************
 * 
 *   1. Connect to a 4 node peer network with security enabled, and deploy a modified version of
 *	chaincode_example02 that stores an additional block of data with every transaction
@@ -19,5 +19,5 @@ import (
 
 func main() {
 	// args:  testname, # client threads, # peers, total # transactions
-	lstutil.RunLedgerStressTest( "LST_4client4peer4M", 4, 4, 4000000 )
+	lstutil.RunLedgerStressTest( "LST_4client4peer4M", 4, 4, 3000000 )
 }
