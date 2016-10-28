@@ -137,6 +137,8 @@ where:
 
 * **Constant**: the transactions are sent at the specified rate. This parameter is valid only the transMode is set to Constant.
   
+  * recHist: This parameter indicates if brief history of the run will be saved.  If this parameter is set to HIST, then the output is saved into a file, namely ConstantResults.txt, under the current working directory.  Otherwise, no history is saved.
+
   * constFreq: frequency in ms for the transaction rate.
 
 * **TCertBatchSize**: TCert batch size, default is 200
