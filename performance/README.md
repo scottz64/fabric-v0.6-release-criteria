@@ -94,11 +94,13 @@ where:
 
 * **transMode**: transaction mode
 
- * Simple: one transaction type and rate only
+ * Simple: one transaction type and rate only, the subsequent transaction is sent when the response, success or failure, of the previous transaction is received
 
  * Burst: various traffic rates
 
  * Mix: mix invoke and query transactions
+
+ * Constant: the transactions are sent by the specified rate, constFreq, regardless the response
 
 * **transType**: transaction type
 
@@ -128,6 +130,10 @@ where:
 * **Mix**: each invoke is followed by a query on every thread. This parameter is valid only the transMode is set to Mix.
   
   * mixFreq: frequency in ms for the transaction rate. This value should be set based on the characteristics of the chaincode to avoid the failure of the immediate query.
+
+* **Constant**: the transactions are sent at the specified rate. This parameter is valid only the constMode is set to Constant.
+  
+  * constFreq: frequency in ms for the transaction rate.
 
 * **TCertBatchSize**: TCert batch size, default is 200
 
@@ -176,7 +182,7 @@ Each thread executes the same transaction concurrently for the specified time du
 
 #Key Store
 
-The sensitive keys are stored and accessible for users to perform any transactions on the blockchain. These keys are stored in keyValStore directory under current working directory. The directory name is made of keyValStore followed by each LPAR Index, such as keyValStore0, keyValStore1 etc.
+The private keys and certificates for authenticated users are required for performing any transactions on the blockchain. These information are stored in keyValStore directory under current working directory. The directory name is made of keyValStore followed by each LPAR Index, such as keyValStore0, keyValStore1 etc.
 
 Whenever the network is reset, the content of the keyValStore need to be deleted.
 

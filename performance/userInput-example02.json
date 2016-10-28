@@ -3,8 +3,8 @@
     "transType": "Invoke",
     "nPeers": "4",
     "nThread": "4",
-    "nRequest": "1000",
-    "runDur": "60",
+    "nRequest": "0",
+    "runDur": "600",
     "Burst": {
         "burstFreq0":  "500",
         "burstDur0":  "3000",
@@ -13,6 +13,10 @@
     },
     "Mix": {
         "mixFreq": "2000"
+    },
+    "Constant": {
+        "recHist": "none",
+        "constFreq": "1000"
     },
     "TCertBatchSize": "200",
     "ccType": "general",

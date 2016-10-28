@@ -1,10 +1,10 @@
 {
-    "transMode": "Simple",
+    "transMode": "Constant",
     "transType": "Invoke",
     "nPeers": "4",
-    "nThread": "4",
-    "nRequest": "1000",
-    "runDur": "600",
+    "nThread": "1",
+    "nRequest": "0",
+    "runDur": "259200",
     "Burst": {
         "burstFreq0":  "500",
         "burstDur0":  "3000",
@@ -15,7 +15,7 @@
         "mixFreq": "2000"
     },
     "Constant": {
-        "recHist": "none",
+        "recHist": "HIST",
         "constFreq": "1000"
     },
     "TCertBatchSize": "200",
