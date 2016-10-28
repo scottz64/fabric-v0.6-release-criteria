@@ -10,7 +10,7 @@ export TEST_EXISTING_NETWORK=FALSE
 
 cd ../ledgerstresstest
 
-../automation/local_fabric_gerrit.sh -n 4 -b $CORE_PBFT_GENERAL_BATCHSIZE -s -c $COMMIT
+../automation/local_fabric_gerrit.sh -n 4 -b $CORE_PBFT_GENERAL_BATCHSIZE -s -c $COMMIT -l critical
 
 ##### Run LedgerStressTest Regression Tests, using the existing network
 ##### Ensure no envvars override the parms that each testcase uses

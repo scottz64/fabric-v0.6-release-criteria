@@ -223,7 +223,7 @@ func QueryValAndHeight(expectedCtr int64) (passed bool, cntr int64) {
 	resCtr2, qe2 := chaincode.QueryOnHost(qAPIArgs02, qArgsb)
 	resCtr3, qe3 := chaincode.QueryOnHost(qAPIArgs03, qArgsb)
 	if qe0 != nil || qe1 != nil || qe2 != nil || qe3 != nil {
-		fmt.Printf("WARNING: error(s): could not query and convert all B values from all peers: qe0 qe1 qe2 qe3", qe0, qe1, qe2, qe3)
+		fmt.Println("WARNING: error(s): could not query and convert all B values from all peers: qe0 qe1 qe2 qe3", qe0, qe1, qe2, qe3)
 	}
 
 	ht0, _ := chaincode.GetChainHeight( peernetwork.PeerName(0))
@@ -241,7 +241,7 @@ func QueryValAndHeight(expectedCtr int64) (passed bool, cntr int64) {
 	resCtrI2, e2 := strconv.Atoi(resCtr2) 
 	resCtrI3, e3 := strconv.Atoi(resCtr3) 
 	if e0 != nil || e1 != nil || e2 != nil || e3 != nil {
-		fmt.Printf("WARNING: error(s): could not query and convert all B values from all peers: e0 e1 e2 e3", e0, e1, e2, e3)
+		fmt.Println("WARNING: error(s): could not query and convert all B values from all peers: e0 e1 e2 e3", e0, e1, e2, e3)
 	}
 	
 	cntr = int64(resCtrI0)	// pick peer0 counter to return
