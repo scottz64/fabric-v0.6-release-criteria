@@ -131,7 +131,7 @@ where:
   
   * mixFreq: frequency in ms for the transaction rate. This value should be set based on the characteristics of the chaincode to avoid the failure of the immediate query.
 
-* **Constant**: the transactions are sent at the specified rate. This parameter is valid only the constMode is set to Constant.
+* **Constant**: the transactions are sent at the specified rate. This parameter is valid only the transMode is set to Constant.
   
   * constFreq: frequency in ms for the transaction rate.
 
