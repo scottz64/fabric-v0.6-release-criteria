@@ -157,6 +157,8 @@ chco2.Writer = bufio.NewWriter(osFile)
 	chco2.DeployNew(5000, 5000)
 	chco2.Invokes( chco2.InvokesRequiredForCatchUp )
 	chco2.RestartPeers( []int{ 1 } )
+	if (chco2.Verbose) { fmt.Println("Sleep extra 120 secs") }
+	time.Sleep(chco2.SleepTimeSeconds(120))
 	chco2.Invokes( chco2.InvokesRequiredForCatchUp )
 	chco2.QueryAllPeers( "STEP 6, after stopped 2 peers (0 & 1), deploy, and restarted 1 peer (1) and more Invokes " )
 

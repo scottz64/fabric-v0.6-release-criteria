@@ -161,9 +161,12 @@ fmt.Println("Sleep extra 60 secs") ; time.Sleep(chco2.SleepTimeSeconds(60))
 	chco2.DeployNewOnPeer( 10000, 10000, 0 ) 	// specify Deployment to PEER VP0
 	chco2.Invokes( 100 ) 				// all will be sent to PEER0, since no other peers are running
 	chco2.RestartPeers( []int{ 1, 2 } )
-	fmt.Println("Sleep extra 120 secs") ; time.Sleep(chco2.SleepTimeSeconds(120))
-	chco2.InvokesUniqueOnEveryPeer()
-	fmt.Println("Sleep extra 120 secs") ; time.Sleep(chco2.SleepTimeSeconds(120))
+	fmt.Println("Sleep extra 300 secs") ; time.Sleep(chco2.SleepTimeSeconds(300))
+	//chco2.InvokesUniqueOnEveryPeer()
+	chco2.InvokeOnThisPeer( 2, 0 )
+	chco2.InvokeOnThisPeer( 5, 1 )
+	chco2.InvokeOnThisPeer( 11, 2 )
+	fmt.Println("Sleep extra 180 secs") ; time.Sleep(chco2.SleepTimeSeconds(180))
 	chco2.QueryAllPeers( "STEP 6, after stopped 3 peers (not vp0), deploy, and restarted two of three peers, and more Invokes " )
 
 	chco2.AllRunningNodesMustMatch = true    	// Only 3 nodes are running, and sending plenty of Invokes to catch up.

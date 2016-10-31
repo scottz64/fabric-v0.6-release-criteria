@@ -159,7 +159,7 @@ chco2.Writer = bufio.NewWriter(osFile)
 	chco2.Invokes( 100 ) 			// to VP3
 	time.Sleep(chco2.SleepTimeSeconds(30))
 	chco2.RestartPeers( []int{ 1, 2 } )
-	fmt.Println("Sleep extra 120 secs") ; time.Sleep(chco2.SleepTimeSeconds(120))
+	fmt.Println("Sleep extra 300 secs") ; time.Sleep(chco2.SleepTimeSeconds(300))
 	chco2.InvokesUniqueOnEveryPeer()	// to VP1 VP2 VP3
 	fmt.Println("Sleep extra 120 secs - and look to see if these 14 Tx were processed or were lost") ; time.Sleep(chco2.SleepTimeSeconds(120))
 	chco2.QueryAllPeers( "STEP 8, after stopped 3 peers (including vp0), deploy, and restarted peers 1 & 2 (but not 0), and more Invokes " )
