@@ -48,17 +48,19 @@ Deploys should be processed, or queued if appropriate, with any number of runnin
 ## RESULTS SUMMARY
 
 	Date       Testcases     Pass/Fail   Release   Commit       Time       Notable Parameters
-	20160928   CAT 100-410   39 /  7     v0.6      gerritv0.6   8h00m31s   batchsize=2          
 	 
-	Issues Found
-	FAB-331 FAB-332 FAB-333 FAB-334 FAB-335 FAB-336 FAB-337
-
-	FAILED Testcases:
-	CAT_111_SnIQRnIQ_cycleDownLoop.go
-	CAT_303_S0S1S2_IQ_R0R1R2_IQ.go
-	CAT_305_S1S2S3_IQ_R1R2R3_IQ.go
-	CAT_407_S0S1S2_D_I_R0R1_IQ.go
-	CAT_408_S0S1S2_D_I_R0R1R2_IQ.go
-	CAT_409_S1S2S3_D_I_R1R2_IQ.go
-	CAT_410_S1S2S3_D_I_R1R2R3_IQ.go
-
+	Consensus - Failed Testcases		Opened Bugs	Description
+	 
+	CAT_111_SnIQRnIQ_cycleDownLoop.go	FAB-337		dup Tx 
+	CAT_303_S0S1S2_IQ_R0R1R2_IQ.go		FAB-333		lost Tx after restart 3 peers together
+	CAT_305_S1S2S3_IQ_R1R2R3_IQ.go		FAB-333		lost Tx after restart 3 peers together
+	CAT_407_S0S1S2_D_I_R0R1_IQ.go		FAB-911		lost Tx from vp0 after stop vp0/vp1/vp2, deploy, restart vp0/vp1, invokes
+	CAT_408_S0S1S2_D_I_R0R1R2_IQ.go		FAB-335		deploy failed when restart 3 peers together
+	CAT_409_S1S2S3_D_I_R1R2_IQ.go		FAB-334/FAB-912	lost Tx after all peers after stop vp1/vp2/vp3, deploy, restart vp1/vp2, invokes
+	CAT_410_S1S2S3_D_I_R1R2R3_IQ.go		FAB-335		deploy failed when restart 3 peers together
+	CAT_412_S0S1S2_D_I_R1R2_IQ.go		FAB-334/FAB-912	lost Tx after all peers after stop vp1/vp2/vp3, deploy, restart vp1/vp2, invokes
+	 
+	CRT_502_StopAndRestart1or2_10Hrs.go	FAB-331		acked Tx lost after stop/restart peers many times
+	 
+	CAT_201_S2S1_IQDIQ.go (using Pauses)	FAB-336		no http response from vp0, while peers vp1,vp2 docker paused
+	 
