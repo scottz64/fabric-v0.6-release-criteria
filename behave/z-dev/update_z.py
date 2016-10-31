@@ -76,25 +76,28 @@ def saveData_BM(peerList, user_info):
     data = { "UserData": [], "PeerData": [], "PeerGrpc": [] }
 
     # Save all the peer information for connecting to the peers
-    grpc_port = 30001
+    grpc_port = 7051
     for peerInfo in peerList:
-        if peerInfo['type'] != 'peer':
-            continue
+        print peerInfo, ":", peerList[peerInfo]
+        index_match = re.match(r'.*-vp(?P<num>\d)-api.*', peerList[peerInfo].get('api_host', ""))
+        index = index_match.group('num')
+        peerName = "vp%s" % index
 
-        index_match = re.match(r'.*_vp(?P<num>\d)-api.*', peerInfo['api_host'])
-        if not index_match:
-            index = peerList.index(peerInfo)
-        else:
-            index = index_match.group('num')
+        url = peerList[peerInfo].get('url', '')
+        port = peerList[peerInfo].get('api_port', '')
 
         data['PeerData'].append( {'name': 'PEER%s' % str(index),
-                                  'api-port': str(peerInfo["api_port"]),
-                                  'api-host': peerInfo['api_host']} )
-        data['PeerGrpc'].append( {'api-host': peerInfo['api_host'],
+                                  'api-port': str(peerList[peerInfo]["api_port"]),
+                                  'api-host': peerList[peerInfo]['api_host']} )
+        data['PeerGrpc'].append( {'api-host': peerList[peerInfo]['api_host'],
                                   'api-port': str(grpc_port)} )
+        data['UserData'].append(dict(peer=peerName,
+                        username=peerList[peerInfo]['security']['enrollId'],
+                        secret=peerList[peerInfo]['security']['enrollSecret']))
         grpc_port = grpc_port + 2
     data['UserData'] = user_info
-    data['name'] = peerInfo["network_id"]
+    #data['name'] = peerInfo["network_id"]
+    data['name'] = network_info.get("lpar", "")
     return data
 
 
@@ -109,32 +112,43 @@ def saveData(options, peerList, user_info):
     # Save all the peer information for connecting to the peers
     rest_port = 20000
     for peerInfo in peerList:
+        print peerInfo, ":", peerList[peerInfo]
         if isinstance(peerInfo, tuple):
             index = peerList.index(peerInfo)
             long_peerName = peerInfo[0].split('_')
             peerName = long_peerName[1]
         else:
-            index_match = re.match(r'.*_vp(?P<num>\d)-api.*', peerInfo.get('api_host', ""))
+            #index_match = re.match(r'.*-vp(?P<num>\d)-api.*', peerInfo.get('api_host', ""))
+            index_match = re.match(r'.*-vp(?P<num>\d)-api.*', peerList[peerInfo].get('api_host', ""))
             index = index_match.group('num')
             peerName = "vp%s" % index
 
         if options.blue_mix:
-            url = peerInfo['api_host']
-        else:
+            url = "%(api_host)s:%(api_port)d" % peerInfo
+            port = str(peerInfo['api_port'])
+        elif ip_address is not None:
             url = "%s:%d" %(ip_address, rest_port)
+            port = "unknown"
+        else:
+            url = peerList[peerInfo].get('url', '')
+            port = peerList[peerInfo].get('api_port', '')
 
-        peerData = {'port': "unknown",
+        peerData = {'port': port,
                     'host': "internal",
                     'api-host': url,
                     'name': peerName}
+        #userData = dict(peer=peerName,
+        #                username=user_info[int(index)]['username'],
+        #                secret=user_info[int(index)]['secret'])
         userData = dict(peer=peerName,
-                        username=user_info[int(index)]['username'],
-                        secret=user_info[int(index)]['secret'])
+                        username=peerList[peerInfo]['security']['enrollId'],
+                        secret=peerList[peerInfo]['security']['enrollSecret'])
         rest_port = rest_port + 100
 
         # Pull the user name for the vp0 user for all of the peers
         if peerName == 'vp0':
-            main_user = user_info[int(index)]['username']
+            #main_user = user_info[int(index)]['username']
+            main_user = peerList[peerInfo]['security']['enrollId']
 
         data['PeerData'].append(peerData)
         data['UserData'].append(userData)
@@ -170,7 +184,8 @@ if __name__ == "__main__":
     options = handleOptions()
     network_info = readNetworkFile(options.network_file)
     if options.blue_mix:
-        user_info = getUserData_BM(network_info['users'])
+        #user_info = getUserData_BM(network_info['users'])
+        user_info = getUserData(network_info)
         if options.behave:
             (main_user, data) = saveData(options, network_info["peers"], user_info)
             updated = savePrimaryUser(main_user, data)
@@ -179,7 +194,8 @@ if __name__ == "__main__":
             data = saveData_BM(network_info["peers"], user_info)
     else:
         user_info = getUserData(network_info)
-        peerList = network_info['peers'].items()
+        #peerList = network_info['peers'].items()
+        peerList = network_info['peers']
         (main_user, data) = saveData(options, peerList, user_info)
         updated = savePrimaryUser(main_user, data)
         data = saveCAInfo(options, updated)
