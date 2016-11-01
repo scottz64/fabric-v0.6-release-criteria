@@ -47,7 +47,8 @@ const (
 	THROUGHPUT_RATE_DEFAULT = 10
 	THROUGHPUT_RATE_MAX = 160 	// normally should be well under 160, but this blast rate might be useful for short tests
 
-	BUNDLE_OF_TRANSACTIONS = 1000 	// in each client, after sending this many transactions, print a status msg and sleep for ntwk to catch up
+	BUNDLE_OF_TRANSACTIONS = 100 	// after this many transactions are sent, clients will (sometimes print a status msg and)
+					// sleep for ntwk to catch up if needed according to throughput reate
 	MAX_CLIENTS = 50
 )
 
@@ -147,10 +148,13 @@ func Init() {
 	localNetworkType := strings.TrimSpace(strings.ToUpper(os.Getenv("TEST_NETWORK")))
 	THROUGHPUT_RATE = THROUGHPUT_RATE_DEFAULT
 	if localNetworkType == "" || localNetworkType == "LOCAL" {
-		THROUGHPUT_RATE = NUM_CLIENTS * 11
-	} else if localNetworkType == "Z" {
-		// THROUGHPUT_RATE = NUM_CLIENTS * 2
 		THROUGHPUT_RATE = THROUGHPUT_RATE * NUM_CLIENTS
+	} else if localNetworkType == "Z" || localNetworkType == "BLUEMIX" {
+		THROUGHPUT_RATE = NUM_CLIENTS * 2
+	} else if localNetworkType == "ZACI" {
+		THROUGHPUT_RATE = THROUGHPUT_RATE * NUM_CLIENTS
+	} else if localNetworkType == "GTS" {
+		THROUGHPUT_RATE = NUM_CLIENTS * 3 / 2		//  1.5 Tx per sec
 	}
 	envvar = os.Getenv("TEST_LST_THROUGHPUT_RATE")
         if envvar != "" {
@@ -214,7 +218,8 @@ func InvokeAllThreadsOnAllPeers() {
 			var numTxOnThisClient int64
 			numTxOnThisClient = TX_COUNT / int64(NUM_CLIENTS)
 			var logFilter int64 = 1					// a higher value will skip more logs
-			if TX_COUNT>(BUNDLE_OF_TRANSACTIONS * 20) { logFilter = 10 } // print log once every 10,000 Tx, instead of every 1,000
+			if TX_COUNT>(BUNDLE_OF_TRANSACTIONS * 20) { logFilter = 10 } // print log once every 1000 Tx, instead of every 100, when total Tx exceeds 2,000
+			if TX_COUNT>(BUNDLE_OF_TRANSACTIONS * 200) { logFilter = 100 } // print log once every 10,000 Tx, when total Tx exceeds 20,000
 			if clientThread == 0 { numTxOnThisClient = numTxOnThisClient + (TX_COUNT % int64(NUM_CLIENTS)) }
 			Logger(fmt.Sprintf("========= Started CLIENT %d thread on peer %d, to run %d Tx", clientThread, peerNum, numTxOnThisClient))
 			for i = 0; i < numTxOnThisClient; i++ {
