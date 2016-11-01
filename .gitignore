@@ -28,3 +28,5 @@ sdk/node/lib/protos/*
 report.xml
 # Vim buffer files
 *.sw*
+# Python binary files
+*.pyc

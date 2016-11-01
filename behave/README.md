@@ -1,4 +1,4 @@
-Behave tests are testing for the behavior of a feature and what the expected results should look like. 
+Feature (behave) tests are testing for the behavior of a feature and what the expected results should look like. 
 
 # Summary of Tests
 The tests executed in this suite cover the following general areas. Most of the networks utilized in these tests are 4 peer networks.
@@ -18,6 +18,7 @@ The tests executed in this suite cover the following general areas. Most of the 
 # Prerequisites
 You must have the following installed:
 * python
+* behave
 * docker
 * docker-compose
 
@@ -47,7 +48,7 @@ The only setup that is needed before executing the behave tests is to make sure 
 
 ```sh
 $ git clone <hyperledger-fabric>
-$ ln -s path/to/hyperledger/fabric path/to/release-criteria/behave/fabric
+$ ln -s path/to/hyperledger/fabric/build path/to/release-criteria/behave/build
 ```
 
 ### Execution
