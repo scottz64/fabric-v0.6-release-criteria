@@ -75,8 +75,9 @@ if (transMode.toUpperCase() != 'MIX') {
 
 if (transMode.toUpperCase() == 'CONSTANT') {
     if (uiContent.Constant.recHist.toUpperCase() == 'HIST') {
-        var ConstantFile = fs.createWriteStream('ConstantResults.txt');
-        console.log('LPAR=%d, create ConstantResults.txt', LPARid);
+        var ofile = 'ConstantResults'+LPARid+'.txt';
+        var ConstantFile = fs.createWriteStream(ofile);
+        console.log('LPAR=%d, create %s', LPARid, ofile);
     }
 }
 // input: nThread

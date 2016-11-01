@@ -325,19 +325,19 @@ function isExecDone(trType) {
     tCurr = new Date().getTime();
     if ( trType.toUpperCase() == 'INVOKE' ) {
         if ( nRequest > 0 ) {
-//            if ( (tr_s % (nRequest/5)) == 0) {
-//                console.log(util.format("LPAR:id=%d:%d, invokes sent: number=%d, elapsed time= %d",
-//                                         LPARid, pid, tr_s, tCurr-tLocal));
-//            }
+            if ( (tr_s % (nRequest/5)) == 0) {
+                console.log(util.format("LPAR:id=%d:%d, invokes sent: number=%d, elapsed time= %d",
+                                         LPARid, pid, tr_s, tCurr-tLocal));
+            }
 
             if ( tr_s >= nRequest ) {
                 IDone = 1;
             }
         } else {
-//            if ( (tr_s % 1000 ) == 0) {
-//                console.log(util.format("LPAR:id=%d:%d, invokes sent: number=%d, elapsed time= %d",
-//                                         LPARid, pid, tr_s, tCurr-tLocal));
-//            }
+            if ( (tr_s % 1000 ) == 0) {
+                console.log(util.format("LPAR:id=%d:%d, invokes sent: number=%d, elapsed time= %d",
+                                         LPARid, pid, tr_s, tCurr-tLocal));
+            }
 
             if ( tCurr >= tEnd ) {
                 IDone = 1;
@@ -345,19 +345,19 @@ function isExecDone(trType) {
         }
     } else if ( trType.toUpperCase() == 'QUERY' ) {
         if ( nRequest > 0 ) {
-//            if ( (tr_sq % (nRequest/5)) == 0) {
-//                console.log(util.format("LPAR:id=%d:%d, queries sent: number=%d, elapsed time= %d",
-//                                         LPARid, pid, tr_sq, tCurr-tLocal));
-//            }
+            if ( (tr_sq % (nRequest/5)) == 0) {
+                console.log(util.format("LPAR:id=%d:%d, queries sent: number=%d, elapsed time= %d",
+                                         LPARid, pid, tr_sq, tCurr-tLocal));
+            }
 
             if ( tr_sq >= nRequest ) {
                 QDone = 1;
             }
         } else {
-//            if ( (tr_sq % 1000 ) == 0) {
-//                console.log(util.format("LPAR:id=%d:%d, queries sent: number=%d, elapsed time= %d",
-//                                         LPARid, pid, tr_sq, tCurr-tLocal));
-//            }
+            if ( (tr_sq % 1000 ) == 0) {
+                console.log(util.format("LPAR:id=%d:%d, queries sent: number=%d, elapsed time= %d",
+                                         LPARid, pid, tr_sq, tCurr-tLocal));
+            }
 
             if ( tCurr >= tEnd ) {
                 QDone = 1;
@@ -776,6 +776,7 @@ function execModeBurst(user) {
 // fix rate
 var recHist;
 var constFreq;
+var ofile;
 function SendConstant(pid, user, trType, callback) {
 
 //    tCurr = new Date().getTime();
@@ -810,7 +811,7 @@ function SendConstant(pid, user, trType, callback) {
         // output
         if ( recHist == 'HIST' ) {
             buff = LPARid +':'+ pid + ' ' + trType[0] + ':' + tr_s + ' Failed:' + tr_re + ' time:'+ tCurr + '\n';
-            fs.appendFile('ConstantResults.txt', buff, function(err) {
+            fs.appendFile(ofile, buff, function(err) {
                 if (err) {
                    return console.log(err);
                 }
@@ -858,7 +859,7 @@ function SendConstant(pid, user, trType, callback) {
         // output
         if ( recHist == 'HIST' ) {
             buff = LPARid +':'+ pid + ' ' + trType[0] + ':' + tr_sq + ' Failed:' + tr_req + ' time:'+ tCurr + '\n';
-            fs.appendFile('ConstantResults.txt', buff, function(err) {
+            fs.appendFile(ofile, buff, function(err) {
                 if (err) {
                    return console.log(err);
                 }
@@ -907,6 +908,7 @@ function execModeConstant(user) {
             constFreq = 1000;
         }
 
+        ofile = 'ConstantResults'+LPARid+'.txt';
         //var ConstantFile = fs.createWriteStream('ConstantResults.txt');
         console.log('LPAR:id=%d:%d, Constant Freq: %d ms', LPARid, pid, constFreq);
 
