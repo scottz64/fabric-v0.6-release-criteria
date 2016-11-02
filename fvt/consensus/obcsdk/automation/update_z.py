@@ -1,4 +1,12 @@
 #!/usr/bin/python
+# USAGE:
+# 1. Create a text file "service_credentials_file" with the contents of your BlueMix network by using the
+#    "service credentials" link/button at the bottom right corner of the Network tab of your IBM Blockchain network.
+# 2. Use this script (named update_z.py) to generate the networkcredentials file by typing:
+#        ./update_z.py -b -f service_credentials_file
+# 3. Optionally copy it to ../util/    (optional since many test scripts will do that for you anyways):
+#        cp networkcredentials ../util/NetworkCredentials.json. Many test scripts will do that for you anyways.
+
 import json
 import re
 import getpass
@@ -56,8 +64,8 @@ def getUserData(network_info):
     for ca in network_info['ca']:
         users = network_info['ca'][ca]['users']
         for user in users:
-            if user.startswith("user_type1"):
-                user_info.append(dict(username=user, secret=users[user]))
+            if user['username'].startswith("user_type1"):
+                user_info.append(dict(username=user['username'], secret=user['secret']))
     return user_info
 
 
