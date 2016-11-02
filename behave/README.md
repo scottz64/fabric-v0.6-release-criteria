@@ -1,21 +1,6 @@
 Feature (behave) tests are testing for the behavior of a feature and what the expected results should look like. 
 
-# Summary of Tests
-The tests executed in this suite cover the following general areas. Most of the networks utilized in these tests are 4 peer networks.
-* basic fabric API functionality including:
-	* deploy (chaincode)
-	* invoke (chaincode)
-	* query (chaincode)
-	* block height (chain)
-	* number of peers in a network (network/peers)
-	* committing of transactions to a peer's ledger (transactions)
-* "large" network configuration (16 peers)
-* consensus (stopping and starting peers)
-	* stopping chaincode and ensuring it is restarted with a query/invoke
-* peer upgrade with in place data (on a separate container/partition)
-	* both fallback and upgrade on a commit level
-
-# Prerequisites
+# SETUP
 You must have the following installed:
 * python
 * behave
@@ -37,7 +22,7 @@ $ sudo pip install grpcio
 $ sudo pip install pyyaml
 ```
 
-# Environments
+# USAGE
 This version of the fabric-based behave tests have been modified such that tests can both be executed locally as well as on a remote network that has already been setup with fabric.
 
 ## Local Network (Default)
@@ -105,15 +90,18 @@ Since we have a set network, we cannot test both https and http network setups. 
 $ behave -D tls=true -D remote-ip=10.1.0.13 --tags=scat
 ```
 
-# Helpful scripts
-Generating the networkcredentials file for use in the tests
-For zACI environment outside of BlueMix:
-```sh
-$ python update_z.py -f <zACI network file name>
-```
-
-For X86 BlueMix environment:
-```sh
-$ python update_z.py -b -f <BlueMix X86 file name>
-```
+# Summary of Tests
+The tests executed in this suite cover the following general areas. Most of the networks utilized in these tests are 4 peer networks.
+* basic fabric API functionality including:
+	* deploy (chaincode)
+	* invoke (chaincode)
+	* query (chaincode)
+	* block height (chain)
+	* number of peers in a network (network/peers)
+	* committing of transactions to a peer's ledger (transactions)
+* "large" network configuration (16 peers)
+* consensus (stopping and starting peers)
+	* stopping chaincode and ensuring it is restarted with a query/invoke
+* peer upgrade with in place data (on a separate container/partition)
+	* both fallback and upgrade on a commit level
 

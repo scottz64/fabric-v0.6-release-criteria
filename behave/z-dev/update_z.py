@@ -1,4 +1,30 @@
 #!/usr/bin/python
+#
+# Copyright IBM Corp. 2016 All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+#
+# Generating the networkcredentials file for use in the tests
+# For zACI environment outside of BlueMix executing behave tests:
+#     $ ./update_z.py -f <zACI network file name> --behave
+#
+# For X86 BlueMix environment:
+#     $ ./update_z.py -b -f <BlueMix X86 file name>
+#
+# For available options, type:
+#     $ ./update_z.py -h
+#
 # USAGE:
 # 1. Create a text file "service_credentials_file" with the contents of your BlueMix network by using the
 #    "service credentials" link/button at the bottom right corner of the Network tab of your IBM Blockchain network.
@@ -6,6 +32,7 @@
 #        ./update_z.py -b -f service_credentials_file
 # 3. Optionally copy it to ../util/    (optional since many test scripts will do that for you anyways):
 #        cp networkcredentials ../util/NetworkCredentials.json. Many test scripts will do that for you anyways.
+#
 
 import json
 import re
@@ -86,7 +113,6 @@ def saveData_BM(peerList, user_info):
     # Save all the peer information for connecting to the peers
     grpc_port = 7051
     for peerInfo in peerList:
-        print peerInfo, ":", peerList[peerInfo]
         index_match = re.match(r'.*-vp(?P<num>\d)-api.*', peerList[peerInfo].get('api_host', ""))
         index = index_match.group('num')
         peerName = "vp%s" % index
@@ -120,7 +146,6 @@ def saveData(options, peerList, user_info):
     # Save all the peer information for connecting to the peers
     rest_port = 20000
     for peerInfo in peerList:
-        print peerInfo, ":", peerList[peerInfo]
         if isinstance(peerInfo, tuple):
             index = peerList.index(peerInfo)
             long_peerName = peerInfo[0].split('_')
@@ -132,31 +157,34 @@ def saveData(options, peerList, user_info):
             peerName = "vp%s" % index
 
         if options.blue_mix:
+            host = peerInfo.get('api_host', 'internal')
             url = "%(api_host)s:%(api_port)d" % peerInfo
             port = str(peerInfo['api_port'])
         elif ip_address is not None:
+            host = ip_address
             url = "%s:%d" %(ip_address, rest_port)
             port = "unknown"
         else:
+            host = peerList[peerInfo].get('api_host', 'internal')
             url = peerList[peerInfo].get('url', '')
             port = peerList[peerInfo].get('api_port', '')
 
         peerData = {'port': port,
-                    'host': "internal",
+                    'host': host,
                     'api-host': url,
                     'name': peerName}
-        #userData = dict(peer=peerName,
-        #                username=user_info[int(index)]['username'],
-        #                secret=user_info[int(index)]['secret'])
         userData = dict(peer=peerName,
-                        username=peerList[peerInfo]['security']['enrollId'],
-                        secret=peerList[peerInfo]['security']['enrollSecret'])
+                        username=user_info[int(index)]['username'],
+                        secret=user_info[int(index)]['secret'])
+        #userData = dict(peer=peerName,
+        #                username=peerList[peerInfo]['security']['enrollId'],
+        #                secret=peerList[peerInfo]['security']['enrollSecret'])
         rest_port = rest_port + 100
 
         # Pull the user name for the vp0 user for all of the peers
         if peerName == 'vp0':
-            #main_user = user_info[int(index)]['username']
-            main_user = peerList[peerInfo]['security']['enrollId']
+            main_user = user_info[int(index)]['username']
+            #main_user = peerList[peerInfo]['security']['enrollId']
 
         data['PeerData'].append(peerData)
         data['UserData'].append(userData)
