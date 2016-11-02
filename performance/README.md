@@ -72,7 +72,11 @@ The above command will execute chaincode auction on 2 LPARs based on the setting
         },
 	    "TCertBatchSize": "200",
         "ccType": "general",
-        "auctionKey": "0",
+        "ccOptions": {
+            "keyStart": "5000",
+            "payLoadMin": "1024",
+            "payLoadMax": "2048"
+        },
         "deploy": {
             "chaincodePath": "github.com/chaincode_example02",
             "fcn": "init",
@@ -145,11 +149,16 @@ where:
 
 * **ccType**: chaincode type
 
-  * auction: The first argument in the query and invoke request is incremented by 1 for every transaction.  And, the invoke payload is made of a random string with a random size between 1KB to 2KB.  This will make all invoke trnasactions different.
+  * auction: The first argument in the query and invoke request is incremented by 1 for every transaction.  And, the invoke payload is made of a random string with various size between payLoadMin and payLoadMax defined in ccOptions.
 
   * general: The arguments of transaction request are taken from the user input json file without any changes.
 
-* **auctionKey**: the starting transaction key index, this is used when the ccType is auction which requires different key for every invoke.
+* **ccOptions**: chaincode options
+  * keyStart: the starting transaction key index, this is used when the ccType is auction which requires a unique key for each invoke.
+
+  * payLoadMin: minimum size in bytes of the payload. The payload is made of random string with various size between payLoadMin and payLoadMax.
+
+  * payLoadMax: maximum size in bytes of the payload
 
 * **deploy**: deploy contents
 

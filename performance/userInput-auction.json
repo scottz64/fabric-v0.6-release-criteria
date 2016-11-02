@@ -20,7 +20,11 @@
     },
     "TCertBatchSize": "200",
     "ccType": "auction",
-    "auctionKey": "0",
+    "ccOptions": {
+        "keyStart": "5000",
+        "payLoadMin": "1024",
+        "payLoadMax": "2048"
+    },
     "deploy": {
         "chaincodePath": "auction",
         "fcn": "init",
@@ -36,7 +40,6 @@
     },
     "SCFile": [
 	    {"ServiceCredentials":"SCFiles/config-local.json"},
-	    {"ServiceCredentials":"SCFiles/hsbn-ssc-perf3.json"},
 	    {"ServiceCredentials":"SCFiles/ServiceCredentials0000.json"},
 	    {"ServiceCredentials":"SCFiles/ServiceCredentials0001.json"},
 	    {"ServiceCredentials":"SCFiles/ServiceCredentials0002.json"}
