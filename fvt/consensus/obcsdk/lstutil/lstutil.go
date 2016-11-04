@@ -149,12 +149,9 @@ func Init() {
 	THROUGHPUT_RATE = THROUGHPUT_RATE_DEFAULT
 	if localNetworkType == "" || localNetworkType == "LOCAL" {
 		THROUGHPUT_RATE = THROUGHPUT_RATE * NUM_CLIENTS
-	} else if localNetworkType == "Z" || localNetworkType == "BLUEMIX" {
+	} else if localNetworkType == "Z" {
 		THROUGHPUT_RATE = NUM_CLIENTS * 2
-	} else if localNetworkType == "ZACI" {
-		THROUGHPUT_RATE = THROUGHPUT_RATE * NUM_CLIENTS
-	} else if localNetworkType == "GTS" {
-		THROUGHPUT_RATE = NUM_CLIENTS * 3 / 2		//  1.5 Tx per sec
+		//THROUGHPUT_RATE = 2
 	}
 	envvar = os.Getenv("TEST_LST_THROUGHPUT_RATE")
         if envvar != "" {
