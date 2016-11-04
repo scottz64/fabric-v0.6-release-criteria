@@ -249,15 +249,19 @@ function enrollAndRegisterUsers() {
 
 // transaction arguments
 // transaction id
-var keyStart
-if ( ccType == 'auction' )
-    keyStart = parseInt(uiContent.auctionKey);
-else {
-   keyStart = 0;
+var keyStart=0;
+var payLoadMin=0;
+var payLoadMax=0;
+if ( ccType == 'auction' ) {
+    keyStart = parseInt(uiContent.ccOptions.keyStart);
+    payLoadMin = parseInt(uiContent.ccOptions.payLoadMin)/2;
+    payLoadMax = parseInt(uiContent.ccOptions.payLoadMax)/2;
+    console.log('LPAR:id=%d:%d, auction chaincode setting: keyStart=%d payLoadMin=%d payLoadMax=%d', 
+                 LPARid, pid, keyStart, parseInt(uiContent.ccOptions.payLoadMin), parseInt(uiContent.ccOptions.payLoadMax));
 }
 var trid = pid*1000000 + keyStart;
 var tridq= pid*1000000 + keyStart;
-console.log('LPAR:id=%d:%d, keyStart=%d trid=%d, tridq=%d', LPARid, pid, keyStart, trid, tridq);
+console.log('LPAR:id=%d:%d, trid=%d, tridq=%d', LPARid, pid, trid, tridq);
 
 //var testQueryArgs = uiContent.query.args.split(",");
 var testQueryArgs = [];
@@ -383,10 +387,8 @@ function SendSimple(pid, user, trType, callback) {
         if (ccType == 'auction') {
             requestLoc.args[0] = trid.toString();
 
-            // random payload: 1kb - 2kb
-	    min = 512;
-	    max = 1024;
-	    r = Math.floor(Math.random() * (max - min)) + min;
+            // random payload
+	    r = Math.floor(Math.random() * (payLoadMax - payLoadMin)) + payLoadMin;
 
 	    buf = crypto.randomBytes(r);
 	    requestLoc.args[4] = buf.toString('hex');
@@ -504,13 +506,8 @@ function SendMix(pid, user, mix, callback) {
         if (ccType == 'auction') {
             requestLoc.args[0] = trid.toString();
 
-	    // random payload: 1kb - 2kb
-	    //min = 512;
-	    //max = 1024;
-	    min = 5120;
-	    max = 256000;
-	    r = Math.floor(Math.random() * (max - min)) + min;
-	    //r = 512;
+	    // random payload
+	    r = Math.floor(Math.random() * (payLoadMax - payLoadMin)) + payLoadMin;
 
 	    buf = crypto.randomBytes(r);
 	    requestLoc.args[4] = buf.toString('hex');
@@ -652,13 +649,8 @@ function SendBurst(pid, user, trType, callback) {
         if (ccType == 'auction') {
             requestLoc.args[0] = trid.toString();
 
-	    // random payload: 1kb - 2kb
-	    min = 512;
-	    max = 1024;
-	    //min = 5120;
-	    //max = 256000;
-	    r = Math.floor(Math.random() * (max - min)) + min;
-	    //r = 512;
+	    // random payload
+	    r = Math.floor(Math.random() * (payLoadMax - payLoadMin)) + payLoadMin;
 
 	    buf = crypto.randomBytes(r);
 	    requestLoc.args[4] = buf.toString('hex');
@@ -793,13 +785,8 @@ function SendConstant(pid, user, trType, callback) {
         if (ccType == 'auction') {
             requestLoc.args[0] = trid.toString();
 
-	    // random payload: 1kb - 2kb
-	    min = 512;
-	    max = 1024;
-	    //min = 5120;
-	    //max = 256000;
-	    r = Math.floor(Math.random() * (max - min)) + min;
-	    //r = 512;
+	    // random payload
+	    r = Math.floor(Math.random() * (payLoadMax - payLoadMin)) + payLoadMin;
 
 	    buf = crypto.randomBytes(r);
 	    requestLoc.args[4] = buf.toString('hex');

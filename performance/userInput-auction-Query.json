@@ -20,7 +20,11 @@
     },
     "TCertBatchSize": "200",
     "ccType": "auction",
-    "auctionKey": "5000",
+    "ccOptions": {
+        "keyStart": "5000",
+        "payLoadMin": "1024",
+        "payLoadMax": "2048"
+    },
     "deploy": {
         "chaincodePath": "auction",
         "fcn": "init",
