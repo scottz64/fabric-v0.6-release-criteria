@@ -42,9 +42,10 @@ var ccPath = process.argv[4];
 var tStart = parseInt(process.argv[5]);
 var bcHost = process.argv[6];
 console.log('LPAR=%d, svcFile:%s, ccPath:%s, bcHost:%s', LPARid, svcFile, ccPath, bcHost);
+var certFile;
 
 process.env['GOPATH'] = __dirname;
-var chaincodeIDPath = __dirname + "/" + ccPath + "/chaincodeID";
+var chaincodeIDPath = __dirname + "/" + ccPath + "/chaincodeID" + LPARid;
 console.log('chaincodeIDPath ' , chaincodeIDPath);
 
 // Create a client blockchin.
@@ -127,10 +128,6 @@ var keydir = __dirname + '/keyValStore' + LPARid;
 chain.setKeyValStore(hfc.newFileKeyValStore(keydir));
 //console.log('LPAR=%d, keydir=%s', LPARid, keydir);
 
-// Creating an environment variable for ciphersuites
-process.env['GRPC_SSL_CIPHER_SUITES'] = 'ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA384:ECDHE-RSA-AES256-GCM-SHA384';
-
-
 // Read and process the credentials.json
 var network;
 try {
@@ -146,22 +143,18 @@ var user;
 
 // Determining if we are running on a startup or HSBN network based on the url
 // of the discovery host name.  The HSBN will contain the string zone.
-var isHSBN = peers[0].discovery_host.indexOf('zone') >= 0 ? true : false;
-console.log('LPAR=%d, isHSBN:', LPARid, isHSBN);
+var isHSBN;
+if ( bcHost == 'bluemix' ) {
+    isHSBN = true;
+    certFile = __dirname + "/" + ccPath + '/certificate.pem';
+    console.log('LPAR=%d, isHSBN: %s, certFile: %s', LPARid, isHSBN, certFile);
+} else {
+    isHSBN = false;
+    console.log('LPAR=%d, isHSBN: %s', LPARid, isHSBN);
+}
 
 var peerAddress = [];
 var network_id = Object.keys(network.credentials.ca);
-
-if (!isHSBN) {
-    //HSBN uses RSA generated keys
-    chain.setECDSAModeForGRPC(true);
-}
-
-
-if ( bcHost == 'bluemix' ) {
-    var certFile = ccPath + '/certificate.pem';
-    var certUrl = network.credentials.cert;
-}
 
 setTimeout(function(){
     enrollAndRegisterUsers();
@@ -184,6 +177,7 @@ function enrollAndRegisterUsers() {
             chain.addPeer("grpcs://" + peers[i].discovery_host + ":" + peers[i].discovery_port, {
                 pem: cert
             });
+            console.log('LPAR=%d, peer%d:  grpcs://%s', LPARid, i, peers[i].discovery_host + ":" + peers[i].discovery_port);
         }
     } else {
         var ca_url = "grpc://" + network.credentials.ca[network_id].discovery_host + ":" + network.credentials.ca[network_id].discovery_port;
@@ -214,7 +208,7 @@ function enrollAndRegisterUsers() {
     } else {
         // Enroll a 'admin' who is already registered because it is
         // listed in fabric/membersrvc/membersrvc.yaml with it's one time password.
-        //console.log('username=%s, secret=%s', users[0].username, users[0].secret);
+        console.log('username=%s, secret=%s', users[0].username, users[0].secret);
         chain.enroll(users[0].username, users[0].secret, function(err, admin) {
             if (err) throw Error("\nLPAR=%d, ERROR: failed to enroll admin : %s", LPARid, err);
 
@@ -262,7 +256,7 @@ if ( bcHost == 'bluemix' ) {
         //args: ["a", "100", "b", "200"],
 	args: testDeployArgs,
         // the location where the startup and HSBN store the certificates
-        certificatePath: isHSBN ? "/root/" : "/certs/blockchain-cert.pem"
+        certificatePath: isHSBN ? "/certs/blockchain-cert.pem" : "/root/"
     };
 } else {
     var deployRequest = {
@@ -304,7 +298,11 @@ function execTransactions(user) {
 
         // Start the transactions
         for (var i = 0; i < nThread; i++) {
+            if ( bcHost == 'bluemix') {
+	    var workerProcess = child_process.spawn('node', ['./perf-execRequest.js', LPARid, i, testChaincodeID, tStart, uiFile, bcHost, certFile ]);
+            } else {
 	    var workerProcess = child_process.spawn('node', ['./perf-execRequest.js', LPARid, i, testChaincodeID, tStart, uiFile, bcHost ]);
+            }
 
             workerProcess.stdout.on('data', function (data) {
                console.log('stdout: ' + data);
