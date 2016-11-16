@@ -4,7 +4,7 @@
 The performance Node SDK uses [Hyperledger Fabric Client (HFC) SDK](http://hyperledger-fabric.readthedocs.io/en/latest/Setup/NodeSDK-setup/) to interact with a [Hyperledger fabric](https://github.com/hyperledger/fabric) network.
 
 
-#Installation
+#Setup
 
 1. download all scripts (1 bash shell script and 3 js scripts) and userInput json files into the local working directory
 1. create a sub directory, SCFiles, under the working directory
@@ -12,7 +12,7 @@ The performance Node SDK uses [Hyperledger Fabric Client (HFC) SDK](http://hyper
 1. modify userInput.json according to the desired test and the Service Credentials files
 
 
-#Usages
+#Usage
 
 	./perf_driver.sh <user input json file> <chaincode path> <nLPARs> <bcHost>
 

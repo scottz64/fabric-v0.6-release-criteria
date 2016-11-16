@@ -32,7 +32,18 @@ var testChaincodeID = process.argv[4];
 var tStart = parseInt(process.argv[5]);
 var uiFile = process.argv[6];
 var bcHost = process.argv[7];
-//var certFile = process.argv[7];
+var certFile;
+if ( bcHost == 'bluemix' ) {
+}
+var isHSBN;
+if ( bcHost == 'bluemix' ) {
+    isHSBN = true;
+    certFile = process.argv[8];
+    console.log('LPAR:id=%d:%d, isHSBN: %s, certificate: %s', LPARid, pid, isHSBN, certFile);
+} else {
+    isHSBN = false;
+    console.log('LPAR:id=%d:%d, isHSBN: %s', LPARid, pid, isHSBN);
+}
 
 
 process.env['GOPATH'] = __dirname;
@@ -58,11 +69,10 @@ var user;
 
 // Determining if we are running on a starter or HSBN network based on the url
 // of the discovery host name.  The HSBN will contain the string zone.
-var isHSBN = peers[0].discovery_host.indexOf('zone') >= 0 ? true : false;
+
 //console.log('LPAR:id=%d:%d, isHSBN:', LPARid, pid, isHSBN);
 var peerAddress = [];
 var network_id = Object.keys(network.credentials.ca);
-var ca_url = "grpc://" + network.credentials.ca[network_id].discovery_host + ":" + network.credentials.ca[network_id].discovery_port;
 
 
 /*
@@ -148,13 +158,6 @@ var chainName = 'targetChain'+LPARid;
 var chain = hfc.newChain(chainName);
 //console.log('LPAR:id=%d:%d, chain name=%s ', LPARid, pid, chainName);
 
-//setECDSAModeForGRPC
-if (!isHSBN) {
-    //HSBN uses RSA generated keys
-    chain.setECDSAModeForGRPC(true)
-}
-
-//
 // Set the directory for the local file-based key value store, point to the
 // address of the membership service, and add an associated peer node.
 var keydir = __dirname + '/keyValStore' + LPARid;
@@ -162,21 +165,27 @@ var keydir = __dirname + '/keyValStore' + LPARid;
 chain.setKeyValStore(hfc.newFileKeyValStore(keydir));
     if ( bcHost == 'bluemix' ) {
         var cert = fs.readFileSync(certFile);
+        var ca_url = "grpcs://" + network.credentials.ca[network_id].discovery_host + ":" + network.credentials.ca[network_id].discovery_port;
         chain.setMemberServicesUrl(ca_url, {
             pem: cert
         });
+        console.log('LPAR:id=%d:%d, ca_url: %s', LPARid, pid, ca_url);
 
 	// Add peer to blockchain
 	var idx = pid%nPeers;
 	chain.addPeer("grpcs://" + peers[idx].discovery_host + ":" + peers[idx].discovery_port, {
             pem: cert
         });
+        console.log('LPAR:id=%d:%d, peer: grpcs://%s', LPARid, pid, peers[idx].discovery_host + ":" + peers[idx].discovery_port);
     } else {
+        var ca_url = "grpc://" + network.credentials.ca[network_id].discovery_host + ":" + network.credentials.ca[network_id].discovery_port;
+        console.log('LPAR:id=%d:%d, ca_url: %s', LPARid, pid, ca_url);
         chain.setMemberServicesUrl(ca_url);
 
 	// Add peer to blockchain
 	var idx = pid%nPeers;
 	chain.addPeer("grpc://" + peers[idx].discovery_host + ":" + peers[idx].discovery_port);
+        console.log('LPAR:id=%d:%d, peer: grpc://%s', LPARid, pid, peers[idx].discovery_host + ":" + peers[idx].discovery_port);
     }
 
 
@@ -443,8 +452,8 @@ function SendSimple(pid, user, trType, callback) {
             tr_rsq++;
 
             if ( QDone == 1 ) {
-//                console.log(util.format("LPAR:id=%d:%d, Successfully queried chaincode: value=%s, number=%d, time= %d, elapsed= %d",
-//                                     LPARid, pid, results.result.toString(), tr_rsq, tCurr, tCurr-tLocal));
+                console.log(util.format("LPAR:id=%d:%d, Successfully queried chaincode: value=%s, number=%d, time= %d, elapsed= %d",
+                                     LPARid, pid, results.result.toString(), tr_rsq, tCurr, tCurr-tLocal));
                 console.log(util.format("SendQuery:LPAR:id=%d:%d, Query: total= %d completed= %d failed= %d time(ms): starting= %d ending= %d elapsed= %d",
                                      LPARid, pid, tr_sq, tr_rsq, tr_req, tLocal, tCurr, tCurr-tLocal));
             } else {
