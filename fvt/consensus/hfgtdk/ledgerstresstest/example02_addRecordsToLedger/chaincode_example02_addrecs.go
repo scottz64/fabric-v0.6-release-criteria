@@ -20,22 +20,11 @@ Modified by Ratnakar Asara, and Scott Zwierzynski.
 
 package main
 
-//WARNING - this chaincode's ID is hard-coded in chaincode_example04 to illustrate one way of
-//calling chaincode from a chaincode. If this example is modified, chaincode_example04.go has
-//to be modified as well with the new ID of chaincode_example02.
-//chaincode_example05 show's how chaincode ID can be passed in as a parameter instead of
-//hard-coding.
-
 import (
 	"errors"
 	"fmt"
 	"strconv"
 	"github.com/hyperledger/fabric/core/chaincode/shim"
-	//"github.com/hyperledger/fabric/core/chaincode"
-
-	//"hyperledger/ccs"
-	//main "github.com/scottz64/obcsdk/blob/master/ledgerstresstest/example02_addRecordsToLedger"
-	//main "github.com/hyperledger/fabric/examples/chaincode/go/chaincode_example02"
 )
 
 type Chaincode_example02_addrecs struct {

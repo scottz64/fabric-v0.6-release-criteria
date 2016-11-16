@@ -136,16 +136,16 @@ func SetupLocalNetworkWithMoreOptions(
 
 	// run script located in the ../automation directory
 	pwd, _ := os.Getwd()
-	if strings.Contains(pwd, "obcsdk/") {
-		// good: it looks like we are probably in a testing subdirectory of obcsdk; hopefully it is an immediate subdirectory.
+	if strings.Contains(pwd, "hfgtdk/") {
+		// good: it looks like we are probably in a testing subdirectory of hfgtdk; hopefully it is an immediate subdirectory.
 		os.Chdir(pwd + "/../automation")
 	} else {
-		if strings.Contains(pwd, "obcsdk") {
-			// ok, we are IN ../obcsdk so lets work with that...
+		if strings.Contains(pwd, "hfgtdk") {
+			// ok, we are IN directory .../hfgtdk, so we can work with that...
 			os.Chdir(pwd + "/automation")
 		} else {
-			fmt.Println("peernetwork/peerNetworkSetup.go SetupLocalNetworkWithMoreOptions(): ERROR: you must be in a subdirectory of obcsdk/ when running go tests:\ncurrent pwd: ", pwd)
-			panic(errors.New("ERROR: first cd to a test directory underneath obcsdk/ to run go tests"))
+			fmt.Println("peernetwork/peerNetworkSetup.go SetupLocalNetworkWithMoreOptions(): ERROR: you must be in a subdirectory of hfgtdk/ when running go tests:\ncurrent pwd: ", pwd)
+			panic(errors.New("ERROR: first cd to a test directory underneath hfgtdk/ to run go tests"))
 		}
 	}
 	pwd_automation, _ := os.Getwd()

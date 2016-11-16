@@ -1,5 +1,5 @@
-# obcsdk
-obcsdk: opensource blockchain software development kit: GO code and test framework for testing hyperledger/fabric Blockchain
+# hfgtdk
+hfgtdk: opensource blockchain Hyperledger Fabric Go Test Development Kit
 
 ##Obtain the GoSDK and test programs:
 Clone to the src directory where GO is installed (use either $GOROOT/src or $GOPATH/src).
@@ -15,7 +15,7 @@ For more information on setting up a peer network,
  
 ##How to execute the programs:
 - If you wish to connect to an existing network, change the credentials in NetworkCredentials.json as needed.
-- Helpful shell scripts are located in the obcsdk/automation directory:
+- Helpful shell scripts are located in the hfgtdk/automation directory:
 ```
 	../automation/go_record.sh <tests.go>   - execute this from any of the test directories, to run go tests and record stdout logs in unique GO_TEST* named files in the current working directory.
 ```
@@ -30,28 +30,28 @@ For more information on setting up a peer network,
 	$  export COMMIT=<commit>
 
 	# To run a basic test to create a 4-peer network and exercise the REST API functionalities:
-	$ cd obcsdk/chcotest
+	$ cd hfgtdk/chcotest
 	$ go run BasicFuncNewNetwork.go
 	 
 	# To run Consensus Acceptance Tests or two of the long-run tests:
-	$ cd obcsdk/CAT
+	$ cd hfgtdk/CAT
 	$ ../automation/go_record.sh CAT*go
 	$ ../automation/go_record.sh CRT_501_StopAndRestartRandom_10Hrs.go
 	$ ../automation/go_record.sh CRT_502_StopAndRestart1or2_10Hrs.go
 	 
 	# To run ledger stress tests: After first starting up a new network by running a test that creates and uses 
-	# a networkcredentials file (which maps to obcsdk/util/NetworkCredentials.json), simply run these tests by:
-	$ cd obcsdk/CAT
+	# a networkcredentials file (which maps to hfgtdk/util/NetworkCredentials.json), simply run these tests by:
+	$ cd hfgtdk/CAT
 	$ go run testtemplate.go
-	$ cd obcsdk/ledgerstresstest
+	$ cd hfgtdk/ledgerstresstest
 	$ TEST_NETWORK=LOCAL go run LST_2Client2Peer20K.go
 
 	# Or, here is the easiest way to run the basic API test and five concurrency testcases in this directory:
-	$ cd obcsdk/ledgerstresstest
+	$ cd hfgtdk/ledgerstresstest
 	$ ./run_LST_regression.sh
 
 	# To run COMMIT=821a3c7, the v0.6 Sep 7th build, in local environment with one of these commands:
-	$ cd obcsdk/automation
+	$ cd hfgtdk/automation
 	$ ./local_fabric_gerrit.sh -c 821a3c7 -n 4 -f 1 -l error -m pbft -b 500 -s
 	$ export COMMIT=821a3c7; export REPOSITORY_SOURCE=GERRIT; go_record.sh ../CAT/testtemplate.go ../chcotest/BasicFuncNewNetwork.go
 ```

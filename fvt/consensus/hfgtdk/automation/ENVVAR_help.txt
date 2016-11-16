@@ -1,5 +1,5 @@
 
-# These are the environment variables used by the scripts and go code in obcsdk.
+# These are the environment variables used by the scripts and go code in hfgtdk.
 
 ##############################################################
 # local_fabric* scripts use these:

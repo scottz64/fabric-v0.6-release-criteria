@@ -457,17 +457,17 @@ func StopPeersLocal(thisNetwork PeerNetwork, peers []string) {
 
 	for i:=0; i < len(peers); i++ {
 /*
-	    if !thisNetwork.IsLocal && TEST_NETWORK==Z, then use different command format instead of docker stop (or restart)!
-		(and also don't forget to retrieve the extra data for the msg header, and use it in every msg...)
+	    if !thisNetwork.IsLocal , then use different command format instead of docker stop (or restart)!
+	        if TEST_NETWORK==Z, then use one format
+		else use another format
 	    else continue with existing code, to send docker command
 
-https://<LPAR URL>/api/com.ibm.zBlockchain/peers/<PEER_ID>/<stop|restart>
-https://5a088be5-276c-42b3-b550-421f3f27b6ab_vp0-api.zone.blockchain.ibm.com:443/api/com.ibm.zBlockchain/peers/<vpN>/<stop|restart>
-GetURL(vpN)/api/com.ibm.zBlockchain/peers/vpN/<stop|restart>
+STOP/RESTART:
+When you have an external network (not local which uses docker), to do stop/restart, use this format:
+https://manage.0.secure.blockchain.ibm.com/gts/lpar/<192.x IP addr>/networks/<network ID>/nodes/<peer name>/stop
+Exception: When you have a 9.* address (zACI, when TEST_NETWORK=Z), use this format:
+https://<9.x IP address>/api/com.ibm.zBlockchain/networks/<network id>/nodes/<peer name>/stop
 
-And at one time, since restart does not work, we had to try this:
-https://manage.zone.blockchain.ibm.com/api/lpar/INTERNAL_LPAR_IP/peer/PEER_ID/restart
-https://manage.zone.blockchain.ibm.com/api/lpar/192.x.y.z/peer/vpN/restart
 
 func genCMD( keyword<stop|restart|pause|unpause>    {
   return 

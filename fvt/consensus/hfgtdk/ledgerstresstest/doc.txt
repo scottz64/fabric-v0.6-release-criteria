@@ -1,0 +1,11 @@
+#-----------------------------------------------------------------------
+# TEST OBJECTIVE : basic network setup, deploy, invoke, query all peers
+#                  using REST interface, and exercise chaincode APIs
+# SETUP STEPS:
+#   1. Set environment variable: export TEST_NETWORK=LOCAL
+# TEST DETAILS (Optional):
+#   1. Setup local docker network with security with 4 peer nodes
+#   2. Deploy chaincode example02
+#   3. Send Invoke Requests on all peers using go routines
+#   4. Verify query results and chainheights match on all peers
+#-----------------------------------------------------------------------

@@ -1,24 +1,16 @@
-package main
 
-import (
-	"fmt"
-	"../chaincode"
-	"../peernetwork"
-	"os"
-	"bufio"
-	//"strconv"
-	"strings"
-	"time"
-	"../lstutil"
-	"../chco2"
-)
-
-var f *os.File
-//var myNetwork peernetwork.PeerNetwork
-var url string
-var counter int64
-var subTestsFailures int
-
+#-----------------------------------------------------------------------
+# TEST OBJECTIVE : basic network setup, deploy, invoke and query on all
+#    peers (default using REST interface) using chaincode addrecs,
+#    and exercise and validate all chaincode APIs
+# SETUP STEPS:
+#   1. Set environment variables:
+#      export TEST_NETWORK=""    or    export TEST_NETWORK=LOCAL
+# TEST DETAILS (Optional):
+#   1. Setup local docker network with security with 4 peer nodes
+#   2. Deploy chaincode addrecs from
+#      ../ledgerstresstest/example02_addRecordsToLedger/
+#-----------------------------------------------------------------------
 
 /* -----------------------------------------------------------------------------------------------------------------------------
     TEST coverage for Basic Functionality: Block, Blockchain, Chaincode, Network, Registrar, and Transactions
@@ -56,6 +48,28 @@ var subTestsFailures int
 
    -----------------------------------------------------------------------------------------------------------------------------
  */
+
+
+
+package main
+
+import (
+	"fmt"
+	"../chaincode"
+	"../peernetwork"
+	"os"
+	"bufio"
+	//"strconv"
+	"strings"
+	"time"
+	"../lstutil"
+	"../chco2"
+)
+
+var f *os.File
+var url string
+var counter int64
+var subTestsFailures int
 
 
 func main() {
@@ -112,7 +126,6 @@ func main() {
 	lstutil.Logger("\n===== /chaincode Deploy Test =====")
 	counter = lstutil.DeployChaincode(chco2.MyNetwork)  // includes sleep 60 secs for Local network or 120 secs for External network
 	lstutil.Logger(fmt.Sprintf("-----Deploy Test returned counter: %d", counter))
-	// lstutil.Logger("Sleep another 2 min before proceeding..."); time.Sleep(120 * time.Second)
 
 	queryCounterSuccess := lstutil.QueryAllHostsToGetCurrentCounter(chco2.MyNetwork, lstutil.TESTNAME, &counter)
 	if !queryCounterSuccess {
