@@ -10,5 +10,5 @@ Or, unleash 400 threads to concurrently send transactions for a minute (limited 
 on your machine that is running the test), by executing run_conc4p1min400Thrd_LOCAL.sh.
 
 For each of these, look for .log files to be created in the directory where the actual
-go tests reside, in ../../fvt/consensus/obcsdk/ledgerstresstest/
+go tests reside, in ../../fvt/consensus/tdk/ledgerstresstest/
 

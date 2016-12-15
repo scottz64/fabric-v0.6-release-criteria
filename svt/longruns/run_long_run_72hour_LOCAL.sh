@@ -9,7 +9,7 @@ echo -e "$USAGE "
 # USE THIS _sigs() signal catcher/forwarder to pass signal to the child process.
 trap 'echo $0 Received termination signal.; kill $! 2>/dev/null; exit' SIGHUP SIGINT SIGQUIT SIGTERM SIGABRT
 
-cd ../../fvt/consensus/obcsdk/automation/
+cd ../../fvt/consensus/tdk/automation/
 
 PRE_COMMIT="$COMMIT"
 source ./ENVVARS_LOCAL

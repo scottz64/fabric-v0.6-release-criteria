@@ -253,7 +253,7 @@ CORE_SECURITY_ENABLED=$(echo $CORE_SECURITY_ENABLED | tr a-z A-Z)
 
 # This is used by the GO SDK to determine which repository to retrieve the image from.
 # Default is GERRIT, representing the official source of the hyperledger fabric master branch.
-# Optionally can be set to GITHUB to retrieve images of IBM V0.5 branch.
+# Optionally can be set to GITHUB to retrieve images of V0.5 branch.
 
 : ${REPOSITORY_SOURCE="GERRIT"}
 
@@ -261,7 +261,7 @@ CORE_SECURITY_ENABLED=$(echo $CORE_SECURITY_ENABLED | tr a-z A-Z)
 # Deprecated: LOCAL_FABRIC_SCRIPT=../automation/local_fabric.sh
 # There are now two scripts. Determine which one we will be using, based on REPOSITORY_SOURCE.
 #   Default is the gerrit script, for the official hyperledger/fabric.
-#   GITHUB may be specified when using v0.5 branch commit images for Z and BlueMix.
+#   GITHUB may be specified when using v0.5 branch commit images
 LOCAL_FABRIC_SCRIPT=../automation/local_fabric_gerrit.sh
 if [ "$REPOSITORY_SOURCE" == "GITHUB" ]
 then
