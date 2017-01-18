@@ -1,5 +1,7 @@
 # Release-Criteria Document
 
+For the latest tests and information, switch to branch v0.6 which is more up-to-date than this master branch.
+
 ## The release criteria repository is organized as follows
 1.  Each release is documented in its own branch.
 2.  All the tests in each branch are executed on three platforms.
