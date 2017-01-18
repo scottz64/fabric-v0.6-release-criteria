@@ -1,0 +1,8 @@
+{
+             "MemberServices_URL":"grpc://localhost:7054",
+			       "Peer0_URL":"grpc://localhost:30001",
+             "Peer1_URL":"grpc://localhost:30003",
+             "Peer2_URL":"grpc://localhost:30005",
+             "Peer3_URL":"grpc://localhost:30007",
+              "KeyVal_Store": "/tmp/keyValStore"
+ }

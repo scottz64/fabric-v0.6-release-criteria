@@ -1,0 +1,37 @@
+
+# These are the environment variables used by the scripts and go code in tdk.
+
+##############################################################
+# local_fabric* scripts use these:
+#	: ${SECURITY:="N"}
+#	: ${F:="1"}
+#	: ${NUM_PEERS="5"}
+#	: ${COMMIT="latest"}
+#	: ${PEER_LOG="debug"}
+#	: ${CONSENSUS_MODE="pbft"}
+#	: ${PBFT_BATCHSIZE="500"}
+
+##############################################################
+# Note: GO scripts override parms in local_fabric scripts
+# GO scripts use these variables {defaultValue|otherValues...} :
+#	COMMIT {latest}
+#	CORE_LOGGING_LEVEL			{ERROR|<critical|debug|another value in peer/core.yaml>}
+#	CORE_PBFT_GENERAL_BATCHSIZE		{2}
+#	CORE_PBFT_GENERAL_F			{1}
+#	CORE_PBFT_GENERAL_MODE			{batch|noops...}
+#	CORE_PBFT_GENERAL_N			{4}
+#	CORE_PBFT_GENERAL_TIMEOUT_BATCH		{2}  # integer.  however this is not used; code uses default "2s" (seconds)
+#	CORE_PEER_VALIDATOR_CONSENSUS_PLUGIN	{pbft}
+#	CORE_SECURITY_ENABLED			{Y|N}
+#	REPOSITORY_SOURCE			{GERRIT|GITHUB}
+#	TEST_EXISTING_NETWORK			{FALSE|TRUE}
+#	TEST_FULL_CATCHUP			{FALSE|TRUE}
+#	TEST_LST_NUM_CLIENTS			{<unset, to let LST scripts run as intended>|<integer number of client_threads>}
+#	TEST_LST_NUM_PEERS			{<unset, to let LST scripts run as intended>|<integer number of peers>}
+#	TEST_LST_THROUGHPUT_RATE		{<unset, to let LST scripts run as intended>|<integer Tx per sec transmit rate>}
+#	TEST_LST_TX_COUNT			{<unset, to let LST scripts run as intended>|<integer total number of invoke transactions to send>}
+#	TEST_NET_COMM_PROTOCOL			{HTTP|HTTPS}
+#	TEST_NETWORK				{LOCAL|Z}
+#	TEST_STOP_OR_PAUSE			{STOP|PAUSE}
+#	TEST_VERBOSE				{FALSE|TRUE}
+
