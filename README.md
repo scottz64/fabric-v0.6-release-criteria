@@ -1,7 +1,19 @@
 # Release-Criteria Document
 This was copied December 2016 to this public repo at: https://github.com/scottz64/fabric-v0.6-release-criteria
 
-Branch v0.6 contains the latest changes. Branch master is out-of-date.
+This branch v0.6 contains the latest changes. Branch master is out-of-date.
+```
+git clone https://github.com/scottz64/fabric-v0.6-release-criteria.git
+cd fabric-v0.6-release-criteria/fvt/consensus/tdk/CAT
+../automation/go_record.sh CAT_100_Startup_DIQ_API.go
+cd ../../../../svt/concurrency
+./run_conc4p1min400Thrd_LOCAL.sh
+
+And there are plenty more tests in many directories.
+
+cd ../../performance
+and view the README.md for instructions
+```
 
 ## The release criteria repository is organized as follows
 1.  Each release is documented in its own branch.
